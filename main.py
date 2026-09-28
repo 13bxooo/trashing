@@ -11,17 +11,15 @@ st.set_page_config(
 # SESSION STATE
 # =========================================================
 
-if "game_started" not in st.session_state:
-    st.session_state.game_started = False
+if "show_start_menu" not in st.session_state:
+    st.session_state.show_start_menu = False
 
 if "save_exists" not in st.session_state:
     st.session_state.save_exists = False
 
-if "show_start_menu" not in st.session_state:
-    st.session_state.show_start_menu = False
-
 if "continue_message" not in st.session_state:
     st.session_state.continue_message = ""
+
 
 # =========================================================
 # STYLE
@@ -30,20 +28,41 @@ if "continue_message" not in st.session_state:
 st.markdown("""
 <style>
 
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* ---------------------------------------------------------
+   STREAMLIT 기본 UI 제거
+--------------------------------------------------------- */
 
-html, body, [data-testid="stAppViewContainer"] {
-    margin: 0;
-    padding: 0;
-    background: #111820;
+#MainMenu {
+    visibility: hidden;
 }
 
-[data-testid="stHeader"] {
-    background: transparent;
+header {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
 }
 
 [data-testid="stSidebar"] {
     display: none;
+}
+
+[data-testid="stHeader"] {
+    display: none;
+}
+
+
+/* ---------------------------------------------------------
+   전체 화면
+--------------------------------------------------------- */
+
+.stApp {
+    background: #000000;
+}
+
+[data-testid="stAppViewContainer"] {
+    background: #000000;
 }
 
 .block-container {
@@ -51,183 +70,93 @@ html, body, [data-testid="stAppViewContainer"] {
     max-width: none !important;
 }
 
-/* 전체 화면 */
 
-.logic-screen {
-    position: relative;
-    width: 100vw;
-    min-height: 100vh;
+/* ---------------------------------------------------------
+   타이틀
+--------------------------------------------------------- */
 
-    background:
-        repeating-linear-gradient(
-            0deg,
-            #182631 0px,
-            #182631 39px,
-            #1c2c38 40px
-        );
+.main-title {
+    position: fixed;
 
-    color: white;
-    font-family: monospace;
+    top: 50%;
+    left: 50%;
 
-    overflow: hidden;
-}
+    transform: translate(-50%, -105%);
 
-
-/* 상단 제목 */
-
-.logic-title {
-    position: absolute;
-    top: 24px;
-    left: 28px;
-
-    padding: 10px 16px;
-
-    background: #101820;
-
-    border: 2px solid #71889a;
+    color: #ffffff;
 
     font-family: monospace;
-    font-size: 18px;
+
+    font-size: 42px;
+
     font-weight: bold;
 
-    letter-spacing: 2px;
+    letter-spacing: 8px;
 
-    z-index: 5;
+    white-space: nowrap;
+
+    text-align: center;
 }
 
 
-/* 타이머 */
+/* ---------------------------------------------------------
+   부제
+--------------------------------------------------------- */
 
-.logic-timer {
-    position: absolute;
+.subtitle {
+    position: fixed;
 
-    top: 24px;
-    right: 28px;
+    top: calc(50% + 5px);
+    left: 50%;
 
-    padding: 10px 16px;
+    transform: translateX(-50%);
 
-    background: #101820;
-
-    border: 2px solid #71889a;
+    color: #8c8c8c;
 
     font-family: monospace;
 
-    font-size: 17px;
+    font-size: 12px;
 
-    letter-spacing: 1px;
+    letter-spacing: 4px;
 
-    z-index: 5;
+    white-space: nowrap;
 }
 
 
-/* 게임 영역 */
+/* ---------------------------------------------------------
+   버튼 영역
+--------------------------------------------------------- */
 
-.logic-room {
+.menu-wrapper {
 
-    position: absolute;
+    position: fixed;
 
-    left: 7%;
-    right: 7%;
-
-    top: 100px;
-    bottom: 150px;
-
-    border: 3px solid #536b7c;
-
-    background:
-        repeating-linear-gradient(
-            0deg,
-            #1b2a35 0px,
-            #1b2a35 39px,
-            #20313d 40px
-        );
-
-    box-shadow:
-        inset 0 0 0 2px #0d151c,
-        0 0 30px rgba(0,0,0,0.4);
-}
-
-
-/* ECHO */
-
-.echo-text {
-
-    position: absolute;
-
-    top: 20%;
     left: 50%;
+    top: calc(50% + 90px);
 
     transform: translateX(-50%);
 
-    color: #9db3c4;
-
-    font-size: 14px;
-
-    letter-spacing: 8px;
-}
-
-
-/* 연구시설 */
-
-.room-center {
-
-    position: absolute;
-
-    top: 45%;
-    left: 50%;
-
-    transform: translate(-50%, -50%);
-
-    width: 230px;
-    height: 120px;
-
-    border: 2px solid #405766;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
+    width: 330px;
 
     text-align: center;
-
-    color: #8097a8;
-
-    font-size: 14px;
-
-    line-height: 1.7;
 }
 
 
-/* 메뉴 영역 */
-
-.menu-area {
-
-    position: absolute;
-
-    left: 50%;
-    bottom: 185px;
-
-    transform: translateX(-50%);
-
-    display: flex;
-
-    align-items: flex-start;
-
-    gap: 14px;
-
-    z-index: 10;
-}
-
-
-/* 메뉴 버튼 */
+/* ---------------------------------------------------------
+   Streamlit 버튼
+--------------------------------------------------------- */
 
 .stButton > button {
 
-    background: #101820 !important;
+    width: 100% !important;
 
-    color: #dce6ec !important;
+    height: 48px !important;
 
-    border: 2px solid #71889a !important;
+    background: #000000 !important;
+
+    color: #ffffff !important;
+
+    border: 1px solid #ffffff !important;
 
     border-radius: 0 !important;
 
@@ -235,123 +164,73 @@ html, body, [data-testid="stAppViewContainer"] {
 
     font-size: 14px !important;
 
-    letter-spacing: 1px !important;
+    letter-spacing: 3px !important;
 
-    min-width: 150px !important;
-
-    height: 45px !important;
-
-    transition: 0.15s !important;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease !important;
 }
+
 
 .stButton > button:hover {
 
-    background: #243746 !important;
+    background: #ffffff !important;
 
-    border-color: #a7bac8 !important;
+    color: #000000 !important;
 
-    color: white !important;
+    border-color: #ffffff !important;
 }
 
 
-/* START 하위 메뉴 */
+.stButton > button:focus {
 
-.start-submenu {
+    box-shadow: none !important;
 
-    position: absolute;
+}
 
-    left: 0;
 
-    top: 54px;
+/* ---------------------------------------------------------
+   START 하위 메뉴
+--------------------------------------------------------- */
 
-    width: 150px;
+.start-menu {
 
-    background: #101820;
+    width: 330px;
 
-    border: 2px solid #71889a;
+    margin-top: 8px;
+
+    margin-bottom: 8px;
 
     padding: 8px;
 
-    z-index: 20;
+    background: #000000;
+
+    border: 1px solid #ffffff;
 }
 
 
-/* 메시지 */
-
-.system-message {
-
-    position: absolute;
-
-    left: 7%;
-    right: 7%;
-
-    bottom: 25px;
-
-    min-height: 75px;
-
-    background: #f1f1f1;
-
-    border: 3px solid #536b7c;
-
-    color: #111820;
-
-    display: flex;
-
-    align-items: center;
-
-    padding: 15px 20px;
-
-    z-index: 4;
-}
-
-
-.message-label {
-
-    width: 130px;
-
-    color: #243746;
-
-    font-size: 13px;
-
-    font-weight: bold;
-
-    letter-spacing: 1px;
-}
-
-
-.message-text {
-
-    color: #111820;
-
-    font-size: 15px;
-
-    line-height: 1.6;
-}
-
-
-/* 안내 메시지 */
+/* ---------------------------------------------------------
+   오류 메시지
+--------------------------------------------------------- */
 
 .continue-warning {
 
-    position: absolute;
+    position: fixed;
 
     left: 50%;
-
-    bottom: 130px;
+    bottom: 45px;
 
     transform: translateX(-50%);
 
-    width: 420px;
+    width: 520px;
 
-    padding: 14px 20px;
+    padding: 13px 20px;
 
-    background: #101820;
+    background: #000000;
 
-    border: 2px solid #71889a;
+    border: 1px solid #777777;
 
-    color: #dce6ec;
-
-    text-align: center;
+    color: #ffffff;
 
     font-family: monospace;
 
@@ -359,7 +238,28 @@ html, body, [data-testid="stAppViewContainer"] {
 
     line-height: 1.7;
 
-    z-index: 30;
+    text-align: center;
+}
+
+
+/* ---------------------------------------------------------
+   버전 표시
+--------------------------------------------------------- */
+
+.version {
+
+    position: fixed;
+
+    bottom: 20px;
+    left: 25px;
+
+    color: #444444;
+
+    font-family: monospace;
+
+    font-size: 10px;
+
+    letter-spacing: 1px;
 }
 
 </style>
@@ -367,82 +267,73 @@ html, body, [data-testid="stAppViewContainer"] {
 
 
 # =========================================================
-# BACKGROUND
+# TITLE
 # =========================================================
 
-st.markdown("""
-<div class="logic-screen">
-
-    <div class="logic-title">
-        ☰ PROJECT : LOGIC
+st.markdown(
+    """
+    <div class="main-title">
+        PROJECT : LOGIC
     </div>
 
-    <div class="logic-timer">
-        TIME&nbsp;&nbsp;59:59
+    <div class="subtitle">
+        INFORMATION IS NOT ALWAYS TRUE
     </div>
 
-    <div class="logic-room">
-
-        <div class="echo-text">
-            E C H O
-        </div>
-
-        <div class="room-center">
-            RESEARCH FACILITY
-            <br>
-            CONTROL ROOM
-        </div>
-
+    <div class="version">
+        SYSTEM // LOGIC-001
     </div>
-
-</div>
-""", unsafe_allow_html=True)
-
-
-# =========================================================
-# MAIN MENU
-# =========================================================
-
-# 버튼을 화면 중앙 하단에 배치하기 위한 컬럼
-left_space, menu_col, right_space = st.columns([1.8, 1, 1.8])
-
-with menu_col:
-
-    start_col, how_col = st.columns(2)
-
-    with start_col:
-
-        if st.button(
-            "START",
-            key="start_button",
-            use_container_width=True
-        ):
-            st.session_state.show_start_menu = (
-                not st.session_state.show_start_menu
-            )
-
-    with how_col:
-
-        if st.button(
-            "HOW TO PLAY",
-            key="how_button",
-            use_container_width=True
-        ):
-            st.switch_page("pages/2_How_to_Play.py")
+    """,
+    unsafe_allow_html=True
+)
 
 
 # =========================================================
-# START SUB MENU
+# MENU
 # =========================================================
 
-if st.session_state.show_start_menu:
+# 화면 중앙에 메뉴를 배치하기 위한 여백
+st.write("")
+st.write("")
+st.write("")
+st.write("")
+st.write("")
+st.write("")
+st.write("")
+st.write("")
+st.write("")
 
-    sub_left, sub_menu, sub_right = st.columns([2.1, 0.9, 2])
 
-    with sub_menu:
+menu_left, menu_center, menu_right = st.columns(
+    [2.2, 1, 2.2]
+)
+
+with menu_center:
+
+    # -----------------------------------------------------
+    # START
+    # -----------------------------------------------------
+
+    if st.button(
+        "START",
+        key="start_button",
+        use_container_width=True
+    ):
+        st.session_state.show_start_menu = (
+            not st.session_state.show_start_menu
+        )
+
+        st.session_state.continue_message = ""
+
+
+    # -----------------------------------------------------
+    # START SUB MENU
+    # -----------------------------------------------------
+
+    if st.session_state.show_start_menu:
 
         st.markdown(
-            '<div class="start-submenu">',
+            '<div class="start-menu">',
             unsafe_allow_html=True
         )
 
@@ -452,14 +343,15 @@ if st.session_state.show_start_menu:
             use_container_width=True
         ):
 
+            # 저장된 게임이 존재하는 경우
             if st.session_state.save_exists:
 
-                st.session_state.game_started = True
                 st.session_state.show_start_menu = False
                 st.session_state.continue_message = ""
 
                 st.switch_page("pages/1_Game.py")
 
+            # 저장된 게임이 없는 경우
             else:
 
                 st.session_state.continue_message = (
@@ -473,16 +365,21 @@ if st.session_state.show_start_menu:
             use_container_width=True
         ):
 
-            # 새로운 게임 시작
-            st.session_state.game_started = True
+            # =================================================
+            # 새로운 게임 데이터 초기화
+            # =================================================
+
             st.session_state.save_exists = True
 
-            # 게임 데이터 초기화
+            st.session_state.game_started = True
+
             st.session_state.current_room = "CONTROL ROOM"
+
             st.session_state.player_x = 50
             st.session_state.player_y = 50
 
             st.session_state.inventory = []
+
             st.session_state.echo_log = []
 
             st.session_state.solved_puzzles = []
@@ -492,8 +389,10 @@ if st.session_state.show_start_menu:
             st.session_state.game_state = "GAME"
 
             st.session_state.show_start_menu = False
+
             st.session_state.continue_message = ""
 
+            # 게임 페이지로 이동
             st.switch_page("pages/1_Game.py")
 
         st.markdown(
@@ -502,8 +401,23 @@ if st.session_state.show_start_menu:
         )
 
 
+    # -----------------------------------------------------
+    # HOW TO PLAY
+    # -----------------------------------------------------
+
+    if st.button(
+        "HOW TO PLAY",
+        key="how_to_play",
+        use_container_width=True
+    ):
+
+        st.session_state.show_start_menu = False
+
+        st.switch_page("pages/2_How_to_Play.py")
+
+
 # =========================================================
-# CONTINUE ERROR MESSAGE
+# CONTINUE ERROR
 # =========================================================
 
 if st.session_state.continue_message:
@@ -516,24 +430,3 @@ if st.session_state.continue_message:
         """,
         unsafe_allow_html=True
     )
-
-
-# =========================================================
-# SYSTEM MESSAGE
-# =========================================================
-
-st.markdown("""
-<div class="system-message">
-
-    <div class="message-label">
-        SYSTEM
-    </div>
-
-    <div class="message-text">
-        시스템이 초기화되었습니다.
-        <br>
-        <b>ECHO</b> 연결을 확인하고 있습니다...
-    </div>
-
-</div>
-""", unsafe_allow_html=True)
