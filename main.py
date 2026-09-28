@@ -1,5 +1,7 @@
+import base64
+from pathlib import Path
+
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 # =========================================================
@@ -10,777 +12,490 @@ st.set_page_config(
     page_title="PROJECT : LOGIC",
     page_icon="◈",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
 
 
 # =========================================================
-# QUERY ACTION
+# FONT
 # =========================================================
 
-action = st.query_params.get("action")
+font_candidates = [
+    Path("neodgm.ttf"),
+    Path("neodgm(2).ttf"),
+]
 
-if action == "new_game":
+font_data = ""
 
-    st.query_params.clear()
-
-    st.switch_page("pages/1_Game.py")
-
-
-elif action == "continue":
-
-    st.query_params.clear()
-
-    # -----------------------------------------
-    # 아직 실제 저장 시스템이 없으므로
-    # 현재는 저장 데이터가 없는 상태
-    # -----------------------------------------
-
-    st.warning(
-        "이전 플레이 기록이 존재하지 않습니다. "
-        "새 게임을 시작해주세요."
-    )
-
-
-elif action == "how_to_play":
-
-    st.query_params.clear()
-
-    st.switch_page("pages/2_How_to_Play.py")
+for font_path in font_candidates:
+    if font_path.exists():
+        with open(font_path, "rb") as f:
+            font_data = base64.b64encode(f.read()).decode("utf-8")
+        break
 
 
 # =========================================================
-# STREAMLIT 기본 UI 제거
+# SESSION STATE
+# =========================================================
+
+if "start_open" not in st.session_state:
+    st.session_state.start_open = False
+
+
+# =========================================================
+# HIDE STREAMLIT UI
 # =========================================================
 
 st.markdown(
-    """
+    f"""
     <style>
 
-    #MainMenu {
+    /* =====================================================
+       FONT
+       ===================================================== */
+
+    @font-face {{
+        font-family: "NeoDungGeunMo";
+        src: url(data:font/ttf;base64,{font_data});
+    }}
+
+
+    /* =====================================================
+       STREAMLIT UI
+       ===================================================== */
+
+    #MainMenu {{
         visibility: hidden;
-    }
+    }}
 
-    header {
+    header {{
         visibility: hidden;
-    }
+    }}
 
-    footer {
+    footer {{
         visibility: hidden;
-    }
+    }}
 
-    [data-testid="stSidebar"] {
+    [data-testid="stSidebar"] {{
         display: none;
-    }
+    }}
 
-    [data-testid="stHeader"] {
-        display: none;
-    }
-
-    [data-testid="stToolbar"] {
-        display: none;
-    }
-
-    html,
-    body,
-    .stApp,
-    [data-testid="stAppViewContainer"] {
-
-        margin: 0 !important;
-        padding: 0 !important;
-
+    .stApp {{
         background: #000000 !important;
-    }
+    }}
 
-    .block-container {
+    .block-container {{
+        padding: 0 !important;
+        max-width: 100% !important;
+    }}
+
+
+    /* =====================================================
+       TITLE
+       ===================================================== */
+
+    .project-title {{
+        position: fixed;
+
+        top: 12vh;
+        left: 50%;
+
+        transform: translateX(-50%);
+
+        white-space: nowrap;
+
+        color: #ffffff;
+
+        font-family: "NeoDungGeunMo", monospace;
+
+        font-size: clamp(28px, 4vw, 48px);
+
+        letter-spacing: 2px;
+
+        z-index: 10;
+
+        animation: title-flicker 4s infinite;
+    }}
+
+
+    /* =====================================================
+       SUBTITLE
+       ===================================================== */
+
+    .project-subtitle {{
+        position: fixed;
+
+        top: 22vh;
+        left: 50%;
+
+        transform: translateX(-50%);
+
+        white-space: nowrap;
+
+        color: #9c9c9c;
+
+        font-family: "NeoDungGeunMo", monospace;
+
+        font-size: clamp(13px, 1.5vw, 18px);
+
+        letter-spacing: 1px;
+
+        z-index: 10;
+    }}
+
+
+    /* =====================================================
+       START CONTAINER
+       ===================================================== */
+
+    .st-key-start_button {{
+        position: fixed !important;
+
+        top: 51vh !important;
+        left: 50% !important;
+
+        transform: translateX(-50%) !important;
+
+        width: 170px !important;
+        height: 55px !important;
 
         padding: 0 !important;
         margin: 0 !important;
 
-        max-width: none !important;
-    }
+        z-index: 1000 !important;
+    }}
+
+
+    /* =====================================================
+       START BUTTON
+       ===================================================== */
+
+    .st-key-start_button button {{
+        width: 170px !important;
+        height: 55px !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        border: none !important;
+        border-radius: 0 !important;
+
+        background: transparent !important;
+
+        color: #ffffff !important;
+
+        font-family: "NeoDungGeunMo", monospace !important;
+
+        font-size: 19px !important;
+
+        box-shadow: none !important;
+
+        cursor: pointer !important;
+    }}
+
+
+    .st-key-start_button button:hover {{
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: none !important;
+    }}
+
+
+    .st-key-start_button button:focus {{
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
+
+    .st-key-start_button button:focus:hover {{
+        background: #ffffff !important;
+        color: #000000 !important;
+    }}
+
+
+    /* =====================================================
+       HOW TO PLAY CONTAINER
+       ===================================================== */
+
+    .st-key-how_to_play_button {{
+        position: fixed !important;
+
+        top: 65vh !important;
+        left: 50% !important;
+
+        transform: translateX(-50%) !important;
+
+        width: 220px !important;
+        height: 55px !important;
+
+        padding: 0 !important;
+        margin: 0 !important;
+
+        z-index: 1000 !important;
+    }}
+
+
+    /* =====================================================
+       HOW TO PLAY BUTTON
+       ===================================================== */
+
+    .st-key-how_to_play_button button {{
+        width: 220px !important;
+        height: 55px !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        border: none !important;
+        border-radius: 0 !important;
+
+        background: transparent !important;
+
+        color: #ffffff !important;
+
+        font-family: "NeoDungGeunMo", monospace !important;
+
+        font-size: 19px !important;
+
+        box-shadow: none !important;
+
+        cursor: pointer !important;
+    }}
+
+
+    .st-key-how_to_play_button button:hover {{
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: none !important;
+    }}
+
+
+    .st-key-how_to_play_button button:focus {{
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
+
+    .st-key-how_to_play_button button:focus:hover {{
+        background: #ffffff !important;
+        color: #000000 !important;
+    }}
+
+
+    /* =====================================================
+       POPUP
+       ===================================================== */
+
+    .st-key-popup {{
+        position: fixed !important;
+
+        top: calc(51vh - 3px) !important;
+        left: calc(50% + 105px) !important;
+
+        width: 190px !important;
+
+        padding: 0 !important;
+        margin: 0 !important;
+
+        border: 1px solid #ffffff !important;
+
+        background: #050505 !important;
+
+        z-index: 2000 !important;
+    }}
+
+
+    /* =====================================================
+       POPUP BUTTON
+       ===================================================== */
+
+    .st-key-popup button {{
+        width: 188px !important;
+        height: 42px !important;
+
+        margin: 0 !important;
+        padding: 0 18px !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+
+        border: none !important;
+        border-radius: 0 !important;
+
+        background: #050505 !important;
+
+        color: #ffffff !important;
+
+        font-family: "NeoDungGeunMo", monospace !important;
+
+        font-size: 14px !important;
+
+        text-align: left !important;
+
+        box-shadow: none !important;
+
+        cursor: pointer !important;
+    }}
+
+
+    .st-key-popup button:hover {{
+        background: #ffffff !important;
+        color: #000000 !important;
+    }}
+
+
+    .st-key-popup button:focus {{
+        background: #050505 !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
+
+    .st-key-popup button:focus:hover {{
+        background: #ffffff !important;
+        color: #000000 !important;
+    }}
+
+
+    /* =====================================================
+       TITLE FLICKER
+       ===================================================== */
+
+    @keyframes title-flicker {{
+
+        0%, 18%, 20%, 22%, 63%, 65%, 100% {{
+            opacity: 1;
+        }}
+
+        19% {{
+            opacity: 0.35;
+        }}
+
+        21% {{
+            opacity: 0.65;
+        }}
+
+        64% {{
+            opacity: 0.15;
+        }}
+
+    }}
+
+
+    /* =====================================================
+       MOBILE
+       ===================================================== */
+
+    @media (max-width: 600px) {{
+
+        .st-key-start_button {{
+            top: 51vh !important;
+        }}
+
+        .st-key-how_to_play_button {{
+            top: 73vh !important;
+        }}
+
+        .st-key-popup {{
+            top: 59vh !important;
+            left: 50% !important;
+
+            transform: translateX(-50%) !important;
+        }}
+
+    }}
 
     </style>
+
+    <div class="project-title">
+        PROJECT : LOGIC
+    </div>
+
+    <div class="project-subtitle">
+        INFORMATION IS NOT ALWAYS TRUE
+    </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 
 # =========================================================
-# START SCREEN
+# START BUTTON
 # =========================================================
 
-components.html(
-    """
-    <!DOCTYPE html>
+with st.container(key="start_button"):
 
-    <html>
+    start_clicked = st.button(
+        "START",
+        key="start",
+        use_container_width=True,
+    )
 
-    <head>
 
-        <meta charset="UTF-8">
+if start_clicked:
+    st.session_state.start_open = (
+        not st.session_state.start_open
+    )
 
-        <style>
 
-            * {
-                box-sizing: border-box;
-            }
+# =========================================================
+# START POPUP
+# =========================================================
 
+if st.session_state.start_open:
 
-            html,
-            body {
+    with st.container(key="popup"):
 
-                margin: 0;
-                padding: 0;
+        continue_clicked = st.button(
+            "CONTINUE",
+            key="continue",
+            use_container_width=True,
+        )
 
-                width: 100%;
-                height: 100%;
+        new_game_clicked = st.button(
+            "NEW GAME",
+            key="new_game",
+            use_container_width=True,
+        )
 
-                overflow: hidden;
+    if continue_clicked:
 
-                background: #000000;
-            }
+        st.warning(
+            "이전 플레이 기록이 존재하지 않습니다. 새 게임을 시작해주세요."
+        )
 
+    if new_game_clicked:
 
-            /* =========================================
-               전체 화면
-               ========================================= */
+        st.info(
+            "GAME SYSTEM은 현재 준비 중입니다."
+        )
 
-            .screen {
 
-                position: relative;
+# =========================================================
+# HOW TO PLAY
+# =========================================================
 
-                width: 100vw;
-                height: 100vh;
+with st.container(key="how_to_play_button"):
 
-                background: #000000;
+    how_to_play_clicked = st.button(
+        "HOW TO PLAY",
+        key="how_to_play",
+        use_container_width=True,
+    )
 
-                color: #ffffff;
 
-                font-family:
-                    "Courier New",
-                    Consolas,
-                    monospace;
+# =========================================================
+# PAGE NAVIGATION
+# =========================================================
 
-                overflow: hidden;
-            }
+if how_to_play_clicked:
 
-
-            /* =========================================
-               PROJECT : LOGIC
-               ========================================= */
-
-            .title {
-
-                position: absolute;
-
-                top: 12vh;
-                left: 50%;
-
-                transform: translateX(-50%);
-
-                color: #ffffff;
-
-                font-size: clamp(32px, 4vw, 58px);
-
-                font-weight: bold;
-
-                letter-spacing: 0.12em;
-
-                white-space: nowrap;
-
-                text-align: center;
-
-                text-shadow:
-                    0 0 4px rgba(255,255,255,0.85),
-                    0 0 12px rgba(255,255,255,0.25);
-
-                animation:
-                    title-flicker
-                    4.2s
-                    infinite;
-            }
-
-
-            /* =========================================
-               SUBTITLE
-               ========================================= */
-
-            .subtitle {
-
-                position: absolute;
-
-                top: 22vh;
-                left: 50%;
-
-                transform: translateX(-50%);
-
-                color: #9a9a9a;
-
-                font-size: clamp(10px, 1.1vw, 15px);
-
-                letter-spacing: 0.25em;
-
-                white-space: nowrap;
-
-                text-align: center;
-            }
-
-
-            /* =========================================
-               메뉴 영역
-               ========================================= */
-
-            .menu-area {
-
-                position: absolute;
-
-                top: 51vh;
-                left: 50%;
-
-                transform: translateX(-50%);
-
-                width: 500px;
-
-                height: 180px;
-            }
-
-
-            /* =========================================
-               START
-               ========================================= */
-
-            .start {
-
-                position: absolute;
-
-                top: 0;
-                left: 0;
-
-                width: 170px;
-                height: 55px;
-
-                display: flex;
-
-                align-items: center;
-                justify-content: center;
-
-                color: #ffffff;
-
-                font-size: 22px;
-
-                letter-spacing: 0.12em;
-
-                cursor: pointer;
-
-                user-select: none;
-
-                transition: none;
-            }
-
-
-            .start:hover {
-
-                text-shadow:
-                    0 0 5px rgba(255,255,255,0.5);
-            }
-
-
-            /* =========================================
-               START 오른쪽 팝업
-               ========================================= */
-
-            .popup {
-
-                position: absolute;
-
-                top: -3px;
-                left: 225px;
-
-                width: 190px;
-
-                padding: 7px 0;
-
-                background: #080808;
-
-                border: 1px solid #555555;
-
-                box-shadow:
-                    0 0 0 1px #111111,
-                    0 0 12px rgba(255,255,255,0.08);
-
-                display: none;
-
-                animation:
-                    popup-appear
-                    0.12s
-                    steps(2, end);
-            }
-
-
-            .popup.show {
-
-                display: block;
-            }
-
-
-            /* =========================================
-               팝업 버튼
-               ========================================= */
-
-            .popup-button {
-
-                width: 100%;
-
-                height: 42px;
-
-                display: flex;
-
-                align-items: center;
-
-                padding-left: 18px;
-
-                color: #ffffff;
-
-                font-size: 14px;
-
-                letter-spacing: 0.1em;
-
-                cursor: pointer;
-
-                user-select: none;
-            }
-
-
-            .popup-button + .popup-button {
-
-                border-top: 1px solid #222222;
-            }
-
-
-            /* =========================================
-               마우스 올리면 깜빡임
-               ========================================= */
-
-            .popup-button:hover {
-
-                background: #ffffff;
-
-                color: #000000;
-
-                animation:
-                    menu-flicker
-                    0.55s
-                    steps(1, end)
-                    infinite;
-            }
-
-
-            /* =========================================
-               HOW TO PLAY
-               ========================================= */
-
-            .how {
-
-                position: absolute;
-
-                top: 110px;
-                left: -25px;
-
-                width: 220px;
-                height: 55px;
-
-                display: flex;
-
-                align-items: center;
-                justify-content: center;
-
-                color: #ffffff;
-
-                font-size: 17px;
-
-                letter-spacing: 0.12em;
-
-                cursor: pointer;
-
-                user-select: none;
-            }
-
-
-            .how:hover {
-
-                text-shadow:
-                    0 0 5px rgba(255,255,255,0.5);
-            }
-
-
-            /* =========================================
-               TITLE FLICKER
-               ========================================= */
-
-            @keyframes title-flicker {
-
-                0%,
-                4% {
-                    opacity: 1;
-                }
-
-                5% {
-                    opacity: 0.45;
-                }
-
-                6% {
-                    opacity: 1;
-                }
-
-                13% {
-                    opacity: 1;
-                }
-
-                14% {
-                    opacity: 0.2;
-                }
-
-                15% {
-                    opacity: 0.85;
-                }
-
-                16% {
-                    opacity: 1;
-                }
-
-                38% {
-                    opacity: 1;
-                }
-
-                39% {
-                    opacity: 0.4;
-                }
-
-                40% {
-                    opacity: 0.1;
-                }
-
-                41% {
-                    opacity: 0.9;
-                }
-
-                42% {
-                    opacity: 1;
-                }
-
-                70% {
-                    opacity: 1;
-                }
-
-                71% {
-                    opacity: 0.3;
-                }
-
-                72% {
-                    opacity: 1;
-                }
-
-                100% {
-                    opacity: 1;
-                }
-            }
-
-
-            /* =========================================
-               MENU FLICKER
-               ========================================= */
-
-            @keyframes menu-flicker {
-
-                0% {
-                    opacity: 1;
-                }
-
-                18% {
-                    opacity: 0.15;
-                }
-
-                19% {
-                    opacity: 1;
-                }
-
-                38% {
-                    opacity: 0.35;
-                }
-
-                39% {
-                    opacity: 1;
-                }
-
-                60% {
-                    opacity: 0.1;
-                }
-
-                61% {
-                    opacity: 1;
-                }
-
-                80% {
-                    opacity: 0.45;
-                }
-
-                81% {
-                    opacity: 1;
-                }
-
-                100% {
-                    opacity: 1;
-                }
-            }
-
-
-            /* =========================================
-               POPUP APPEAR
-               ========================================= */
-
-            @keyframes popup-appear {
-
-                0% {
-
-                    opacity: 0;
-
-                    transform:
-                        translateX(-7px);
-                }
-
-                100% {
-
-                    opacity: 1;
-
-                    transform:
-                        translateX(0);
-                }
-            }
-
-
-            /* =========================================
-               작은 화면
-               ========================================= */
-
-            @media (max-width: 700px) {
-
-                .title {
-
-                    top: 12vh;
-
-                    font-size: 30px;
-                }
-
-
-                .subtitle {
-
-                    top: 21vh;
-
-                    font-size: 9px;
-                }
-
-
-                .menu-area {
-
-                    width: 100%;
-
-                    left: 50%;
-                }
-
-
-                .start {
-
-                    left: calc(50% - 85px);
-                }
-
-
-                .popup {
-
-                    left: calc(50% + 105px);
-                }
-
-
-                .how {
-
-                    left: calc(50% - 110px);
-                }
-
-            }
-
-        </style>
-
-    </head>
-
-
-    <body>
-
-        <div class="screen">
-
-
-            <!-- =====================================
-                 TITLE
-                 ===================================== -->
-
-            <div class="title">
-
-                PROJECT : LOGIC
-
-            </div>
-
-
-            <div class="subtitle">
-
-                INFORMATION IS NOT ALWAYS TRUE
-
-            </div>
-
-
-            <!-- =====================================
-                 MENU
-                 ===================================== -->
-
-            <div class="menu-area">
-
-
-                <!-- START -->
-
-                <div
-                    class="start"
-                    id="start"
-                >
-
-                    START
-
-                </div>
-
-
-                <!-- START POPUP -->
-
-                <div
-                    class="popup"
-                    id="popup"
-                >
-
-                    <div
-                        class="popup-button"
-                        id="continue"
-                    >
-
-                        CONTINUE
-
-                    </div>
-
-
-                    <div
-                        class="popup-button"
-                        id="new-game"
-                    >
-
-                        NEW GAME
-
-                    </div>
-
-                </div>
-
-
-                <!-- HOW TO PLAY -->
-
-                <div
-                    class="how"
-                    id="how"
-                >
-
-                    HOW TO PLAY
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-
-        <script>
-
-            /* =========================================
-               START → POPUP
-               ========================================= */
-
-            const start =
-                document.getElementById("start");
-
-            const popup =
-                document.getElementById("popup");
-
-
-            start.addEventListener(
-                "click",
-                function() {
-
-                    popup.classList.toggle("show");
-
-                }
-            );
-
-
-            /* =========================================
-               NEW GAME
-               ========================================= */
-
-            document
-                .getElementById("new-game")
-                .addEventListener(
-                    "click",
-                    function() {
-
-                        window.parent.location.href =
-                            "?action=new_game";
-
-                    }
-                );
-
-
-            /* =========================================
-               CONTINUE
-               ========================================= */
-
-            document
-                .getElementById("continue")
-                .addEventListener(
-                    "click",
-                    function() {
-
-                        window.parent.location.href =
-                            "?action=continue";
-
-                    }
-                );
-
-
-            /* =========================================
-               HOW TO PLAY
-               ========================================= */
-
-            document
-                .getElementById("how")
-                .addEventListener(
-                    "click",
-                    function() {
-
-                        window.parent.location.href =
-                            "?action=how_to_play";
-
-                    }
-                );
-
-        </script>
-
-    </body>
-
-    </html>
-    """,
-    height=900,
-    scrolling=False
-)
+    st.switch_page(
+        "pages/1_How_To_Play.py"
+    )
