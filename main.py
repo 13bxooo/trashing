@@ -439,6 +439,7 @@ with st.container(key="start_button"):
 
 
 if start_clicked:
+
     st.session_state.start_open = (
         not st.session_state.start_open
     )
@@ -464,17 +465,41 @@ if st.session_state.start_open:
             use_container_width=True,
         )
 
-    if continue_clicked:
 
-        st.warning(
-            "이전 플레이 기록이 존재하지 않습니다. 새 게임을 시작해주세요."
-        )
+# =====================================================
+# CONTINUE
+# =====================================================
 
-    if new_game_clicked:
+if continue_clicked:
 
-        st.info(
-            "GAME SYSTEM은 현재 준비 중입니다."
-        )
+    st.warning(
+        "이전 플레이 기록이 존재하지 않습니다. 새 게임을 시작해주세요."
+    )
+
+
+# =====================================================
+# NEW GAME
+# =====================================================
+
+if new_game_clicked:
+
+    # 새로운 게임 상태 초기화
+
+    st.session_state.game_started = True
+    st.session_state.game_paused = False
+    st.session_state.game_finished = False
+
+    # 15분 = 900초
+
+    st.session_state.remaining_seconds = 15 * 60
+
+    # 시작 팝업 닫기
+
+    st.session_state.start_open = False
+
+    # 게임 화면으로 이동
+
+    st.switch_page("pages/2_Game.py")
 
 
 # =========================================================
