@@ -12,7 +12,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="PROJECT : LOGIC",
-    page_icon="◈",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -21,9 +20,6 @@ st.set_page_config(
 # =========================================================
 # SESSION STATE
 # =========================================================
-
-if "game_started" not in st.session_state:
-    st.session_state.game_started = True
 
 if "game_paused" not in st.session_state:
     st.session_state.game_paused = False
@@ -34,7 +30,6 @@ if "game_finished" not in st.session_state:
 if "remaining_seconds" not in st.session_state:
     st.session_state.remaining_seconds = 15 * 60
 
-# 타이머가 실제로 시작된 시각
 if "timer_deadline" not in st.session_state:
     st.session_state.timer_deadline = time.time() + 15 * 60
 
@@ -43,8 +38,8 @@ if "timer_deadline" not in st.session_state:
 # TIMER
 # =========================================================
 
-# 일시정지 상태가 아니라면 현재 시각을 기준으로 남은 시간 계산
 if not st.session_state.game_paused:
+
     current_time = time.time()
 
     st.session_state.remaining_seconds = max(
@@ -63,198 +58,153 @@ if not st.session_state.game_paused:
 # FONT
 # =========================================================
 
-font_candidates = [
-    Path("neodgm.ttf"),
-    Path("neodgm(2).ttf"),
-]
+font_path = None
 
-font_data = ""
+for name in ["neodgm.ttf", "neodgm(2).ttf"]:
 
-for font_path in font_candidates:
-    if font_path.exists():
-        with open(font_path, "rb") as f:
-            font_data = base64.b64encode(
-                f.read()
-            ).decode("utf-8")
+    candidate = Path(name)
+
+    if candidate.exists():
+        font_path = candidate
         break
 
 
-# =========================================================
-# PAUSE BUTTON
-# =========================================================
+if font_path:
 
-if not st.session_state.game_finished:
+    font_base64 = base64.b64encode(
+        font_path.read_bytes()
+    ).decode("utf-8")
 
-    with st.container(key="pause_button"):
+else:
 
-        pause_clicked = st.button(
-            "RESUME"
-            if st.session_state.game_paused
-            else "PAUSE",
-            key="pause_game_button",
-        )
-
-    if pause_clicked:
-
-        # -------------------------------------------------
-        # PAUSE
-        # -------------------------------------------------
-
-        if not st.session_state.game_paused:
-
-            current_time = time.time()
-
-            st.session_state.remaining_seconds = max(
-                0,
-                int(
-                    st.session_state.timer_deadline
-                    - current_time
-                )
-            )
-
-            st.session_state.game_paused = True
-
-        # -------------------------------------------------
-        # RESUME
-        # -------------------------------------------------
-
-        else:
-
-            st.session_state.timer_deadline = (
-                time.time()
-                + st.session_state.remaining_seconds
-            )
-
-            st.session_state.game_paused = False
-
-        st.rerun()
+    font_base64 = ""
 
 
 # =========================================================
-# CSS
+# PAUSE BUTTON CSS
 # =========================================================
 
 st.markdown(
     f"""
     <style>
 
-    /* =====================================================
-       FONT
-       ===================================================== */
-
     @font-face {{
-        font-family: "NeoDungGeunMo";
-        src: url(data:font/ttf;base64,{font_data});
+        font-family: 'NeoDungGeunMo';
+
+        src:
+            url(data:font/ttf;base64,{font_base64})
+            format('truetype');
     }}
 
-
-    /* =====================================================
-       STREAMLIT UI
-       ===================================================== */
-
-    #MainMenu {{
-        visibility: hidden;
+    html,
+    body,
+    [class*="css"] {{
+        font-family:
+            'NeoDungGeunMo',
+            monospace !important;
     }}
 
-    header {{
-        visibility: hidden;
-    }}
-
+    #MainMenu,
+    header,
     footer {{
         visibility: hidden;
     }}
 
-    [data-testid="stSidebar"] {{
-        display: none;
-    }}
-
     .stApp {{
-        background: #000000;
+        background: #000000 !important;
     }}
 
     .block-container {{
         padding: 0 !important;
-        max-width: 100% !important;
+        max-width: 100vw !important;
     }}
 
 
-    /* =====================================================
+    /* =========================================
        PAUSE BUTTON
-       ===================================================== */
+       ========================================= */
 
-    .st-key-pause_button {{
+    .st-key-pause_game_button {{
+
         position: fixed !important;
 
-        top: 25px !important;
-        right: 30px !important;
+        top: 24px !important;
+        right: 28px !important;
 
-        width: 140px !important;
+        width: 45px !important;
         height: 45px !important;
 
-        margin: 0 !important;
-        padding: 0 !important;
+        z-index: 999999 !important;
 
-        z-index: 1000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }}
 
 
-    .st-key-pause_button button {{
-        width: 140px !important;
+    .st-key-pause_game_button button {{
+
+        width: 45px !important;
         height: 45px !important;
 
-        margin: 0 !important;
         padding: 0 !important;
+        margin: 0 !important;
 
-        border: 1px solid #555555 !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+
         border-radius: 0 !important;
 
         background: #000000 !important;
         color: #ffffff !important;
 
-        font-family: "NeoDungGeunMo", monospace !important;
-        font-size: 15px !important;
+        font-family:
+            'NeoDungGeunMo',
+            monospace !important;
 
-        box-shadow: none !important;
+        font-size: 24px !important;
 
-        transition:
-            background 0.15s ease,
-            color 0.15s ease !important;
+        cursor: pointer !important;
     }}
 
 
-    .st-key-pause_button button:hover {{
+    .st-key-pause_game_button button:hover {{
+
         background: #ffffff !important;
         color: #000000 !important;
-        border-color: #ffffff !important;
-    }}
 
-
-    .st-key-pause_button button:focus {{
+        border: none !important;
+        outline: none !important;
         box-shadow: none !important;
     }}
 
 
-    /* =====================================================
-       MOBILE
-       ===================================================== */
+    .st-key-pause_game_button button:focus {{
+
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }}
+
 
     @media (max-width: 700px) {{
 
-        .st-key-pause_button {{
-            top: 18px !important;
-            right: 18px !important;
+        .st-key-pause_game_button {{
 
-            width: 115px !important;
+            top: 16px !important;
+            right: 16px !important;
+
+            width: 40px !important;
             height: 40px !important;
         }}
 
-        .st-key-pause_button button {{
-            width: 115px !important;
+        .st-key-pause_game_button button {{
+
+            width: 40px !important;
             height: 40px !important;
 
-            font-size: 13px !important;
+            font-size: 21px !important;
         }}
-
     }}
 
     </style>
@@ -264,174 +214,477 @@ st.markdown(
 
 
 # =========================================================
-# GAME SCREEN
+# PAUSE
+# =========================================================
+
+pause_clicked = st.button(
+    "▶"
+    if st.session_state.game_paused
+    else "||",
+    key="pause_game_button",
+)
+
+
+if pause_clicked:
+
+    current_time = time.time()
+
+    if not st.session_state.game_paused:
+
+        st.session_state.remaining_seconds = max(
+            0,
+            int(
+                st.session_state.timer_deadline
+                - current_time
+            )
+        )
+
+        st.session_state.game_paused = True
+
+    else:
+
+        st.session_state.timer_deadline = (
+            time.time()
+            + st.session_state.remaining_seconds
+        )
+
+        st.session_state.game_paused = False
+
+    st.rerun()
+
+
+# =========================================================
+# INITIAL VALUES
 # =========================================================
 
 remaining = st.session_state.remaining_seconds
-
 paused = st.session_state.game_paused
-
 finished = st.session_state.game_finished
 
+minutes = remaining // 60
+seconds = remaining % 60
 
-game_html = f"""
+timer_text = f"{minutes:02d}:{seconds:02d}"
+
+
+# =========================================================
+# GAME HTML
+# =========================================================
+
+html = f"""
 <!DOCTYPE html>
 
 <html>
 
 <head>
 
+<meta charset="UTF-8">
+
+
 <style>
 
-* {{
-    box-sizing: border-box;
+/* =====================================================
+   FONT
+   ===================================================== */
+
+@font-face {{
+
+    font-family:
+        'NeoDungGeunMo';
+
+    src:
+        url(data:font/ttf;base64,{font_base64})
+        format('truetype');
 }}
+
+
+* {{
+
+    box-sizing: border-box;
+
+    user-select: none;
+}}
+
 
 html,
 body {{
+
     margin: 0;
     padding: 0;
 
     width: 100%;
     height: 100%;
 
+    overflow: hidden;
+
+    background: #000000;
+
+    font-family:
+        'NeoDungGeunMo',
+        monospace;
+}}
+
+
+body {{
+
+    color: #ffffff;
+}}
+
+
+/* =====================================================
+   GAME
+   ===================================================== */
+
+.game {{
+
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
     background: #000000;
 
     overflow: hidden;
-
-    font-family: "Courier New", monospace;
 }}
 
 
 /* =====================================================
-   GAME BACKGROUND
+   TOP UI
    ===================================================== */
 
-.game-screen {{
-    position: relative;
+.project-title {{
 
-    width: 100%;
-    height: 100vh;
-
-    min-height: 700px;
-
-    background: #000000;
-
-    color: #ffffff;
-}}
-
-
-/* =====================================================
-   TOP LEFT
-   ===================================================== */
-
-.project-label {{
     position: absolute;
 
-    top: 25px;
-    left: 30px;
+    top: 24px;
+    left: 28px;
 
-    color: #777777;
+    font-size: 18px;
 
-    font-family: "Courier New", monospace;
+    letter-spacing: 1px;
+
+    z-index: 20;
+}}
+
+
+.stage-title {{
+
+    position: absolute;
+
+    top: 52px;
+    left: 28px;
 
     font-size: 13px;
 
-    letter-spacing: 2px;
+    color: #777777;
+
+    letter-spacing: 1px;
+
+    z-index: 20;
 }}
 
-
-/* =====================================================
-   TIMER
-   ===================================================== */
 
 .timer {{
+
     position: absolute;
 
-    top: 25px;
+    top: 24px;
     left: 50%;
 
-    transform: translateX(-50%);
+    transform:
+        translateX(-50%);
 
-    color: #ffffff;
-
-    font-family: "Courier New", monospace;
-
-    font-size: 20px;
+    font-size: 22px;
 
     letter-spacing: 2px;
+
+    z-index: 20;
 }}
 
 
 /* =====================================================
-   GAME AREA
+   GAME WORLD
    ===================================================== */
 
 .game-area {{
+
     position: absolute;
 
-    top: 105px;
-    left: 50%;
+    top: 90px;
+    left: 28px;
+    right: 28px;
+    bottom: 70px;
 
-    transform: translateX(-50%);
+    overflow: hidden;
 
-    width: min(1100px, 86vw);
-    height: calc(100vh - 210px);
+    background-color: #080808;
 
-    min-height: 480px;
+    /*
+       임시 격자 배경
+    */
 
-    border: 1px solid #333333;
+    background-image:
 
-    background:
         linear-gradient(
-            rgba(255,255,255,0.015) 1px,
+            rgba(255,255,255,0.045) 1px,
             transparent 1px
         ),
+
         linear-gradient(
             90deg,
-            rgba(255,255,255,0.015) 1px,
+            rgba(255,255,255,0.045) 1px,
             transparent 1px
         );
 
-    background-size: 32px 32px;
+    background-size: 40px 40px;
 }}
 
 
 /* =====================================================
-   CENTER SYSTEM
+   ROOM BOUNDARY
    ===================================================== */
 
-.system-center {{
+.room {{
+
     position: absolute;
 
+    left: 7%;
+    top: 8%;
+
+    width: 86%;
+    height: 82%;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.12);
+
+    overflow: hidden;
+}}
+
+
+/* =====================================================
+   ROOM DETAILS
+   ===================================================== */
+
+.room-line-horizontal {{
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+
     top: 50%;
+
+    height: 1px;
+
+    background:
+        rgba(255,255,255,0.045);
+}}
+
+
+.room-line-vertical {{
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
     left: 50%;
 
-    transform: translate(-50%, -50%);
+    width: 1px;
 
-    text-align: center;
-
-    white-space: nowrap;
+    background:
+        rgba(255,255,255,0.045);
 }}
 
 
-.system-title {{
-    font-size: 20px;
+/* =====================================================
+   CONTROL ROOM OBJECTS
+   ===================================================== */
 
-    letter-spacing: 4px;
+.object {{
 
-    margin-bottom: 18px;
-}}
+    position: absolute;
 
+    display: flex;
 
-.system-line {{
-    color: #666666;
+    align-items: center;
+    justify-content: center;
+
+    background: #0b0b0b;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.22);
+
+    color: #777777;
 
     font-size: 12px;
 
-    letter-spacing: 2px;
+    text-align: center;
+}}
 
-    margin: 7px 0;
+
+/* 중앙 모니터 */
+
+.monitor {{
+
+    left: 43%;
+    top: 13%;
+
+    width: 14%;
+    height: 12%;
+}}
+
+
+/* 책상 */
+
+.desk {{
+
+    left: 35%;
+    top: 62%;
+
+    width: 30%;
+    height: 12%;
+}}
+
+
+/* 단말기 */
+
+.terminal {{
+
+    left: 18%;
+    top: 35%;
+
+    width: 14%;
+    height: 17%;
+}}
+
+
+/* 출입문 */
+
+.exit-door {{
+
+    right: 0;
+
+    top: 35%;
+
+    width: 8%;
+    height: 30%;
+
+    background: #111111;
+
+    writing-mode:
+        vertical-rl;
+
+    letter-spacing: 2px;
+}}
+
+
+/* =====================================================
+   OBJECT LABEL
+   ===================================================== */
+
+.object-label {{
+
+    position: absolute;
+
+    bottom: -22px;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    white-space: nowrap;
+
+    font-size: 10px;
+
+    color: #555555;
+}}
+
+
+/* =====================================================
+   PLAYER
+   ===================================================== */
+
+.player {{
+
+    position: absolute;
+
+    width: 24px;
+    height: 24px;
+
+    left: 50%;
+    top: 43%;
+
+    transform:
+        translate(-50%, -50%);
+
+    background: #ffffff;
+
+    z-index: 15;
+
+    box-shadow:
+        0 0 0 1px #000000;
+}}
+
+
+/* 플레이어 아래 그림자 */
+
+.player::after {{
+
+    content: "";
+
+    position: absolute;
+
+    left: 4px;
+    right: 4px;
+
+    bottom: -5px;
+
+    height: 4px;
+
+    background:
+        rgba(255,255,255,0.15);
+}}
+
+
+/* =====================================================
+   INTERACTION MESSAGE
+   ===================================================== */
+
+.interaction-message {{
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 5%;
+
+    transform:
+        translateX(-50%);
+
+    padding: 10px 18px;
+
+    background: #000000;
+
+    font-size: 13px;
+
+    color: #ffffff;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.1s linear;
+
+    z-index: 30;
+}}
+
+
+.interaction-message.visible {{
+
+    opacity: 1;
 }}
 
 
@@ -440,201 +693,354 @@ body {{
    ===================================================== */
 
 .status {{
+
     position: absolute;
 
-    bottom: 25px;
-    left: 30px;
+    bottom: 24px;
+    left: 28px;
 
-    color: #555555;
+    font-size: 14px;
 
-    font-size: 11px;
+    color: #777777;
 
-    letter-spacing: 2px;
+    z-index: 20;
 }}
 
 
 /* =====================================================
-   HOW TO PLAY OVERLAY
+   OVERLAY COMMON
    ===================================================== */
 
 .overlay {{
-    position: fixed;
+
+    position: absolute;
 
     inset: 0;
 
-    display: none;
+    z-index: 100;
+
+    display: flex;
 
     align-items: center;
     justify-content: center;
 
-    background: rgba(0,0,0,0.92);
-
-    z-index: 5000;
+    background:
+        rgba(0,0,0,0.90);
 }}
 
 
-.overlay.active {{
-    display: flex;
-}}
+/* =====================================================
+   INVENTORY
+   ===================================================== */
 
+.inventory-panel {{
 
-.help-box {{
-    width: min(760px, 86vw);
-
-    max-height: 82vh;
-
-    overflow-y: auto;
-
-    padding: 38px 45px;
-
-    border: 1px solid #555555;
+    width:
+        min(820px, 88vw);
 
     background: #050505;
 
-    color: #ffffff;
+    padding: 34px 38px;
 }}
 
 
-.help-header {{
+.inventory-header {{
+
     display: flex;
 
-    justify-content: space-between;
+    justify-content:
+        space-between;
 
     align-items: center;
 
     padding-bottom: 18px;
 
-    margin-bottom: 25px;
+    margin-bottom: 22px;
 
-    border-bottom: 1px solid #333333;
+    border-bottom:
+        1px solid #333333;
 }}
 
 
-.help-title {{
-    font-size: 22px;
+.inventory-title {{
 
-    letter-spacing: 3px;
-}}
-
-
-.help-close {{
-    color: #777777;
-
-    font-size: 11px;
+    font-size: 24px;
 
     letter-spacing: 1px;
 }}
 
 
-.help-section {{
-    margin-bottom: 25px;
+.inventory-close {{
+
+    font-size: 12px;
+
+    color: #666666;
 }}
 
 
-.help-number {{
-    color: #777777;
+/* =====================================================
+   INVENTORY SLOTS
+   ===================================================== */
+
+.inventory-grid {{
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 10px;
+}}
+
+
+.inventory-slot {{
+
+    position: relative;
+
+    aspect-ratio: 1 / 1;
+
+    background: #090909;
+
+    border:
+        1px solid #292929;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition:
+        background 0.1s linear,
+        color 0.1s linear;
+}}
+
+
+.inventory-slot:hover {{
+
+    background: #ffffff;
+
+    color: #000000;
+}}
+
+
+.inventory-slot.selected {{
+
+    background: #ffffff;
+
+    color: #000000;
+}}
+
+
+.slot-number {{
+
+    position: absolute;
+
+    top: 7px;
+    left: 9px;
+
+    font-size: 10px;
+
+    color: #555555;
+}}
+
+
+.item-name {{
+
+    font-size: 13px;
+
+    text-align: center;
+}}
+
+
+.empty-text {{
+
+    color: #444444;
 
     font-size: 11px;
-
-    letter-spacing: 2px;
-
-    margin-bottom: 7px;
 }}
 
 
-.help-name {{
-    font-size: 15px;
+.item-description {{
 
-    letter-spacing: 2px;
+    min-height: 70px;
 
-    margin-bottom: 7px;
-}}
+    margin-top: 20px;
 
+    padding: 15px;
 
-.help-description {{
-    color: #999999;
+    background: #090909;
+
+    border-top:
+        1px solid #292929;
 
     font-size: 12px;
 
     line-height: 1.8;
 
-    letter-spacing: 0.5px;
-}}
-
-
-.help-warning {{
-    margin-top: 30px;
-
-    padding-top: 20px;
-
-    border-top: 1px solid #333333;
-
-    color: #bbbbbb;
-
-    font-size: 11px;
-
-    line-height: 1.8;
-
-    letter-spacing: 0.5px;
-}}
-
-
-.help-footer {{
-    margin-top: 20px;
-
-    color: #555555;
-
-    font-size: 10px;
-
-    letter-spacing: 2px;
+    color: #888888;
 }}
 
 
 /* =====================================================
-   PAUSE OVERLAY
+   HOW TO PLAY
+   ===================================================== */
+
+.help-panel {{
+
+    width:
+        min(760px, 86vw);
+
+    max-height: 82vh;
+
+    overflow-y: auto;
+
+    background: #050505;
+
+    padding: 36px 40px;
+}}
+
+
+.help-header {{
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    padding-bottom: 18px;
+
+    margin-bottom: 20px;
+
+    border-bottom:
+        1px solid #333333;
+}}
+
+
+.help-title {{
+
+    font-size: 24px;
+}}
+
+
+.help-close {{
+
+    font-size: 12px;
+
+    color: #666666;
+}}
+
+
+.help-row {{
+
+    display: flex;
+
+    gap: 20px;
+
+    padding: 14px 0;
+
+    border-bottom:
+        1px solid #1f1f1f;
+}}
+
+
+.help-number {{
+
+    width: 30px;
+
+    color: #555555;
+}}
+
+
+.help-key {{
+
+    width: 145px;
+
+    font-size: 14px;
+}}
+
+
+.help-description {{
+
+    color: #888888;
+
+    font-size: 12px;
+
+    line-height: 1.7;
+}}
+
+
+.help-important {{
+
+    margin-top: 22px;
+
+    padding: 16px;
+
+    background: #090909;
+
+    border-left:
+        2px solid #ffffff;
+}}
+
+
+.help-important-title {{
+
+    margin-bottom: 8px;
+
+    font-size: 13px;
+}}
+
+
+.help-important-text {{
+
+    color: #888888;
+
+    font-size: 11px;
+
+    line-height: 1.8;
+}}
+
+
+/* =====================================================
+   PAUSE
    ===================================================== */
 
 .pause-overlay {{
-    position: fixed;
+
+    position: absolute;
 
     inset: 0;
 
-    display: none;
+    z-index: 90;
+
+    display: flex;
 
     align-items: center;
     justify-content: center;
 
-    background: rgba(0,0,0,0.92);
-
-    z-index: 4000;
-}}
-
-
-.pause-overlay.active {{
-    display: flex;
-}}
-
-
-.pause-box {{
-    text-align: center;
+    background:
+        rgba(0,0,0,0.90);
 }}
 
 
 .pause-title {{
-    font-size: 24px;
 
-    letter-spacing: 5px;
+    font-size: 28px;
 
-    margin-bottom: 15px;
+    text-align: center;
+
+    margin-bottom: 14px;
 }}
 
 
-.pause-text {{
-    color: #666666;
+.pause-sub {{
 
-    font-size: 11px;
+    color: #777777;
 
-    letter-spacing: 2px;
+    font-size: 13px;
+
+    text-align: center;
 }}
 
 
@@ -642,49 +1048,42 @@ body {{
    TIME OVER
    ===================================================== */
 
-.game-over {{
-    position: fixed;
+.time-over {{
+
+    position: absolute;
 
     inset: 0;
 
-    display: none;
+    z-index: 200;
+
+    display: flex;
 
     align-items: center;
     justify-content: center;
 
     background: #000000;
-
-    z-index: 6000;
 }}
 
 
-.game-over.active {{
-    display: flex;
-}}
+.time-over-title {{
 
-
-.game-over-box {{
-    text-align: center;
-}}
-
-
-.game-over-title {{
     font-size: 30px;
 
-    letter-spacing: 5px;
+    text-align: center;
 
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }}
 
 
-.game-over-line {{
-    color: #666666;
+.time-over-text {{
 
-    font-size: 11px;
+    color: #777777;
 
-    letter-spacing: 2px;
+    font-size: 13px;
 
-    margin: 8px;
+    text-align: center;
+
+    line-height: 1.8;
 }}
 
 
@@ -694,47 +1093,67 @@ body {{
 
 @media (max-width: 700px) {{
 
-    .project-label {{
-        left: 18px;
-        top: 20px;
-        font-size: 10px;
+    .project-title {{
+        top: 18px;
+        left: 16px;
+        font-size: 14px;
+    }}
+
+    .stage-title {{
+        top: 40px;
+        left: 16px;
+        font-size: 11px;
     }}
 
     .timer {{
-        top: 20px;
-        font-size: 16px;
+        top: 18px;
+        font-size: 17px;
     }}
 
     .game-area {{
-        top: 90px;
+        top: 68px;
+        left: 16px;
+        right: 16px;
+        bottom: 58px;
 
-        width: 92vw;
-
-        height: calc(100vh - 170px);
-
-        min-height: 450px;
+        background-size: 30px 30px;
     }}
 
     .status {{
-        left: 18px;
+        left: 16px;
         bottom: 18px;
+        font-size: 11px;
     }}
 
-    .help-box {{
-        padding: 28px 24px;
-
+    .inventory-panel,
+    .help-panel {{
         width: 90vw;
+        padding: 24px 20px;
     }}
 
-    .help-title {{
-        font-size: 18px;
+    .inventory-grid {{
+        gap: 6px;
     }}
 
-    .help-close {{
-        font-size: 9px;
+    .item-name {{
+        font-size: 10px;
+    }}
+
+    .help-row {{
+        gap: 10px;
+    }}
+
+    .help-key {{
+        width: 90px;
+        font-size: 11px;
+    }}
+
+    .help-description {{
+        font-size: 10px;
     }}
 
 }}
+
 
 </style>
 
@@ -744,23 +1163,25 @@ body {{
 <body>
 
 
-<div class="game-screen">
+<div class="game">
 
 
     <!-- =================================================
          TOP
          ================================================= -->
 
-    <div class="project-label">
+    <div class="project-title">
         PROJECT : LOGIC
     </div>
 
 
-    <div
-        id="timer"
-        class="timer"
-    >
-        REMAINING 00:00
+    <div class="stage-title">
+        STAGE 01 // CONTROL ROOM
+    </div>
+
+
+    <div class="timer" id="timer">
+        {timer_text}
     </div>
 
 
@@ -770,25 +1191,482 @@ body {{
 
     <div class="game-area">
 
-        <div class="system-center">
 
-            <div class="system-title">
-                SYSTEM INITIALIZING
+        <div class="room">
+
+
+            <!-- 방 내부 격자 -->
+
+            <div class="room-line-horizontal"></div>
+
+            <div class="room-line-vertical"></div>
+
+
+            <!-- =================================================
+                 OBJECTS
+                 ================================================= -->
+
+
+            <div
+                class="object monitor"
+                id="monitor"
+            >
+
+                MONITOR
+
+                <div class="object-label">
+                    CENTRAL MONITOR
+                </div>
+
             </div>
 
-            <div class="system-line">
-                ECHO SYSTEM // ONLINE
+
+            <div
+                class="object desk"
+                id="desk"
+            >
+
+                DESK
+
+                <div class="object-label">
+                    RESEARCH DESK
+                </div>
+
             </div>
 
-            <div class="system-line">
-                FACILITY STATUS // UNKNOWN
+
+            <div
+                class="object terminal"
+                id="terminal"
+            >
+
+                TERMINAL
+
+                <div class="object-label">
+                    SECURITY TERMINAL
+                </div>
+
             </div>
 
-            <div class="system-line">
-                PRESS H TO VIEW CONTROLS
+
+            <div
+                class="object exit-door"
+                id="exitDoor"
+            >
+
+                EXIT
+
+                <div class="object-label">
+                    SECURITY DOOR
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 PLAYER
+                 ================================================= -->
+
+            <div
+                class="player"
+                id="player"
+            ></div>
+
+
+            <!-- =================================================
+                 INTERACTION MESSAGE
+                 ================================================= -->
+
+            <div
+                class="interaction-message"
+                id="interactionMessage"
+            >
+                PRESS E
+            </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             INVENTORY OVERLAY
+             ================================================= -->
+
+        <div
+            class="overlay"
+            id="inventoryOverlay"
+            style="display:none;"
+        >
+
+            <div class="inventory-panel">
+
+
+                <div class="inventory-header">
+
+                    <div class="inventory-title">
+                        INVENTORY
+                    </div>
+
+                    <div class="inventory-close">
+                        I / ESC TO CLOSE
+                    </div>
+
+                </div>
+
+
+                <div class="inventory-grid">
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="0"
+                    >
+
+                        <div class="slot-number">
+                            01
+                        </div>
+
+                        <div
+                            class="empty-text"
+                            id="slot0"
+                        >
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="1"
+                    >
+
+                        <div class="slot-number">
+                            02
+                        </div>
+
+                        <div
+                            class="empty-text"
+                            id="slot1"
+                        >
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="2"
+                    >
+
+                        <div class="slot-number">
+                            03
+                        </div>
+
+                        <div class="empty-text">
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="3"
+                    >
+
+                        <div class="slot-number">
+                            04
+                        </div>
+
+                        <div class="empty-text">
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="4"
+                    >
+
+                        <div class="slot-number">
+                            05
+                        </div>
+
+                        <div class="empty-text">
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="5"
+                    >
+
+                        <div class="slot-number">
+                            06
+                        </div>
+
+                        <div class="empty-text">
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="6"
+                    >
+
+                        <div class="slot-number">
+                            07
+                        </div>
+
+                        <div class="empty-text">
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="inventory-slot"
+                        data-slot="7"
+                    >
+
+                        <div class="slot-number">
+                            08
+                        </div>
+
+                        <div class="empty-text">
+                            EMPTY
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div
+                    class="item-description"
+                    id="itemDescription"
+                >
+
+                    ITEM DESCRIPTION
+                    <br><br>
+                    아이템을 선택하면 설명이 표시됩니다.
+
+                </div>
+
+
             </div>
 
         </div>
+
+
+        <!-- =================================================
+             HOW TO PLAY
+             ================================================= -->
+
+        <div
+            class="overlay"
+            id="helpOverlay"
+            style="display:none;"
+        >
+
+            <div class="help-panel">
+
+
+                <div class="help-header">
+
+                    <div class="help-title">
+                        HOW TO PLAY
+                    </div>
+
+                    <div class="help-close">
+                        H / ESC TO CLOSE
+                    </div>
+
+                </div>
+
+
+                <div class="help-row">
+
+                    <div class="help-number">
+                        01
+                    </div>
+
+                    <div class="help-key">
+                        MOVEMENT<br>
+                        W A S D
+                    </div>
+
+                    <div class="help-description">
+                        연구시설 내부를 이동합니다.
+                    </div>
+
+                </div>
+
+
+                <div class="help-row">
+
+                    <div class="help-number">
+                        02
+                    </div>
+
+                    <div class="help-key">
+                        INTERACTION<br>
+                        E
+                    </div>
+
+                    <div class="help-description">
+                        가까운 물체를 조사하거나
+                        아이템을 획득합니다.
+                    </div>
+
+                </div>
+
+
+                <div class="help-row">
+
+                    <div class="help-number">
+                        03
+                    </div>
+
+                    <div class="help-key">
+                        INVENTORY<br>
+                        I
+                    </div>
+
+                    <div class="help-description">
+                        획득한 아이템을 확인합니다.
+                    </div>
+
+                </div>
+
+
+                <div class="help-row">
+
+                    <div class="help-number">
+                        04
+                    </div>
+
+                    <div class="help-key">
+                        SYSTEM<br>
+                        SPACE
+                    </div>
+
+                    <div class="help-description">
+                        시스템 메시지를 확인합니다.
+                    </div>
+
+                </div>
+
+
+                <div class="help-row">
+
+                    <div class="help-number">
+                        05
+                    </div>
+
+                    <div class="help-key">
+                        CONTROLS<br>
+                        H
+                    </div>
+
+                    <div class="help-description">
+                        조작 방법을 다시 확인합니다.
+                    </div>
+
+                </div>
+
+
+                <div class="help-important">
+
+                    <div class="help-important-title">
+                        IMPORTANT
+                    </div>
+
+                    <div class="help-important-text">
+
+                        시설 내부의 물체와 기록을
+                        자세히 조사하세요.<br>
+
+                        ECHO가 제공하는 모든 정보가
+                        사실이라고 가정해서는 안 됩니다.<br>
+
+                        서로 모순되는 단서가 발견될 수도 있습니다.
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             PAUSE
+             ================================================= -->
+
+        <div
+            class="pause-overlay"
+            id="pauseOverlay"
+            style="display:none;"
+        >
+
+            <div>
+
+                <div class="pause-title">
+                    GAME PAUSED
+                </div>
+
+                <div class="pause-sub">
+                    PRESS ▶ TO CONTINUE
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TIME OVER
+             ================================================= -->
+
+        <div
+            class="time-over"
+            id="timeOver"
+            style="display:none;"
+        >
+
+            <div>
+
+                <div class="time-over-title">
+                    SYSTEM FAILURE
+                </div>
+
+                <div class="time-over-text">
+
+                    FACILITY RESET INITIATED
+                    <br>
+                    CONNECTION TO ECHO LOST
+
+                </div>
+
+            </div>
+
+        </div>
+
 
     </div>
 
@@ -797,194 +1675,8 @@ body {{
          STATUS
          ================================================= -->
 
-    <div class="status">
-        ECHO SYSTEM // CONNECTION ESTABLISHED
-    </div>
-
-
-    <!-- =================================================
-         HOW TO PLAY
-         ================================================= -->
-
-    <div
-        id="helpOverlay"
-        class="overlay"
-    >
-
-        <div class="help-box">
-
-            <div class="help-header">
-
-                <div class="help-title">
-                    HOW TO PLAY
-                </div>
-
-                <div class="help-close">
-                    ESC TO CLOSE
-                </div>
-
-            </div>
-
-
-            <div class="help-section">
-
-                <div class="help-number">
-                    01
-                </div>
-
-                <div class="help-name">
-                    MOVEMENT // W A S D
-                </div>
-
-                <div class="help-description">
-                    연구시설 내부를 이동합니다.
-                </div>
-
-            </div>
-
-
-            <div class="help-section">
-
-                <div class="help-number">
-                    02
-                </div>
-
-                <div class="help-name">
-                    INTERACTION // E
-                </div>
-
-                <div class="help-description">
-                    주변의 물체를 조사하거나
-                    아이템을 획득합니다.
-                </div>
-
-            </div>
-
-
-            <div class="help-section">
-
-                <div class="help-number">
-                    03
-                </div>
-
-                <div class="help-name">
-                    INVENTORY // I
-                </div>
-
-                <div class="help-description">
-                    획득한 아이템과 기록을 확인합니다.
-                    ESC로 닫을 수 있습니다.
-                </div>
-
-            </div>
-
-
-            <div class="help-section">
-
-                <div class="help-number">
-                    04
-                </div>
-
-                <div class="help-name">
-                    SYSTEM MESSAGE // SPACE
-                </div>
-
-                <div class="help-description">
-                    ECHO의 시스템 메시지와
-                    대화를 확인합니다.
-                </div>
-
-            </div>
-
-
-            <div class="help-section">
-
-                <div class="help-number">
-                    05
-                </div>
-
-                <div class="help-name">
-                    HOW TO PLAY // H
-                </div>
-
-                <div class="help-description">
-                    현재 화면에서 조작 방법을 확인합니다.
-                </div>
-
-            </div>
-
-
-            <div class="help-warning">
-
-                IMPORTANT // 모든 물체와 기록을 주의 깊게 조사하세요.<br>
-                ECHO가 제공하는 모든 정보가 사실이라고 가정하지 마세요.<br>
-                서로 모순되는 단서가 발견될 수 있습니다.
-
-            </div>
-
-
-            <div class="help-footer">
-                ECHO SYSTEM // INFORMATION IS NOT ALWAYS TRUE
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =================================================
-         PAUSE OVERLAY
-         ================================================= -->
-
-    <div
-        id="pauseOverlay"
-        class="pause-overlay"
-    >
-
-        <div class="pause-box">
-
-            <div class="pause-title">
-                GAME PAUSED
-            </div>
-
-            <div class="pause-text">
-                PRESS RESUME TO CONTINUE
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =================================================
-         TIME OVER
-         ================================================= -->
-
-    <div
-        id="gameOver"
-        class="game-over"
-    >
-
-        <div class="game-over-box">
-
-            <div class="game-over-title">
-                TIME OVER
-            </div>
-
-            <div class="game-over-line">
-                FACILITY RESET INITIATED
-            </div>
-
-            <div class="game-over-line">
-                ECHO CONNECTION TERMINATED
-            </div>
-
-            <div class="game-over-line">
-                THE INVESTIGATION HAS ENDED
-            </div>
-
-        </div>
-
+    <div class="status" id="status">
+        ECHO SYSTEM // ONLINE
     </div>
 
 
@@ -994,111 +1686,626 @@ body {{
 <script>
 
 
-// =========================================================
-// INITIAL STATE
-// =========================================================
+/* =====================================================
+   GAME STATE
+   ===================================================== */
 
 let remaining = {remaining};
 
-let paused = {"true" if paused else "false"};
+let paused = {str(paused).lower()};
 
-let finished = {"true" if finished else "false"};
+let finished = {str(finished).lower()};
 
 let helpOpen = false;
 
-
-// =========================================================
-// ELEMENTS
-// =========================================================
-
-const timerElement =
-    document.getElementById("timer");
-
-const helpOverlay =
-    document.getElementById("helpOverlay");
-
-const pauseOverlay =
-    document.getElementById("pauseOverlay");
-
-const gameOver =
-    document.getElementById("gameOver");
+let inventoryOpen = false;
 
 
-// =========================================================
-// TIMER
-// =========================================================
+/* =====================================================
+   PLAYER
+   ===================================================== */
 
-function renderTimer() {{
+const player =
+    document.getElementById("player");
 
-    let minutes =
-        Math.floor(remaining / 60);
+const room =
+    document.querySelector(".room");
 
-    let seconds =
-        remaining % 60;
+let playerX = 50;
 
-    timerElement.textContent =
-        "REMAINING "
-        + String(minutes).padStart(2, "0")
-        + ":"
-        + String(seconds).padStart(2, "0");
+let playerY = 43;
+
+const moveSpeed = 1.2;
+
+
+/* =====================================================
+   KEY STATE
+   ===================================================== */
+
+const keys = {{}};
+
+
+/* =====================================================
+   OBJECTS
+   ===================================================== */
+
+const objects = [
+
+    {{
+        id: "monitor",
+        name: "CENTRAL MONITOR",
+        x: 43,
+        y: 13,
+        width: 14,
+        height: 12
+    }},
+
+    {{
+        id: "desk",
+        name: "RESEARCH DESK",
+        x: 35,
+        y: 62,
+        width: 30,
+        height: 12
+    }},
+
+    {{
+        id: "terminal",
+        name: "SECURITY TERMINAL",
+        x: 18,
+        y: 35,
+        width: 14,
+        height: 17
+    }},
+
+    {{
+        id: "exitDoor",
+        name: "SECURITY DOOR",
+        x: 92,
+        y: 35,
+        width: 8,
+        height: 30
+    }}
+
+];
+
+
+/* =====================================================
+   INVENTORY
+   ===================================================== */
+
+const inventory = [
+
+    {{
+        name: "ACCESS CARD",
+        description:
+            "연구시설 보안구역에 접근할 수 있는 카드입니다."
+    }},
+
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+
+];
+
+
+let selectedSlot = -1;
+
+
+/* =====================================================
+   INVENTORY ELEMENTS
+   ===================================================== */
+
+const inventoryOverlay =
+    document.getElementById(
+        "inventoryOverlay"
+    );
+
+const itemDescription =
+    document.getElementById(
+        "itemDescription"
+    );
+
+const inventorySlots =
+    document.querySelectorAll(
+        ".inventory-slot"
+    );
+
+
+/* =====================================================
+   DRAW INVENTORY
+   ===================================================== */
+
+function renderInventory() {{
+
+    inventory.forEach(
+        function(item, index) {{
+
+            const slot =
+                inventorySlots[index];
+
+            const number =
+                slot.querySelector(
+                    ".slot-number"
+                );
+
+            if (!item) {{
+
+                slot.innerHTML =
+                    `
+                    <div class="slot-number">
+                        ${{String(index + 1).padStart(2, "0")}}
+                    </div>
+
+                    <div class="empty-text">
+                        EMPTY
+                    </div>
+                    `;
+
+            }} else {{
+
+                slot.innerHTML =
+                    `
+                    <div class="slot-number">
+                        ${{String(index + 1).padStart(2, "0")}}
+                    </div>
+
+                    <div class="item-name">
+                        ${{item.name}}
+                    </div>
+                    `;
+            }}
+
+        }}
+    );
 }}
 
 
-function updateTimer() {{
+/* =====================================================
+   SELECT INVENTORY SLOT
+   ===================================================== */
 
-    renderTimer();
+inventorySlots.forEach(
+    function(slot) {{
 
-    if (finished) {{
-        gameOver.classList.add("active");
-        return;
+        slot.addEventListener(
+            "click",
+            function() {{
+
+                const index =
+                    Number(
+                        slot.dataset.slot
+                    );
+
+                selectedSlot = index;
+
+
+                inventorySlots.forEach(
+                    function(other) {{
+
+                        other.classList.remove(
+                            "selected"
+                        );
+
+                    }}
+                );
+
+
+                slot.classList.add(
+                    "selected"
+                );
+
+
+                const item =
+                    inventory[index];
+
+
+                if (item) {{
+
+                    itemDescription.innerHTML =
+                        `
+                        ${{item.name}}
+                        <br><br>
+                        ${{item.description}}
+                        `;
+
+                }} else {{
+
+                    itemDescription.innerHTML =
+                        `
+                        ITEM DESCRIPTION
+                        <br><br>
+                        비어 있는 슬롯입니다.
+                        `;
+
+                }}
+
+            }}
+        );
+
     }}
-
-    if (paused || helpOpen) {{
-        return;
-    }}
-
-    if (remaining <= 0) {{
-
-        remaining = 0;
-
-        renderTimer();
-
-        finished = true;
-
-        gameOver.classList.add("active");
-
-        return;
-    }}
-
-    remaining--;
-}}
-
-
-renderTimer();
-
-
-// =========================================================
-// PAUSE STATE
-// =========================================================
-
-if (paused) {{
-    pauseOverlay.classList.add("active");
-}}
-
-
-// =========================================================
-// TIMER LOOP
-// =========================================================
-
-setInterval(
-    updateTimer,
-    1000
 );
 
 
-// =========================================================
-// KEYBOARD
-// =========================================================
+/* =====================================================
+   INITIAL INVENTORY
+   ===================================================== */
+
+renderInventory();
+
+
+/* =====================================================
+   OPEN INVENTORY
+   ===================================================== */
+
+function openInventory() {{
+
+    if (finished) {{
+        return;
+    }}
+
+    helpOpen = false;
+
+    document.getElementById(
+        "helpOverlay"
+    ).style.display = "none";
+
+
+    inventoryOpen = true;
+
+    inventoryOverlay.style.display =
+        "flex";
+
+}}
+
+
+/* =====================================================
+   CLOSE INVENTORY
+   ===================================================== */
+
+function closeInventory() {{
+
+    inventoryOpen = false;
+
+    inventoryOverlay.style.display =
+        "none";
+
+}}
+
+
+/* =====================================================
+   HELP
+   ===================================================== */
+
+const helpOverlay =
+    document.getElementById(
+        "helpOverlay"
+    );
+
+
+function openHelp() {{
+
+    if (finished) {{
+        return;
+    }}
+
+    inventoryOpen = false;
+
+    inventoryOverlay.style.display =
+        "none";
+
+
+    helpOpen = true;
+
+    helpOverlay.style.display =
+        "flex";
+
+}}
+
+
+function closeHelp() {{
+
+    helpOpen = false;
+
+    helpOverlay.style.display =
+        "none";
+
+}}
+
+
+/* =====================================================
+   MOVEMENT
+   ===================================================== */
+
+function updatePlayer() {{
+
+    if (
+        paused ||
+        helpOpen ||
+        inventoryOpen ||
+        finished
+    ) {{
+        return;
+    }}
+
+
+    if (keys["w"]) {{
+        playerY -= moveSpeed;
+    }}
+
+    if (keys["s"]) {{
+        playerY += moveSpeed;
+    }}
+
+    if (keys["a"]) {{
+        playerX -= moveSpeed;
+    }}
+
+    if (keys["d"]) {{
+        playerX += moveSpeed;
+    }}
+
+
+    /*
+       방 범위 제한
+    */
+
+    playerX =
+        Math.max(
+            2,
+            Math.min(
+                98,
+                playerX
+            )
+        );
+
+    playerY =
+        Math.max(
+            2,
+            Math.min(
+                98,
+                playerY
+            )
+        );
+
+
+    player.style.left =
+        playerX + "%";
+
+    player.style.top =
+        playerY + "%";
+
+
+    checkInteraction();
+
+    requestAnimationFrame(
+        updatePlayer
+    );
+
+}}
+
+
+/* =====================================================
+   INTERACTION
+   ===================================================== */
+
+const interactionMessage =
+    document.getElementById(
+        "interactionMessage"
+    );
+
+
+function distanceToObject(object) {{
+
+    const centerX =
+        object.x +
+        object.width / 2;
+
+    const centerY =
+        object.y +
+        object.height / 2;
+
+
+    const dx =
+        playerX - centerX;
+
+    const dy =
+        playerY - centerY;
+
+
+    return Math.sqrt(
+        dx * dx +
+        dy * dy
+    );
+}}
+
+
+let nearbyObject = null;
+
+
+function checkInteraction() {{
+
+    nearbyObject = null;
+
+
+    let closestDistance =
+        Infinity;
+
+
+    objects.forEach(
+        function(object) {{
+
+            const distance =
+                distanceToObject(
+                    object
+                );
+
+
+            if (
+                distance < 12 &&
+                distance < closestDistance
+            ) {{
+
+                nearbyObject =
+                    object;
+
+                closestDistance =
+                    distance;
+
+            }}
+
+        }}
+    );
+
+
+    if (nearbyObject) {{
+
+        interactionMessage.textContent =
+            "E  //  "
+            + nearbyObject.name;
+
+
+        interactionMessage.classList.add(
+            "visible"
+        );
+
+    }} else {{
+
+        interactionMessage.classList.remove(
+            "visible"
+        );
+
+    }}
+}}
+
+
+/* =====================================================
+   INTERACT
+   ===================================================== */
+
+function interact() {{
+
+    if (
+        paused ||
+        helpOpen ||
+        inventoryOpen ||
+        finished
+    ) {{
+        return;
+    }}
+
+
+    if (!nearbyObject) {{
+        return;
+    }}
+
+
+    /*
+       임시 아이템 획득 로직
+
+       SECURITY TERMINAL을 조사하면
+       ACCESS CARD 획득
+    */
+
+    if (
+        nearbyObject.id ===
+        "terminal"
+    ) {{
+
+        if (!inventory[0]) {{
+
+            inventory[0] = {{
+
+                name:
+                    "ACCESS CARD",
+
+                description:
+                    "연구시설 보안구역에 접근할 수 있는 카드입니다."
+
+            }};
+
+            renderInventory();
+
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "SYSTEM // ACCESS CARD ACQUIRED";
+
+        }} else {{
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "TERMINAL // NO NEW DATA";
+
+        }}
+
+        return;
+    }}
+
+
+    if (
+        nearbyObject.id ===
+        "monitor"
+    ) {{
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "MONITOR // SIGNAL UNSTABLE";
+
+        return;
+    }}
+
+
+    if (
+        nearbyObject.id ===
+        "desk"
+    ) {{
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "DESK // NOTHING UNUSUAL";
+
+        return;
+    }}
+
+
+    if (
+        nearbyObject.id ===
+        "exitDoor"
+    ) {{
+
+        if (inventory[0]) {{
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "SECURITY DOOR // ACCESS GRANTED";
+
+        }} else {{
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "SECURITY DOOR // ACCESS CARD REQUIRED";
+
+        }}
+
+    }}
+
+}}
+
+
+/* =====================================================
+   KEYBOARD
+   ===================================================== */
 
 document.addEventListener(
     "keydown",
@@ -1108,19 +2315,132 @@ document.addEventListener(
             event.key.toLowerCase();
 
 
-        // -----------------------------------------------
-        // H
-        // -----------------------------------------------
+        /* =============================================
+           ESC
+           ============================================= */
 
-        if (key === "h") {{
+        if (
+            key === "escape"
+        ) {{
 
-            if (!finished) {{
+            if (helpOpen) {{
 
-                helpOpen = true;
+                closeHelp();
 
-                helpOverlay.classList.add(
-                    "active"
-                );
+                event.preventDefault();
+
+                return;
+
+            }}
+
+
+            if (inventoryOpen) {{
+
+                closeInventory();
+
+                event.preventDefault();
+
+                return;
+
+            }}
+
+        }}
+
+
+        /* =============================================
+           H
+           ============================================= */
+
+        if (
+            key === "h"
+        ) {{
+
+            if (inventoryOpen) {{
+                return;
+            }}
+
+
+            if (helpOpen) {{
+
+                closeHelp();
+
+            }} else {{
+
+                openHelp();
+
+            }}
+
+
+            event.preventDefault();
+
+            return;
+        }}
+
+
+        /* =============================================
+           I
+           ============================================= */
+
+        if (
+            key === "i"
+        ) {{
+
+            if (helpOpen) {{
+                return;
+            }}
+
+
+            if (inventoryOpen) {{
+
+                closeInventory();
+
+            }} else {{
+
+                openInventory();
+
+            }}
+
+
+            event.preventDefault();
+
+            return;
+        }}
+
+
+        /* =============================================
+           E
+           ============================================= */
+
+        if (
+            key === "e"
+        ) {{
+
+            interact();
+
+            event.preventDefault();
+
+            return;
+        }}
+
+
+        /* =============================================
+           MOVEMENT
+           ============================================= */
+
+        if (
+            key === "w" ||
+            key === "a" ||
+            key === "s" ||
+            key === "d"
+        ) {{
+
+            if (
+                !helpOpen &&
+                !inventoryOpen &&
+                !paused
+            ) {{
+
+                keys[key] = true;
 
             }}
 
@@ -1128,28 +2448,150 @@ document.addEventListener(
 
         }}
 
+    }}
+);
 
-        // -----------------------------------------------
-        // ESC
-        // -----------------------------------------------
 
-        if (event.key === "Escape") {{
+/* =====================================================
+   KEY RELEASE
+   ===================================================== */
 
-            if (helpOpen) {{
+document.addEventListener(
+    "keyup",
+    function(event) {{
 
-                helpOpen = false;
+        const key =
+            event.key.toLowerCase();
 
-                helpOverlay.classList.remove(
-                    "active"
-                );
 
-                event.preventDefault();
+        if (
+            key === "w" ||
+            key === "a" ||
+            key === "s" ||
+            key === "d"
+        ) {{
 
-            }}
+            keys[key] = false;
 
         }}
 
     }}
+);
+
+
+/* =====================================================
+   TIMER
+   ===================================================== */
+
+function formatTime(seconds) {{
+
+    const min =
+        Math.floor(
+            seconds / 60
+        );
+
+    const sec =
+        seconds % 60;
+
+
+    return String(min).padStart(2, "0")
+        + ":"
+        + String(sec).padStart(2, "0");
+
+}}
+
+
+function updateTimer() {{
+
+    /*
+       팝업을 열었을 때는
+       시간이 흐르지 않음
+    */
+
+    if (
+        paused ||
+        helpOpen ||
+        inventoryOpen ||
+        finished
+    ) {{
+        return;
+    }}
+
+
+    if (remaining <= 0) {{
+
+        remaining = 0;
+
+        finished = true;
+
+        document.getElementById(
+            "timeOver"
+        ).style.display = "flex";
+
+        return;
+
+    }}
+
+
+    remaining--;
+
+    document.getElementById(
+        "timer"
+    ).textContent =
+        formatTime(
+            remaining
+        );
+
+
+    if (remaining <= 0) {{
+
+        finished = true;
+
+        document.getElementById(
+            "timeOver"
+        ).style.display = "flex";
+
+    }}
+
+}}
+
+
+setInterval(
+    updateTimer,
+    1000
+);
+
+
+/* =====================================================
+   INITIAL STATE
+   ===================================================== */
+
+if (paused) {{
+
+    document.getElementById(
+        "pauseOverlay"
+    ).style.display =
+        "flex";
+
+}}
+
+
+if (finished) {{
+
+    document.getElementById(
+        "timeOver"
+    ).style.display =
+        "flex";
+
+}}
+
+
+/* =====================================================
+   START GAME LOOP
+   ===================================================== */
+
+requestAnimationFrame(
+    updatePlayer
 );
 
 
@@ -1163,11 +2605,11 @@ document.addEventListener(
 
 
 # =========================================================
-# RENDER GAME
+# RENDER
 # =========================================================
 
 components.html(
-    game_html,
+    html,
     height=1000,
     scrolling=False,
 )
