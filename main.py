@@ -214,7 +214,7 @@ st.markdown(
         margin: 0 !important;
         padding: 0 !important;
 
-        border: 1px solid #777777 !important;
+        border: none !important;
         border-radius: 0 !important;
 
         background: #000000 !important;
@@ -227,10 +227,11 @@ st.markdown(
 
         box-shadow: none !important;
 
+        outline: none !important;
+
         transition:
             background 0.15s ease,
-            color 0.15s ease,
-            border-color 0.15s ease !important;
+            color 0.15s ease !important;
     }}
 
 
@@ -239,12 +240,16 @@ st.markdown(
 
         color: #000000 !important;
 
-        border-color: #ffffff !important;
+        border: none !important;
     }}
 
 
     .st-key-start_button button:focus {{
         box-shadow: none !important;
+
+        outline: none !important;
+
+        border: none !important;
     }}
 
 
@@ -277,7 +282,7 @@ st.markdown(
         margin: 0 !important;
         padding: 0 !important;
 
-        border: 1px solid #777777 !important;
+        border: none !important;
         border-radius: 0 !important;
 
         background: #000000 !important;
@@ -290,10 +295,11 @@ st.markdown(
 
         box-shadow: none !important;
 
+        outline: none !important;
+
         transition:
             background 0.15s ease,
-            color 0.15s ease,
-            border-color 0.15s ease !important;
+            color 0.15s ease !important;
     }}
 
 
@@ -302,12 +308,16 @@ st.markdown(
 
         color: #000000 !important;
 
-        border-color: #ffffff !important;
+        border: none !important;
     }}
 
 
     .st-key-how_to_play_button button:focus {{
         box-shadow: none !important;
+
+        outline: none !important;
+
+        border: none !important;
     }}
 
 
@@ -328,11 +338,17 @@ st.markdown(
 
         background: #000000 !important;
 
+        /* 팝업 바깥쪽 테두리는 유지 */
+
         border: 1px solid #555555 !important;
 
         z-index: 200 !important;
     }}
 
+
+    /* =====================================================
+       CONTINUE / NEW GAME
+       ===================================================== */
 
     .st-key-popup button {{
         width: 100% !important;
@@ -341,7 +357,9 @@ st.markdown(
         margin: 0 0 6px 0 !important;
         padding: 0 !important;
 
-        border: 1px solid #555555 !important;
+        /* 버튼 자체에는 테두리 없음 */
+
+        border: none !important;
         border-radius: 0 !important;
 
         background: #000000 !important;
@@ -354,10 +372,11 @@ st.markdown(
 
         box-shadow: none !important;
 
+        outline: none !important;
+
         transition:
             background 0.15s ease,
-            color 0.15s ease,
-            border-color 0.15s ease !important;
+            color 0.15s ease !important;
     }}
 
 
@@ -371,12 +390,16 @@ st.markdown(
 
         color: #000000 !important;
 
-        border-color: #ffffff !important;
+        border: none !important;
     }}
 
 
     .st-key-popup button:focus {{
         box-shadow: none !important;
+
+        outline: none !important;
+
+        border: none !important;
     }}
 
 
@@ -449,6 +472,7 @@ st.markdown(
 
         .st-key-popup {{
             top: 59vh !important;
+
             left: 50% !important;
 
             transform: translateX(-50%) !important;
