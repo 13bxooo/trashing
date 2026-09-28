@@ -17,6 +17,26 @@ st.set_page_config(
 
 
 # =========================================================
+# SESSION STATE
+# =========================================================
+
+if "start_open" not in st.session_state:
+    st.session_state.start_open = False
+
+if "game_started" not in st.session_state:
+    st.session_state.game_started = False
+
+if "game_paused" not in st.session_state:
+    st.session_state.game_paused = False
+
+if "game_finished" not in st.session_state:
+    st.session_state.game_finished = False
+
+if "remaining_seconds" not in st.session_state:
+    st.session_state.remaining_seconds = 15 * 60
+
+
+# =========================================================
 # FONT
 # =========================================================
 
@@ -35,15 +55,7 @@ for font_path in font_candidates:
 
 
 # =========================================================
-# SESSION STATE
-# =========================================================
-
-if "start_open" not in st.session_state:
-    st.session_state.start_open = False
-
-
-# =========================================================
-# HIDE STREAMLIT UI
+# STREAMLIT UI HIDDEN
 # =========================================================
 
 st.markdown(
@@ -81,7 +93,7 @@ st.markdown(
     }}
 
     .stApp {{
-        background: #000000 !important;
+        background: #000000;
     }}
 
     .block-container {{
@@ -98,54 +110,83 @@ st.markdown(
         position: fixed;
 
         top: 12vh;
-        left: 50%;
+        left: 0;
 
-        transform: translateX(-50%);
+        width: 100%;
 
-        white-space: nowrap;
+        text-align: center;
 
         color: #ffffff;
 
         font-family: "NeoDungGeunMo", monospace;
 
-        font-size: clamp(28px, 4vw, 48px);
+        font-size: 42px;
 
-        letter-spacing: 2px;
+        letter-spacing: 3px;
 
         z-index: 10;
 
-        animation: title-flicker 4s infinite;
+        animation: titleFlicker 4s infinite;
     }}
 
-
-    /* =====================================================
-       SUBTITLE
-       ===================================================== */
 
     .project-subtitle {{
         position: fixed;
 
         top: 22vh;
-        left: 50%;
+        left: 0;
 
-        transform: translateX(-50%);
+        width: 100%;
 
-        white-space: nowrap;
+        text-align: center;
 
-        color: #9c9c9c;
+        color: #555555;
 
         font-family: "NeoDungGeunMo", monospace;
 
-        font-size: clamp(13px, 1.5vw, 18px);
+        font-size: 13px;
 
-        letter-spacing: 1px;
+        letter-spacing: 2px;
 
         z-index: 10;
     }}
 
 
     /* =====================================================
-       START CONTAINER
+       TITLE FLICKER
+       ===================================================== */
+
+    @keyframes titleFlicker {{
+
+        0% {{
+            opacity: 1;
+        }}
+
+        3% {{
+            opacity: 0.75;
+        }}
+
+        4% {{
+            opacity: 1;
+        }}
+
+        8% {{
+            opacity: 0.9;
+        }}
+
+        9% {{
+            opacity: 1;
+        }}
+
+        100% {{
+            opacity: 1;
+        }}
+
+    }}
+
+
+    /* =====================================================
+       START BUTTON
        ===================================================== */
 
     .st-key-start_button {{
@@ -159,16 +200,12 @@ st.markdown(
         width: 170px !important;
         height: 55px !important;
 
-        padding: 0 !important;
         margin: 0 !important;
+        padding: 0 !important;
 
-        z-index: 1000 !important;
+        z-index: 100 !important;
     }}
 
-
-    /* =====================================================
-       START BUTTON
-       ===================================================== */
 
     .st-key-start_button button {{
         width: 170px !important;
@@ -177,10 +214,10 @@ st.markdown(
         margin: 0 !important;
         padding: 0 !important;
 
-        border: none !important;
+        border: 1px solid #777777 !important;
         border-radius: 0 !important;
 
-        background: transparent !important;
+        background: #000000 !important;
 
         color: #ffffff !important;
 
@@ -190,33 +227,29 @@ st.markdown(
 
         box-shadow: none !important;
 
-        cursor: pointer !important;
+        transition:
+            background 0.15s ease,
+            color 0.15s ease,
+            border-color 0.15s ease !important;
     }}
 
 
     .st-key-start_button button:hover {{
         background: #ffffff !important;
+
         color: #000000 !important;
-        border: none !important;
+
+        border-color: #ffffff !important;
     }}
 
 
     .st-key-start_button button:focus {{
-        background: transparent !important;
-        color: #ffffff !important;
-        border: none !important;
         box-shadow: none !important;
     }}
 
 
-    .st-key-start_button button:focus:hover {{
-        background: #ffffff !important;
-        color: #000000 !important;
-    }}
-
-
     /* =====================================================
-       HOW TO PLAY CONTAINER
+       HOW TO PLAY BUTTON
        ===================================================== */
 
     .st-key-how_to_play_button {{
@@ -230,16 +263,12 @@ st.markdown(
         width: 220px !important;
         height: 55px !important;
 
-        padding: 0 !important;
         margin: 0 !important;
+        padding: 0 !important;
 
-        z-index: 1000 !important;
+        z-index: 100 !important;
     }}
 
-
-    /* =====================================================
-       HOW TO PLAY BUTTON
-       ===================================================== */
 
     .st-key-how_to_play_button button {{
         width: 220px !important;
@@ -248,10 +277,10 @@ st.markdown(
         margin: 0 !important;
         padding: 0 !important;
 
-        border: none !important;
+        border: 1px solid #777777 !important;
         border-radius: 0 !important;
 
-        background: transparent !important;
+        background: #000000 !important;
 
         color: #ffffff !important;
 
@@ -261,33 +290,29 @@ st.markdown(
 
         box-shadow: none !important;
 
-        cursor: pointer !important;
+        transition:
+            background 0.15s ease,
+            color 0.15s ease,
+            border-color 0.15s ease !important;
     }}
 
 
     .st-key-how_to_play_button button:hover {{
         background: #ffffff !important;
+
         color: #000000 !important;
-        border: none !important;
+
+        border-color: #ffffff !important;
     }}
 
 
     .st-key-how_to_play_button button:focus {{
-        background: transparent !important;
-        color: #ffffff !important;
-        border: none !important;
         box-shadow: none !important;
     }}
 
 
-    .st-key-how_to_play_button button:focus:hover {{
-        background: #ffffff !important;
-        color: #000000 !important;
-    }}
-
-
     /* =====================================================
-       POPUP
+       START POPUP
        ===================================================== */
 
     .st-key-popup {{
@@ -298,36 +323,28 @@ st.markdown(
 
         width: 190px !important;
 
-        padding: 0 !important;
         margin: 0 !important;
+        padding: 6px !important;
 
-        border: 1px solid #ffffff !important;
+        background: #000000 !important;
 
-        background: #050505 !important;
+        border: 1px solid #555555 !important;
 
-        z-index: 2000 !important;
+        z-index: 200 !important;
     }}
 
 
-    /* =====================================================
-       POPUP BUTTON
-       ===================================================== */
-
     .st-key-popup button {{
-        width: 188px !important;
+        width: 100% !important;
         height: 42px !important;
 
-        margin: 0 !important;
-        padding: 0 18px !important;
+        margin: 0 0 6px 0 !important;
+        padding: 0 !important;
 
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-
-        border: none !important;
+        border: 1px solid #555555 !important;
         border-radius: 0 !important;
 
-        background: #050505 !important;
+        background: #000000 !important;
 
         color: #ffffff !important;
 
@@ -335,56 +352,53 @@ st.markdown(
 
         font-size: 14px !important;
 
-        text-align: left !important;
-
         box-shadow: none !important;
 
-        cursor: pointer !important;
+        transition:
+            background 0.15s ease,
+            color 0.15s ease,
+            border-color 0.15s ease !important;
+    }}
+
+
+    .st-key-popup button:last-child {{
+        margin-bottom: 0 !important;
     }}
 
 
     .st-key-popup button:hover {{
         background: #ffffff !important;
+
         color: #000000 !important;
+
+        border-color: #ffffff !important;
     }}
 
 
     .st-key-popup button:focus {{
-        background: #050505 !important;
-        color: #ffffff !important;
-        border: none !important;
         box-shadow: none !important;
     }}
 
 
-    .st-key-popup button:focus:hover {{
-        background: #ffffff !important;
-        color: #000000 !important;
-    }}
-
-
     /* =====================================================
-       TITLE FLICKER
+       WARNING / INFO
        ===================================================== */
 
-    @keyframes title-flicker {{
+    [data-testid="stAlert"] {{
+        position: fixed !important;
 
-        0%, 18%, 20%, 22%, 63%, 65%, 100% {{
-            opacity: 1;
-        }}
+        top: calc(51vh + 115px) !important;
+        left: 50% !important;
 
-        19% {{
-            opacity: 0.35;
-        }}
+        transform: translateX(-50%) !important;
 
-        21% {{
-            opacity: 0.65;
-        }}
+        width: 390px !important;
 
-        64% {{
-            opacity: 0.15;
-        }}
+        z-index: 300 !important;
 
+        font-family: "NeoDungGeunMo", monospace !important;
+
+        font-size: 13px !important;
     }}
 
 
@@ -392,33 +406,83 @@ st.markdown(
        MOBILE
        ===================================================== */
 
-    @media (max-width: 600px) {{
+    @media (max-width: 700px) {{
+
+        .project-title {{
+            top: 15vh;
+
+            font-size: 30px;
+
+            letter-spacing: 2px;
+        }}
+
+        .project-subtitle {{
+            top: 23vh;
+
+            font-size: 10px;
+        }}
+
 
         .st-key-start_button {{
-            top: 51vh !important;
+            top: 56vh !important;
+
+            width: 160px !important;
         }}
+
+
+        .st-key-start_button button {{
+            width: 160px !important;
+        }}
+
 
         .st-key-how_to_play_button {{
             top: 73vh !important;
+
+            width: 200px !important;
         }}
+
+
+        .st-key-how_to_play_button button {{
+            width: 200px !important;
+        }}
+
 
         .st-key-popup {{
             top: 59vh !important;
             left: 50% !important;
 
             transform: translateX(-50%) !important;
+
+            width: 180px !important;
+        }}
+
+
+        [data-testid="stAlert"] {{
+            width: 85vw !important;
+
+            top: 70vh !important;
         }}
 
     }}
 
     </style>
+    """,
+    unsafe_allow_html=True,
+)
 
+
+# =========================================================
+# TITLE
+# =========================================================
+
+st.markdown(
+    """
     <div class="project-title">
         PROJECT : LOGIC
     </div>
 
     <div class="project-subtitle">
-        INFORMATION IS NOT ALWAYS TRUE
+        FACILITY CONTROL SYSTEM
     </div>
     """,
     unsafe_allow_html=True,
@@ -446,6 +510,24 @@ if start_clicked:
 
 
 # =========================================================
+# HOW TO PLAY BUTTON
+# =========================================================
+
+with st.container(key="how_to_play_button"):
+
+    how_to_play_clicked = st.button(
+        "HOW TO PLAY",
+        key="how_to_play",
+        use_container_width=True,
+    )
+
+
+if how_to_play_clicked:
+
+    st.switch_page("pages/1_How_To_Play.py")
+
+
+# =========================================================
 # START POPUP
 # =========================================================
 
@@ -466,61 +548,45 @@ if st.session_state.start_open:
         )
 
 
-# =====================================================
-# CONTINUE
-# =====================================================
+    # =====================================================
+    # CONTINUE
+    # =====================================================
 
-if continue_clicked:
+    if continue_clicked:
 
-    st.warning(
-        "이전 플레이 기록이 존재하지 않습니다. 새 게임을 시작해주세요."
-    )
-
-
-# =====================================================
-# NEW GAME
-# =====================================================
-
-if new_game_clicked:
-
-    # 새로운 게임 상태 초기화
-
-    st.session_state.game_started = True
-    st.session_state.game_paused = False
-    st.session_state.game_finished = False
-
-    # 15분 = 900초
-
-    st.session_state.remaining_seconds = 15 * 60
-
-    # 시작 팝업 닫기
-
-    st.session_state.start_open = False
-
-    # 게임 화면으로 이동
-
-    st.switch_page("pages/2_Game.py")
+        st.warning(
+            "이전 플레이 기록이 존재하지 않습니다. 새 게임을 시작해주세요."
+        )
 
 
-# =========================================================
-# HOW TO PLAY
-# =========================================================
+    # =====================================================
+    # NEW GAME
+    # =====================================================
 
-with st.container(key="how_to_play_button"):
+    if new_game_clicked:
 
-    how_to_play_clicked = st.button(
-        "HOW TO PLAY",
-        key="how_to_play",
-        use_container_width=True,
-    )
+        # -------------------------------------------------
+        # 새로운 게임 상태 초기화
+        # -------------------------------------------------
 
+        st.session_state.game_started = True
 
-# =========================================================
-# PAGE NAVIGATION
-# =========================================================
+        st.session_state.game_paused = False
 
-if how_to_play_clicked:
+        st.session_state.game_finished = False
 
-    st.switch_page(
-        "pages/1_How_To_Play.py"
-    )
+        # 15분 = 900초
+
+        st.session_state.remaining_seconds = 15 * 60
+
+        # -------------------------------------------------
+        # START POPUP 닫기
+        # -------------------------------------------------
+
+        st.session_state.start_open = False
+
+        # -------------------------------------------------
+        # GAME 화면으로 이동
+        # -------------------------------------------------
+
+        st.switch_page("pages/2_Game.py")
