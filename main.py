@@ -29,24 +29,38 @@ if "continue_message" not in st.session_state:
 # =========================================================
 
 def toggle_start_menu():
-    st.session_state.show_start_menu = not st.session_state.show_start_menu
+    """START 메뉴 열기 / 닫기"""
+    st.session_state.show_start_menu = (
+        not st.session_state.show_start_menu
+    )
 
 
 def new_game():
+    """새 게임 시작"""
     st.session_state.show_start_menu = False
+    st.session_state.continue_message = ""
+
     st.switch_page("pages/1_Game.py")
 
 
 def continue_game():
+    """이전 게임 이어하기"""
+
     st.session_state.show_start_menu = False
 
-    # 아직 저장 시스템을 만들지 않았으므로
-    # 현재는 저장 데이터가 없는 상태
+    # -----------------------------------------
+    # 현재는 저장 시스템이 아직 없으므로 False
+    # 나중에 실제 save.json 시스템으로 교체
+    # -----------------------------------------
+
     save_exists = False
 
     if save_exists:
+
         st.switch_page("pages/1_Game.py")
+
     else:
+
         st.session_state.continue_message = (
             "이전 플레이 기록이 존재하지 않습니다. "
             "새 게임을 시작해주세요."
@@ -54,20 +68,21 @@ def continue_game():
 
 
 def how_to_play():
+    """게임 방법 화면으로 이동"""
     st.switch_page("pages/2_How_to_Play.py")
 
 
 # =========================================================
-# CSS
+# GLOBAL CSS
 # =========================================================
 
 st.markdown(
     """
     <style>
 
-    /* =========================================
+    /* =====================================================
        STREAMLIT 기본 UI 제거
-    ========================================= */
+       ===================================================== */
 
     #MainMenu {
         visibility: hidden;
@@ -94,42 +109,56 @@ st.markdown(
     }
 
 
-    /* =========================================
-       전체 화면
-    ========================================= */
+    /* =====================================================
+       전체 배경
+       ===================================================== */
+
+    html,
+    body,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stApp"] {
+
+        background: #000000 !important;
+    }
 
     .stApp {
-        background: #000000 !important;
-    }
 
-    [data-testid="stAppViewContainer"] {
         background: #000000 !important;
-    }
 
-    [data-testid="stMain"] {
-        background: #000000 !important;
+        color: #ffffff !important;
+
+        overflow: hidden !important;
     }
 
     .block-container {
+
         padding: 0 !important;
+
         margin: 0 !important;
+
         max-width: none !important;
+
+        width: 100% !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        PROJECT : LOGIC
-    ========================================= */
+       ===================================================== */
 
     .project-title {
+
         position: fixed;
 
         top: 12vh;
+
         left: 50%;
 
         transform: translateX(-50%);
 
-        color: white;
+        z-index: 50;
+
+        color: #ffffff;
 
         font-family:
             "Courier New",
@@ -144,27 +173,34 @@ st.markdown(
 
         white-space: nowrap;
 
-        z-index: 10;
+        text-align: center;
 
-        animation: project-flicker 4s infinite;
+        animation:
+            project-flicker
+            4.2s
+            infinite;
 
         text-shadow:
-            0 0 4px rgba(255,255,255,0.8),
+            0 0 4px rgba(255,255,255,0.85),
             0 0 12px rgba(255,255,255,0.25);
     }
 
 
-    /* =========================================
+    /* =====================================================
        SUBTITLE
-    ========================================= */
+       ===================================================== */
 
     .project-subtitle {
+
         position: fixed;
 
         top: 22vh;
+
         left: 50%;
 
         transform: translateX(-50%);
+
+        z-index: 50;
 
         color: #9a9a9a;
 
@@ -179,43 +215,77 @@ st.markdown(
 
         white-space: nowrap;
 
-        z-index: 10;
+        text-align: center;
     }
 
 
-    /* =========================================
-       모든 버튼 공통
-    ========================================= */
+    /* =====================================================
+       START CONTAINER
+       ===================================================== */
 
-    div[data-testid="stButton"] {
-        position: fixed;
+    .st-key-start-area {
 
-        z-index: 20;
+        position: fixed !important;
+
+        top: 51vh !important;
+
+        left: 50% !important;
+
+        transform: translateX(-50%) !important;
+
+        width: 170px !important;
+
+        height: 55px !important;
+
+        padding: 0 !important;
+
+        margin: 0 !important;
+
+        z-index: 100 !important;
     }
 
-    div[data-testid="stButton"] > button {
 
-        background: transparent !important;
+    /* =====================================================
+       START BUTTON
+       ===================================================== */
+
+    .st-key-start-area button {
+
+        width: 170px !important;
+
+        height: 55px !important;
+
+        padding: 0 !important;
+
+        margin: 0 !important;
 
         border: none !important;
+
+        border-radius: 0 !important;
+
+        background: transparent !important;
 
         color: #ffffff !important;
 
         box-shadow: none !important;
-
-        border-radius: 0 !important;
 
         font-family:
             "Courier New",
             Consolas,
             monospace !important;
 
-        cursor: pointer;
+        font-size: 22px !important;
+
+        font-weight: normal !important;
+
+        letter-spacing: 0.12em !important;
+
+        cursor: pointer !important;
 
         transition: none !important;
     }
 
-    div[data-testid="stButton"] > button:hover {
+    .st-key-start-area button:hover {
 
         background: transparent !important;
 
@@ -224,177 +294,207 @@ st.markdown(
         border: none !important;
 
         box-shadow:
-            0 0 5px rgba(255,255,255,0.3) !important;
+            0 0 6px rgba(255,255,255,0.18) !important;
     }
 
 
-    /* =========================================
-       START
-    ========================================= */
+    /* =====================================================
+       START POPUP
+       ===================================================== */
 
-    div[data-testid="stButton"]:has(button[key="start_button"]) {
+    .st-key-start-menu {
 
-        top: 51vh;
+        position: fixed !important;
 
-        left: 50%;
+        top: 48.5vh !important;
 
-        transform: translateX(-50%);
+        left: calc(50% + 105px) !important;
 
-        width: 170px;
+        width: 190px !important;
 
-        height: 55px;
-    }
+        padding: 7px 0 !important;
 
-    div[data-testid="stButton"]:has(button[key="start_button"]) button {
+        margin: 0 !important;
 
-        font-size: 22px !important;
+        background: #080808 !important;
 
-        letter-spacing: 0.12em;
+        border: 1px solid #555555 !important;
 
-        height: 55px;
+        box-sizing: border-box !important;
 
-        width: 170px;
-    }
+        z-index: 200 !important;
 
-
-    /* =========================================
-       HOW TO PLAY
-    ========================================= */
-
-    div[data-testid="stButton"]:has(button[key="how_button"]) {
-
-        top: 65vh;
-
-        left: 50%;
-
-        transform: translateX(-50%);
-
-        width: 220px;
-
-        height: 55px;
-    }
-
-    div[data-testid="stButton"]:has(button[key="how_button"]) button {
-
-        font-size: 17px !important;
-
-        letter-spacing: 0.12em;
-
-        height: 55px;
-
-        width: 220px;
+        animation:
+            popup-appear
+            0.12s
+            steps(2, end);
     }
 
 
-    /* =========================================
-       START SUB MENU
-    ========================================= */
+    /* =====================================================
+       POPUP 내부 버튼
+       ===================================================== */
 
-    div[data-testid="stButton"]:has(button[key="continue_button"]) {
+    .st-key-start-menu button {
 
-        top: 49vh;
+        display: block !important;
 
-        left: calc(50% + 120px);
+        width: 188px !important;
 
-        width: 175px;
+        height: 42px !important;
 
-        height: 45px;
+        padding: 0 18px !important;
 
-        background: #080808;
-    }
+        margin: 0 !important;
 
-    div[data-testid="stButton"]:has(button[key="new_game_button"]) {
+        border: none !important;
 
-        top: 56vh;
+        border-radius: 0 !important;
 
-        left: calc(50% + 120px);
+        background: transparent !important;
 
-        width: 175px;
+        color: #ffffff !important;
 
-        height: 45px;
+        box-shadow: none !important;
 
-        background: #080808;
-    }
-
-
-    /* 메뉴 테두리 */
-
-    div[data-testid="stButton"]:has(button[key="continue_button"])::before {
-
-        content: "";
-
-        position: absolute;
-
-        inset: -1px;
-
-        border: 1px solid #555555;
-
-        pointer-events: none;
-    }
-
-    div[data-testid="stButton"]:has(button[key="new_game_button"])::after {
-
-        content: "";
-
-        position: absolute;
-
-        left: -1px;
-        right: -1px;
-        bottom: -1px;
-
-        height: 1px;
-
-        background: #555555;
-
-        pointer-events: none;
-    }
-
-
-    /* =========================================
-       CONTINUE / NEW GAME
-       마우스 올렸을 때 깜빡임
-    ========================================= */
-
-    div[data-testid="stButton"]:has(button[key="continue_button"]) button,
-    div[data-testid="stButton"]:has(button[key="new_game_button"]) button {
+        font-family:
+            "Courier New",
+            Consolas,
+            monospace !important;
 
         font-size: 14px !important;
 
-        letter-spacing: 0.1em;
+        font-weight: normal !important;
 
-        height: 45px;
+        letter-spacing: 0.1em !important;
 
-        width: 175px;
+        text-align: left !important;
 
-        text-align: left;
+        cursor: pointer !important;
 
-        padding-left: 18px !important;
+        transition: none !important;
     }
 
 
-    div[data-testid="stButton"]:has(button[key="continue_button"]) button:hover,
-    div[data-testid="stButton"]:has(button[key="new_game_button"]) button:hover {
+    /* =====================================================
+       POPUP 버튼 사이 구분
+       ===================================================== */
+
+    .st-key-start-menu button + button {
+
+        border-top: 1px solid #222222 !important;
+    }
+
+
+    /* =====================================================
+       CONTINUE / NEW GAME hover
+       형광등 불량처럼 깜빡임
+       ===================================================== */
+
+    .st-key-start-menu button:hover {
 
         background: #ffffff !important;
 
         color: #000000 !important;
 
+        box-shadow: none !important;
+
         animation:
-            menu-flicker 0.55s steps(1, end) infinite;
+            menu-flicker
+            0.55s
+            steps(1, end)
+            infinite;
     }
 
 
-    /* =========================================
+    /* =====================================================
+       HOW TO PLAY CONTAINER
+       ===================================================== */
+
+    .st-key-how-area {
+
+        position: fixed !important;
+
+        top: 65vh !important;
+
+        left: 50% !important;
+
+        transform: translateX(-50%) !important;
+
+        width: 220px !important;
+
+        height: 55px !important;
+
+        padding: 0 !important;
+
+        margin: 0 !important;
+
+        z-index: 100 !important;
+    }
+
+
+    /* =====================================================
+       HOW TO PLAY BUTTON
+       ===================================================== */
+
+    .st-key-how-area button {
+
+        width: 220px !important;
+
+        height: 55px !important;
+
+        padding: 0 !important;
+
+        margin: 0 !important;
+
+        border: none !important;
+
+        border-radius: 0 !important;
+
+        background: transparent !important;
+
+        color: #ffffff !important;
+
+        box-shadow: none !important;
+
+        font-family:
+            "Courier New",
+            Consolas,
+            monospace !important;
+
+        font-size: 17px !important;
+
+        font-weight: normal !important;
+
+        letter-spacing: 0.12em !important;
+
+        cursor: pointer !important;
+
+        transition: none !important;
+    }
+
+    .st-key-how-area button:hover {
+
+        background: transparent !important;
+
+        color: #ffffff !important;
+
+        box-shadow:
+            0 0 6px rgba(255,255,255,0.18) !important;
+    }
+
+
+    /* =====================================================
        CONTINUE 오류 메시지
-    ========================================= */
+       ===================================================== */
 
     .continue-message {
 
         position: fixed;
 
-        top: 76vh;
-
         left: 50%;
+
+        top: 76vh;
 
         transform: translateX(-50%);
 
@@ -404,13 +504,13 @@ st.markdown(
 
         padding: 12px 18px;
 
+        box-sizing: border-box;
+
         background: #080808;
 
         border: 1px solid #444444;
 
         color: #d0d0d0;
-
-        text-align: center;
 
         font-family:
             "Courier New",
@@ -421,17 +521,25 @@ st.markdown(
 
         letter-spacing: 0.04em;
 
-        z-index: 30;
+        text-align: center;
+
+        z-index: 300;
+
+        animation:
+            message-appear
+            0.2s
+            steps(2, end);
     }
 
 
-    /* =========================================
-       PROJECT LOGIC 깜빡임
-    ========================================= */
+    /* =====================================================
+       PROJECT : LOGIC 깜빡임
+       ===================================================== */
 
     @keyframes project-flicker {
 
-        0%, 4% {
+        0%,
+        4% {
             opacity: 1;
         }
 
@@ -497,9 +605,9 @@ st.markdown(
     }
 
 
-    /* =========================================
-       메뉴 깜빡임
-    ========================================= */
+    /* =====================================================
+       메뉴 hover 깜빡임
+       ===================================================== */
 
     @keyframes menu-flicker {
 
@@ -507,35 +615,35 @@ st.markdown(
             opacity: 1;
         }
 
-        20% {
+        18% {
             opacity: 0.15;
         }
 
-        21% {
+        19% {
             opacity: 1;
         }
 
-        42% {
+        38% {
             opacity: 0.35;
         }
 
-        43% {
+        39% {
             opacity: 1;
         }
 
-        64% {
+        60% {
             opacity: 0.1;
         }
 
-        65% {
+        61% {
             opacity: 1;
         }
 
-        82% {
-            opacity: 0.4;
+        80% {
+            opacity: 0.45;
         }
 
-        83% {
+        81% {
             opacity: 1;
         }
 
@@ -545,36 +653,71 @@ st.markdown(
     }
 
 
-    /* =========================================
-       모바일
-    ========================================= */
+    /* =====================================================
+       팝업 등장
+       ===================================================== */
+
+    @keyframes popup-appear {
+
+        0% {
+            opacity: 0;
+
+            transform:
+                translateX(-8px);
+        }
+
+        100% {
+            opacity: 1;
+
+            transform:
+                translateX(0);
+        }
+    }
+
+
+    /* =====================================================
+       메시지 등장
+       ===================================================== */
+
+    @keyframes message-appear {
+
+        0% {
+            opacity: 0;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+
+    /* =====================================================
+       모바일 대응
+       ===================================================== */
 
     @media (max-width: 700px) {
 
         .project-title {
+
             top: 12vh;
+
             font-size: 30px;
         }
 
         .project-subtitle {
+
             top: 21vh;
+
             font-size: 9px;
         }
 
-        div[data-testid="stButton"]:has(button[key="continue_button"]),
-        div[data-testid="stButton"]:has(button[key="new_game_button"]) {
+        .st-key-start-menu {
 
-            left: 50%;
+            left: 50% !important;
 
-            transform: translateX(-50%);
-        }
+            top: 59vh !important;
 
-        div[data-testid="stButton"]:has(button[key="continue_button"]) {
-            top: 59vh;
-        }
-
-        div[data-testid="stButton"]:has(button[key="new_game_button"]) {
-            top: 66vh;
+            transform: translateX(-50%) !important;
         }
 
     }
@@ -604,44 +747,50 @@ st.markdown(
 
 
 # =========================================================
-# START
+# START BUTTON
 # =========================================================
 
-st.button(
-    "START",
-    key="start_button",
-    on_click=toggle_start_menu
-)
+with st.container(key="start_area"):
+
+    st.button(
+        "START",
+        key="start_button",
+        on_click=toggle_start_menu
+    )
 
 
 # =========================================================
-# START SUB MENU
+# START POPUP
 # =========================================================
 
 if st.session_state.show_start_menu:
 
-    st.button(
-        "CONTINUE",
-        key="continue_button",
-        on_click=continue_game
-    )
+    with st.container(key="start_menu"):
 
-    st.button(
-        "NEW GAME",
-        key="new_game_button",
-        on_click=new_game
-    )
+        st.button(
+            "CONTINUE",
+            key="continue_button",
+            on_click=continue_game
+        )
+
+        st.button(
+            "NEW GAME",
+            key="new_game_button",
+            on_click=new_game
+        )
 
 
 # =========================================================
 # HOW TO PLAY
 # =========================================================
 
-st.button(
-    "HOW TO PLAY",
-    key="how_button",
-    on_click=how_to_play
-)
+with st.container(key="how_area"):
+
+    st.button(
+        "HOW TO PLAY",
+        key="how_button",
+        on_click=how_to_play
+    )
 
 
 # =========================================================
