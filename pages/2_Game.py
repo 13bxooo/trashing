@@ -2014,6 +2014,11 @@ input {
     transition: opacity 1.5s linear;
 }
 .fade-screen.active { opacity: 1; }
+.stage-transition-title { position:absolute; inset:0; z-index:310; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000; color:#eee; opacity:0; pointer-events:none; font-family:inherit; text-align:center; letter-spacing:3px; }
+.stage-transition-title.visible { opacity:1; }
+.stage-transition-title .stage-name { font-size:clamp(22px,4vw,42px); animation: stageBlink .65s steps(2,end) infinite; }
+.stage-transition-title .room-name { margin-top:18px; font-size:clamp(12px,2vw,18px); color:#999; animation: stageBlink 1.1s steps(2,end) infinite; }
+@keyframes stageBlink { 50% { opacity:.15; } }
 
 .reader-slot {
 
@@ -3219,6 +3224,9 @@ input {
 </div>
 
 <div class="fade-screen" id="fadeScreen" aria-hidden="true"></div>
+<div id="restartConfirm" style="display:none;position:absolute;inset:0;z-index:500;background:#000e;align-items:center;justify-content:center"><div style="width:min(420px,88%);padding:28px;background:#050505;border:1px solid #666;text-align:center"><div style="font-size:18px;margin-bottom:24px">다시 시작하겠습니까?</div><button id="restartYes" class="code-button" type="button" style="width:120px;margin:6px">YES</button><button id="restartNo" class="code-button" type="button" style="width:120px;margin:6px;background:#000;color:#fff;border:1px solid #555">NO</button></div></div>
+<div id="roomIntro" style="position:absolute;inset:0;z-index:450;background:#000;color:#ddd;display:flex;flex-direction:column;align-items:center;justify-content:center;letter-spacing:3px;text-align:center"><div style="font-size:clamp(22px,4vw,42px);animation:stageBlink .45s steps(2,end) infinite">STAGE 00</div><div style="font-size:clamp(12px,2vw,18px);color:#999;margin-top:18px;animation:stageBlink .7s steps(2,end) infinite">: TUTORIAL</div></div>
+<div class="stage-transition-title" id="stageTransitionTitle" aria-hidden="true"><div class="stage-name">STAGE 01</div><div class="room-name">:( ARCHIVE WING )</div></div>
 
 <script>
 
@@ -5357,7 +5365,9 @@ function finishCardDrag(
             echoNext.classList.add("ready");
             setTimeout(function () {
                 if (fadeScreen) fadeScreen.classList.add("active");
-                setTimeout(function () { parentAction("stage01"); }, 1550);
+                var transitionTitle = document.getElementById("stageTransitionTitle");
+                if (transitionTitle) transitionTitle.classList.add("visible");
+                setTimeout(function () { parentAction("stage01"); }, 3000);
             }, 1000);
         }, 700);
 
@@ -5404,10 +5414,6 @@ dragCard.addEventListener(
 function parentAction(
     action
 ) {
-
-    if (action === "restart") {
-        try { localStorage.removeItem("project_logic_tutorial_save_v2"); } catch (e) {}
-    }
 
     let target =
         null;
@@ -5467,20 +5473,12 @@ function parentAction(
 }
 
 
-document
-    .getElementById(
-        "restartButton"
-    )
-    .addEventListener(
-        "click",
-        function () {
-
-            parentAction(
-                "restart"
-            );
-
-        }
-    );
+document.getElementById("restartButton").addEventListener("click", function () { document.getElementById("restartConfirm").style.display = "flex"; });
+document.getElementById("restartNo").addEventListener("click", function () { document.getElementById("restartConfirm").style.display = "none"; });
+document.getElementById("restartYes").addEventListener("click", function () {
+    try { localStorage.removeItem("project_logic_tutorial_save_v2"); } catch (e) {}
+    parentAction("restart");
+});
 
 
 document
@@ -5557,7 +5555,7 @@ const TUTORIAL_SAVE_KEY = "project_logic_tutorial_save_v2";
 function saveTutorialProgress() {
     try {
         localStorage.setItem(TUTORIAL_SAVE_KEY, JSON.stringify({
-            tutorialStep, playerX, playerY, ACCESS_CODE, inventory, keyCollected, cardConsumed
+            tutorialStep, playerX, playerY, ACCESS_CODE, inventory, keyCollected, cardConsumed, echoIndex, echoText: echoMessage.textContent, typingDone
         }));
     } catch (e) {}
 }
@@ -5575,10 +5573,17 @@ function restoreTutorialProgress() {
         }
         if (typeof saved.keyCollected === "boolean") keyCollected = saved.keyCollected;
         if (typeof saved.cardConsumed === "boolean") cardConsumed = saved.cardConsumed;
+        if (Number.isFinite(saved.echoIndex)) echoIndex = saved.echoIndex;
+        if (typeof saved.echoText === "string" && saved.echoText) echoMessage.textContent = saved.echoText;
+        if (typeof saved.typingDone === "boolean") typingDone = saved.typingDone;
+        if (typingDone) echoNext.classList.add("ready");
         renderInventory();
     } catch (e) {}
 }
 restoreTutorialProgress();
+const roomIntro = document.getElementById("roomIntro");
+try { if (sessionStorage.getItem("project_logic_stage00_intro_seen")) roomIntro.style.display = "none"; else { sessionStorage.setItem("project_logic_stage00_intro_seen", "1"); setTimeout(() => { roomIntro.style.opacity = "0"; roomIntro.style.transition = "opacity .35s"; setTimeout(() => roomIntro.remove(), 380); }, 3000); } } catch(e) { setTimeout(() => roomIntro.remove(), 3000); }
+
 setInterval(saveTutorialProgress, 500);
 window.addEventListener("beforeunload", saveTutorialProgress);
 
