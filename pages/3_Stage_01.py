@@ -70,7 +70,11 @@ __TUTORIAL_CSS__
 .stage01-window-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
 .stage01-window-actions button,.stage01-window-actions a{min-width:150px;text-align:center;justify-content:center}
 .pause-actions{visibility:visible;pointer-events:auto}
-.pause-actions button,.pause-actions a{min-width:150px;text-align:center;justify-content:center;text-decoration:none}
+.pause-actions button,.pause-actions a{min-width:130px;text-align:center;justify-content:center;text-decoration:none}
+.save-gear{position:fixed;right:18px;bottom:18px;z-index:99999;display:none;align-items:center;gap:8px;padding:8px 11px;background:#050505;border:1px solid #666;color:#ddd;font-size:11px;letter-spacing:1px}
+.save-gear.show{display:flex}
+.save-gear .gear{display:inline-block;font-size:20px;animation:gearSpin .8s linear infinite}
+@keyframes gearSpin{to{transform:rotate(360deg)}}
 .computer-overlay.show{display:flex}
 @media(max-width:700px){
  .stage01-timer{top:49px;right:56px;font-size:10px}
@@ -197,8 +201,9 @@ __TUTORIAL_CSS__
   </div>
 
   <div class="pause-overlay" id="pauseOverlay">
-    <div><div class="pause-title">GAME PAUSED</div><div class="pause-sub">PRESS Ⅱ TO CONTINUE</div><div class="pause-actions"><button class="code-button" id="resumeBtn" type="button">RESUME</button><button class="code-button" id="restartBtn" type="button">RESTART</button><a class="code-button" href="?action=title" target="_top" rel="noopener" style="display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-decoration:none">TITLE</a></div></div>
+    <div><div class="pause-title">GAME PAUSED</div><div class="pause-sub">PRESS Ⅱ TO CONTINUE</div><div class="pause-actions"><button class="code-button" id="resumeBtn" type="button">RESUME</button><button class="code-button" id="restartBtn" type="button">RESTART</button><button class="code-button" id="saveTitleBtn" type="button">SAVE &amp; TITLE</button><a class="code-button" id="titleBtn" href="?action=title" target="_top" rel="noopener" style="display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-decoration:none">TITLE</a></div></div>
   </div>
+<div class="save-gear" id="saveGear" aria-live="polite"><span class="gear">⚙</span><span id="saveGearText">SAVING...</span></div>
 </div>
 
 <script>
@@ -211,6 +216,11 @@ const echoMessage=$('echoMessage'), echoNext=$('echoNext'), status=$('status'), 
 let playerX=50, playerY=43, seconds=720, paused=false, finished=false, codeSolved=false, nearby=null;
 let helpOpen=false, inventoryOpen=false, dataOpen=false, codeOpen=false, typingDone=false, typingTimer=null, echoIndex=0, pinBuffer='';
 let timerLast=Date.now();
+const STAGE_SAVE_KEY='project_logic_stage01_save_v1';
+if(__RESET_STAGE_SAVE__){try{localStorage.removeItem(STAGE_SAVE_KEY)}catch(e){}}
+let audioContext=null;
+function playTone(freq=880,duration=0.07,volume=0.045){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext)audioContext=new AC();if(audioContext.state==='suspended')audioContext.resume();const osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type='square';osc.frequency.value=freq;gain.gain.setValueAtTime(0.0001,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(volume,audioContext.currentTime+0.008);gain.gain.exponentialRampToValueAtTime(0.0001,audioContext.currentTime+duration);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+duration+0.01)}catch(e){}}
+function playDoorOpen(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext)audioContext=new AC();if(audioContext.state==='suspended')audioContext.resume();const now=audioContext.currentTime;[440,660,880].forEach((frequency,index)=>{const osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type='square';osc.frequency.value=frequency;gain.gain.setValueAtTime(0.0001,now+index*.12);gain.gain.exponentialRampToValueAtTime(.08,now+index*.12+.02);gain.gain.exponentialRampToValueAtTime(.0001,now+index*.12+.18);osc.connect(gain);gain.connect(audioContext.destination);osc.start(now+index*.12);osc.stop(now+index*.12+.2)});}catch(e){}}
 const keys={w:false,a:false,s:false,d:false};
 const inventory=Array(8).fill(null);
 const items=[];
@@ -249,7 +259,7 @@ function isOverlayOpen(){return helpOpen||inventoryOpen||dataOpen||codeOpen||fin
 function showRecord(title,body){helpOpen=false;inventoryOpen=false;codeOpen=false;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';$('closeRecord').style.display='inline-block';$('windowTitle').textContent=title;$('windowSub').textContent='ARCHIVE ACCESS // RECOVERED DATA';$('windowBody').innerHTML='<div style="margin:10px 0;color:#aaa;line-height:1.9;white-space:pre-line">'+body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';dataOpen=true;dataOverlay.style.display='flex';clearKeys()}
 function closeRecord(){if(finished)return;dataOpen=false;dataOverlay.style.display='none';root.focus()}
 function renderPin(){const slots=$('pinSlots').querySelectorAll('.pin-slot');slots.forEach((el,i)=>{el.textContent=pinBuffer[i]||'—';el.classList.toggle('filled',Boolean(pinBuffer[i]))})}
-function appendPinDigit(digit){if(!codeOpen||pinBuffer.length>=4)return;pinBuffer+=digit;renderPin();$('codeError').textContent='';$('pinStatus').textContent='AUTHENTICATION // '+pinBuffer.length+'/4'}
+function appendPinDigit(digit){if(!codeOpen||pinBuffer.length>=4)return;pinBuffer+=digit;playTone(880,.055,.035);renderPin();$('codeError').textContent='';$('pinStatus').textContent='AUTHENTICATION // '+pinBuffer.length+'/4'}
 function clearPin(){pinBuffer='';renderPin();$('codeError').textContent='';$('pinStatus').textContent='ACCESS LOCKED // ENTER CODE'}
 function backspacePin(){if(!codeOpen)return;pinBuffer=pinBuffer.slice(0,-1);renderPin();$('pinStatus').textContent='AUTHENTICATION // '+pinBuffer.length+'/4'}
 function showCode(){if(!['A','B','C','ARCHIVE'].every(k=>found[k])){showRecord('EXIT // ACCESS LOCKED','ACCESS DENIED\n\n출구 인증을 시작하려면 A·B·C 구역 기록과 ARCHIVE NOTE를 먼저 모두 확보하십시오.');return}codeOpen=true;pinBuffer='';renderPin();codeOverlay.style.display='flex';$('codeTitle').textContent='EXIT ACCESS READER';$('codeError').textContent='';$('pinStatus').textContent='ACCESS LOCKED // ENTER CODE';$('pinLight').classList.remove('green');clearKeys()}
@@ -259,7 +269,7 @@ function openInventory(){if(dataOpen||codeOpen||paused||finished)return;if(inven
 function openHelp(){if(dataOpen||codeOpen||paused||finished)return;if(helpOpen){helpOpen=false;helpOverlay.style.display='none';root.focus();return}inventoryOpen=false;inventoryOverlay.style.display='none';helpOpen=true;helpOverlay.style.display='flex';clearKeys()}
 function addItem(id){if(items.some(item=>item.id===id))return;let item;if(id==='ARCHIVE'){item={id,name:'ARCHIVE NOTE',body:'ARCHIVE INCIDENT // FRAGMENT 04\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 이 명령은 기록을 삭제하라는 지시와 함께 저장되었다.”'}}else item={id,name:clues[id].title,body:clues[id].body};items.push(item);const slot=items.length-1;if(slot<inventory.length)inventory[slot]=item;renderInventory()}
 function interact(){if(paused||finished||isOverlayOpen())return;if(!nearby){say('NO TARGET // 가까운 장치로 이동하십시오.');return}const id=nearby.id;if(clues[id]){if(!found[id]){found[id]=true;addItem(id);$('state'+id).textContent='DATA FOUND';say(id+' 기록을 확보했습니다. INVENTORY에서 다시 확인할 수 있습니다.')}showRecord(clues[id].title,clues[id].body);return}if(id==='ARCHIVE'){found.ARCHIVE=true;$('stateArchive').textContent='READ';addItem('ARCHIVE');say('ARCHIVE NOTE 확보 // 네 자리 인증식을 확인하십시오.');showRecord('ARCHIVE NOTE // FRAGMENT 04','ARCHIVE INCIDENT // PERSONAL NOTE\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 기록 삭제 명령은 사고 직전 ECHO의 내부 인증값으로 전송되었다.”');return}if(id==='EXIT'){if(!codeSolved){showCode();return}finishStage();return}}
-function verify(){if(pinBuffer.length!==4){$('codeError').textContent='FOUR DIGITS REQUIRED // 네 자리 모두 입력하십시오.';return}if(pinBuffer===expectedCode){codeSolved=true;$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('pinLight').classList.add('green');$('pinStatus').textContent='ACCESS GRANTED // GREEN';$('codeError').textContent='ACCESS GRANTED // 출구 잠금 해제';say('인증 완료. 출구 표시등이 초록색으로 바뀌었습니다. 출구에서 E를 눌러 진입하십시오.');setTimeout(()=>{if(codeOpen)closeCode()},900)}else{$('pinLight').classList.remove('green');$('codeError').textContent='INVALID CODE // 기록의 규칙을 다시 확인하십시오.';$('pinStatus').textContent='ACCESS DENIED // RED';say('인증 실패 // 보안 표시등이 빨간색입니다. 기록과 계산 순서를 다시 대조하십시오.')}}
+function verify(){if(pinBuffer.length!==4){$('codeError').textContent='FOUR DIGITS REQUIRED // 네 자리 모두 입력하십시오.';return}if(pinBuffer===expectedCode){codeSolved=true;$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('pinLight').classList.add('green');$('pinStatus').textContent='ACCESS GRANTED // GREEN';$('codeError').textContent='ACCESS GRANTED // 출구 잠금 해제';playDoorOpen();saveStageState();say('인증 완료. 출구 표시등이 초록색으로 바뀌었습니다. 출구에서 E를 눌러 진입하십시오.');setTimeout(()=>{if(codeOpen)closeCode()},900)}else{$('pinLight').classList.remove('green');$('codeError').textContent='INVALID CODE // 기록의 규칙을 다시 확인하십시오.';$('pinStatus').textContent='ACCESS DENIED // RED';say('인증 실패 // 보안 표시등이 빨간색입니다. 기록과 계산 순서를 다시 대조하십시오.')}}
 function addRestartAndTitleButtons(title,sub,copy){helpOpen=false;inventoryOpen=false;dataOpen=true;codeOpen=false;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';pauseOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent=title;$('windowSub').textContent=sub;$('windowBody').innerHTML=copy+'<div class="stage01-window-actions"><button class="code-button" id="clearRestart" type="button">RESTART</button><a class="code-button" href="?action=title" target="_top" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">TITLE</a></div>';const b=$('clearRestart');if(b)b.onclick=restartStage;dataOpen=true;dataOverlay.style.display='flex'}
 function finishStage(){finished=true;clearKeys();pauseOverlay.style.display='none';addRestartAndTitleButtons('STAGE 01 CLEAR','ARCHIVE ACCESS // COMPLETE','<p>ACCESS GRANTED</p><p>ARCHIVE ACCESS가 완료되었습니다.</p>');say('STAGE 01 CLEAR // 다음 구역의 신호가 감지되었습니다.')}
 function expireGame(){if(finished)return;finished=true;clearKeys();addRestartAndTitleButtons('TIME EXPIRED','SYSTEM LOCKDOWN','<p>제한 시간이 종료되었습니다.</p>');say('TIME EXPIRED // RESTART를 선택하십시오.')}
@@ -271,12 +281,43 @@ function blocked(x,y){if(x<3||x>97||y<3||y>96)return true;return obstacles.some(
 function updateMovement(){if(paused||isOverlayOpen())return;let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0);if(!dx&&!dy)return;const len=Math.hypot(dx,dy);dx=dx/len*.48;dy=dy/len*.48;if(!blocked(playerX+dx,playerY))playerX+=dx;if(!blocked(playerX,playerY+dy))playerY+=dy;player.style.left=playerX+'%';player.style.top=playerY+'%';checkInteraction()}
 function typeEcho(index){echoIndex=index;clearTimeout(typingTimer);const text=messages[index]||'';echoMessage.textContent='';typingDone=false;echoNext.classList.remove('ready');let i=0;function tick(){if(i<text.length){echoMessage.textContent+=text[i++];typingTimer=setTimeout(tick,24)}else{typingDone=true;echoNext.classList.add('ready')}}tick()}
 function nextEcho(){if(!typingDone){clearTimeout(typingTimer);echoMessage.textContent=messages[echoIndex]||'';typingDone=true;echoNext.classList.add('ready');return}if(echoIndex<messages.length-1)typeEcho(echoIndex+1)}
-function restartStage(){paused=false;finished=false;codeSolved=false;seconds=720;timerLast=Date.now();playerX=50;playerY=43;nearby=null;helpOpen=inventoryOpen=dataOpen=codeOpen=false;[inventoryOverlay,helpOverlay,dataOverlay,codeOverlay,pauseOverlay].forEach(el=>el.style.display='none');Object.keys(found).forEach(k=>found[k]=false);items.length=0;inventory.fill(null);$('stateA').textContent=$('stateB').textContent=$('stateC').textContent='DATA SEALED';$('stateArchive').textContent='UNREAD';$('statePanel').textContent='LOCKED';$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');pinBuffer='';renderPin();puzzle=puzzleCandidates[Math.floor(Math.random()*puzzleCandidates.length)];expectedCode=makeExpectedCode();rebuildClues();$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');clearPin();renderInventory();updateTimer();player.style.left=playerX+'%';player.style.top=playerY+'%';echoIndex=0;typeEcho(0);say('SYSTEM READY // 접근 가능한 장치 가까이 이동하십시오.');clearKeys();checkInteraction();root.focus()}
+function saveStageState(){
+  try{
+    localStorage.setItem(STAGE_SAVE_KEY,JSON.stringify({version:1,playerX,playerY,seconds,codeSolved,puzzle,found,items,inventory,echoIndex,echoText:echoMessage.textContent,typingDone,updatedAt:Date.now()}));
+    return true;
+  }catch(e){return false}
+}
+function restoreStageState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(STAGE_SAVE_KEY)||'null');
+    if(!saved||saved.version!==1||!saved.puzzle||!Number.isFinite(saved.seconds))return false;
+    playerX=Number.isFinite(saved.playerX)?saved.playerX:50;playerY=Number.isFinite(saved.playerY)?saved.playerY:43;
+    seconds=Math.max(0,Math.min(720,Math.floor(saved.seconds)));codeSolved=!!saved.codeSolved;
+    if(Number.isFinite(saved.puzzle.A)&&Number.isFinite(saved.puzzle.B)&&Number.isFinite(saved.puzzle.C)){puzzle=saved.puzzle;expectedCode=makeExpectedCode();rebuildClues()}
+    Object.keys(found).forEach(k=>found[k]=!!(saved.found&&saved.found[k]));
+    items.length=0;(Array.isArray(saved.items)?saved.items:[]).forEach(item=>{if(item&&item.id&&item.name)items.push(item)});
+    inventory.fill(null);(Array.isArray(saved.inventory)?saved.inventory:[]).slice(0,inventory.length).forEach((item,i)=>inventory[i]=item);
+    ['A','B','C'].forEach(k=>{const el=$('state'+k);if(el)el.textContent=found[k]?'DATA FOUND':'DATA SEALED'});
+    $('stateArchive').textContent=found.ARCHIVE?'READ':'UNREAD';
+    if(codeSolved){$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('pinLight').classList.add('green')}
+    echoIndex=Number.isFinite(saved.echoIndex)?Math.max(0,Math.min(messages.length-1,saved.echoIndex)):0;
+    player.style.left=playerX+'%';player.style.top=playerY+'%';renderInventory();updateTimer();
+    if(typeof saved.echoText==='string'){echoMessage.textContent=saved.echoText;typingDone=true;echoNext.classList.add('ready')}else typeEcho(echoIndex);
+    return true;
+  }catch(e){return false}
+}
+function navigateToTitle(){try{const parentWindow=window.parent;const targetUrl=new URL(parentWindow.location.href);targetUrl.search='';targetUrl.hash='';targetUrl.searchParams.set('action','title');parentWindow.history.replaceState({},'',targetUrl.toString());parentWindow.location.reload();return}catch(e){}try{window.top.location.href='?action=title'}catch(e){say('TITLE NAVIGATION BLOCKED // 새로고침 후 CONTINUE를 선택하십시오.')}}
+function saveAndReturnToTitle(){
+  paused=true;clearKeys();const gear=$('saveGear'),label=$('saveGearText');gear.classList.add('show');label.textContent='SAVING...';
+  const ok=saveStageState();
+  setTimeout(()=>{label.textContent=ok?'SAVED // RETURNING':'SAVE FAILED';setTimeout(navigateToTitle,350)},650);
+}
+function restartStage(){try{localStorage.removeItem(STAGE_SAVE_KEY)}catch(e){}paused=false;finished=false;codeSolved=false;seconds=720;timerLast=Date.now();playerX=50;playerY=43;nearby=null;helpOpen=inventoryOpen=dataOpen=codeOpen=false;[inventoryOverlay,helpOverlay,dataOverlay,codeOverlay,pauseOverlay].forEach(el=>el.style.display='none');Object.keys(found).forEach(k=>found[k]=false);items.length=0;inventory.fill(null);$('stateA').textContent=$('stateB').textContent=$('stateC').textContent='DATA SEALED';$('stateArchive').textContent='UNREAD';$('statePanel').textContent='LOCKED';$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');pinBuffer='';renderPin();puzzle=puzzleCandidates[Math.floor(Math.random()*puzzleCandidates.length)];expectedCode=makeExpectedCode();rebuildClues();$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');clearPin();renderInventory();updateTimer();player.style.left=playerX+'%';player.style.top=playerY+'%';echoIndex=0;typeEcho(0);say('SYSTEM READY // 접근 가능한 장치 가까이 이동하십시오.');clearKeys();checkInteraction();root.focus()}
 function resume(){paused=false;pauseOverlay.style.display='none';timerLast=Date.now();root.focus();clearKeys()}
 function focusGame(){try{root.focus({preventScroll:true})}catch(e){root.focus()}}
 
 $('pauseBtn').addEventListener('click',()=>{if(finished)return;if(!paused&&(helpOpen||inventoryOpen||dataOpen||codeOpen))return;paused=!paused;timerLast=Date.now();pauseOverlay.style.display=paused?'flex':'none';clearKeys();if(!paused)focusGame()});
-$('resumeBtn').addEventListener('click',resume);$('restartBtn').addEventListener('click',restartStage);
+$('resumeBtn').addEventListener('click',resume);$('restartBtn').addEventListener('click',restartStage);$('saveTitleBtn').addEventListener('click',saveAndReturnToTitle);$('titleBtn').addEventListener('click',e=>{e.preventDefault();saveAndReturnToTitle()});
 $('closeRecord').addEventListener('click',closeRecord);$('closeCode').addEventListener('click',closeCode);$('verifyBtn').addEventListener('click',verify);
 document.querySelectorAll('[data-pin]').forEach(btn=>btn.addEventListener('click',()=>{const action=btn.dataset.pin;if(action==='clear')clearPin();else if(action==='back')backspacePin();else appendPinDigit(action)}));
 document.querySelectorAll('[data-direction]').forEach(btn=>{const k=btn.dataset.direction;const down=e=>{e.preventDefault();keys[k]=true;focusGame()};const up=e=>{e.preventDefault();keys[k]=false};btn.addEventListener('pointerdown',down);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>btn.addEventListener(ev,up))});
@@ -284,10 +325,11 @@ document.querySelectorAll('.inventory-slot').forEach((slot,i)=>slot.addEventList
 document.addEventListener('keydown',e=>{const key=e.key.toLowerCase();if(codeOpen){if(/^[0-9]$/.test(e.key)){e.preventDefault();appendPinDigit(e.key);return}if(key==='backspace'){e.preventDefault();backspacePin();return}if(key==='enter'){e.preventDefault();verify();return}if(key==='escape'){e.preventDefault();closeCode();return}return}if(e.repeat&&['e','h','i','escape'].includes(key))return;if(e.code==='Space'){e.preventDefault();if(!paused&&!isOverlayOpen())nextEcho();return}if(key==='escape'){if(codeOpen){closeCode();return}if(dataOpen){closeRecord();return}if(helpOpen){openHelp();return}if(inventoryOpen){openInventory();return}if(paused){resume();return}return}if(key==='h'){e.preventDefault();openHelp();return}if(key==='i'){e.preventDefault();openInventory();return}if(key==='e'){e.preventDefault();interact();return}if(['w','a','s','d'].includes(key)&&!paused&&!isOverlayOpen()){keys[key]=true;e.preventDefault()}});
 document.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(key in keys){keys[key]=false;e.preventDefault()}});window.addEventListener('blur',clearKeys);root.addEventListener('pointerdown',focusGame);
 function loop(){updateMovement();checkInteraction();requestAnimationFrame(loop)}
-player.style.left=playerX+'%';player.style.top=playerY+'%';renderInventory();updateTimer();typeEcho(0);checkInteraction();focusGame();setInterval(syncTimer,250);requestAnimationFrame(loop);
+const restored=restoreStageState();if(!restored){player.style.left=playerX+'%';player.style.top=playerY+'%';renderInventory();updateTimer();typeEcho(0)}checkInteraction();focusGame();setInterval(syncTimer,250);setInterval(saveStageState,1000);requestAnimationFrame(loop);
 })();
 </script></body></html>
 """
 
 html = html.replace("__TUTORIAL_CSS__", tutorial_css)
+html = html.replace("__RESET_STAGE_SAVE__", "true" if st.session_state.pop("stage01_reset_save", False) else "false")
 components.html(html, height=1000, scrolling=False)
