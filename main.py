@@ -128,6 +128,7 @@ if st.session_state.start_open:
                 if _key.startswith(progress_prefixes):
                     del st.session_state[_key]
             st.session_state.tutorial_reset_save = True
+            st.session_state.stage01_reset_save = True
             st.session_state.game_started = True
             st.session_state.game_paused = False
             st.session_state.game_finished = False
@@ -154,6 +155,7 @@ if st.session_state.get("new_game_confirm", False):
             if _key.startswith(("s1_", "tutorial_", "stage01_")):
                 del st.session_state[_key]
         st.session_state.tutorial_reset_save = True
+        st.session_state.stage01_reset_save = True
         st.session_state.game_started = True
         st.session_state.game_paused = False
         st.session_state.game_finished = False
