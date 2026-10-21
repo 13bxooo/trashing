@@ -23,7 +23,7 @@ elif _page_action == "stage01":
 elif _page_action == "restart":
     st.query_params.clear()
     for _key in list(st.session_state.keys()):
-        if _key.startswith(("s1_", "tutorial_", "stage01_")):
+        if _key.startswith(("s1_", "tutorial_", "stage01_", "stage02_")):
             del st.session_state[_key]
     st.session_state.tutorial_reset_save = True
     st.session_state.game_started = True
@@ -106,7 +106,9 @@ if st.session_state.start_open:
         st.session_state.game_paused = False
         # Session-state progress determines the page. If there is no progress flag
         # (e.g. a fresh session), CONTINUE opens the tutorial instead of doing nothing.
-        if st.session_state.get("stage01_started", False):
+        if st.session_state.get("stage02_started", False):
+            st.switch_page("pages/4_Stage_02.py")
+        elif st.session_state.get("stage01_started", False):
             st.switch_page("pages/3_Stage_01.py")
         else:
             st.switch_page("pages/2_Game.py")
@@ -114,7 +116,7 @@ if st.session_state.start_open:
     if new_game_clicked:
         # A run exists if the tutorial/stage has ever been entered or any progress
         # marker has been set in this Streamlit session.
-        progress_prefixes = ("s1_", "tutorial_", "stage01_")
+        progress_prefixes = ("s1_", "tutorial_", "stage01_", "stage02_")
         has_progress = bool(st.session_state.get("game_started", False)) or any(
             key.startswith(progress_prefixes) and bool(value)
             for key, value in st.session_state.items()
@@ -134,6 +136,7 @@ if st.session_state.start_open:
             st.session_state.game_finished = False
             st.session_state.tutorial_complete = False
             st.session_state.stage01_started = False
+            st.session_state.stage02_started = False
             st.session_state.remaining_seconds = 15 * 60
             st.session_state.new_game_confirm = False
             st.session_state.start_open = False
@@ -152,7 +155,7 @@ if st.session_state.get("new_game_confirm", False):
 
     if yes_new_game:
         for _key in list(st.session_state.keys()):
-            if _key.startswith(("s1_", "tutorial_", "stage01_")):
+            if _key.startswith(("s1_", "tutorial_", "stage01_", "stage02_")):
                 del st.session_state[_key]
         st.session_state.tutorial_reset_save = True
         st.session_state.stage01_reset_save = True
@@ -162,6 +165,7 @@ if st.session_state.get("new_game_confirm", False):
         st.session_state.remaining_seconds = 15 * 60
         st.session_state.tutorial_complete = False
         st.session_state.stage01_started = False
+        st.session_state.stage02_started = False
         st.session_state.new_game_confirm = False
         st.session_state.start_open = False
         st.switch_page("pages/2_Game.py")
