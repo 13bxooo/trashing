@@ -11,6 +11,22 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Hidden host-page navigation controls. The iframe asks the parent Streamlit page
+# to click these after its save/fade animation, avoiding sandboxed top-frame navigation.
+st.markdown("<style>.st-key-host_title_nav,.st-key-host_restart_nav,.st-key-host_stage2_nav{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;overflow:hidden!important;}</style>", unsafe_allow_html=True)
+_host_title = st.button("TITLE NAV", key="host_title_nav")
+_host_restart = st.button("RESTART NAV", key="host_restart_nav")
+_host_stage2 = st.button("STAGE 02 NAV", key="host_stage2_nav")
+if _host_title:
+    st.switch_page("main.py")
+if _host_restart:
+    st.session_state["stage01_reset_save"] = True
+    st.rerun()
+if _host_stage2:
+    st.session_state["stage01_started"] = True
+    st.session_state["stage02_started"] = True
+    st.switch_page("pages/4_Stage_02.py")
+
 # Stage 01 intentionally reuses page 2's original in-iframe stylesheet so the
 # scene framing, room, player, ECHO bar, help and inventory panels stay consistent.
 page_dir = Path(__file__).resolve().parent
@@ -71,11 +87,20 @@ __TUTORIAL_CSS__
 .stage01-window-actions button,.stage01-window-actions a{min-width:150px;text-align:center;justify-content:center}
 .pause-actions{visibility:visible;pointer-events:auto}
 .pause-actions button,.pause-actions a{min-width:130px;text-align:center;justify-content:center;text-decoration:none}
-.save-gear{position:fixed;right:18px;bottom:18px;z-index:99999;display:none;align-items:center;gap:8px;padding:8px 11px;background:#050505;border:1px solid #666;color:#ddd;font-size:11px;letter-spacing:1px}
+.save-gear{position:fixed;left:18px;bottom:18px;z-index:99999;display:none;align-items:center;gap:8px;padding:8px 11px;background:#050505;border:1px solid #666;color:#ddd;font-size:11px;letter-spacing:1px}
 .save-gear.show{display:flex}
 .save-gear .gear{display:inline-block;font-size:20px;animation:gearSpin .8s linear infinite}
 @keyframes gearSpin{to{transform:rotate(360deg)}}
 .computer-overlay.show{display:flex}
+.save-fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:100000;transition:opacity .35s ease}
+.save-fade.active{opacity:1;pointer-events:auto}
+.save-fade .fade-label{position:absolute;left:18px;bottom:22px;font-size:12px;color:#aaa;letter-spacing:2px}
+.save-fade .fade-gear{display:inline-block;margin-right:8px;font-size:22px;animation:gearSpin .8s linear infinite}
+.system-computer{width:150px;height:120px;margin:10px auto 18px;position:relative;image-rendering:pixelated}
+.system-computer .screen{position:absolute;left:20px;top:8px;width:110px;height:72px;background:#0876d1;border:8px solid #171717;box-shadow:inset 0 0 0 3px #55baff}
+.system-computer .screen:before{content:'>';position:absolute;left:12px;top:8px;color:#b9edff;font-size:22px;text-shadow:0 0 5px #fff}
+.system-computer .neck{position:absolute;left:67px;top:80px;width:16px;height:15px;background:#777}
+.system-computer .base{position:absolute;left:45px;top:94px;width:60px;height:10px;background:#aaa;border-bottom:4px solid #555}
 @media(max-width:700px){
  .stage01-timer{top:49px;right:56px;font-size:10px}
  .stage01-pause{top:10px;right:10px}
@@ -203,6 +228,7 @@ __TUTORIAL_CSS__
   <div class="pause-overlay" id="pauseOverlay">
     <div><div class="pause-title">GAME PAUSED</div><div class="pause-sub">PRESS Ⅱ TO CONTINUE</div><div class="pause-actions"><button class="code-button" id="resumeBtn" type="button">RESUME</button><button class="code-button" id="restartBtn" type="button">RESTART</button><button class="code-button" id="saveTitleBtn" type="button">SAVE &amp; TITLE</button><a class="code-button" id="titleBtn" href="?action=title" target="_top" rel="noopener" style="display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-decoration:none">TITLE</a></div></div>
   </div>
+<div class="save-fade" id="saveFade"><div class="fade-label"><span class="fade-gear">⚙</span>SAVING DATA...</div></div>
 <div class="save-gear" id="saveGear" aria-live="polite"><span class="gear">⚙</span><span id="saveGearText">SAVING...</span></div>
 </div>
 
@@ -216,8 +242,10 @@ const echoMessage=$('echoMessage'), echoNext=$('echoNext'), status=$('status'), 
 let playerX=50, playerY=43, seconds=720, paused=false, finished=false, codeSolved=false, nearby=null;
 let helpOpen=false, inventoryOpen=false, dataOpen=false, codeOpen=false, typingDone=false, typingTimer=null, echoIndex=0, pinBuffer='';
 let timerLast=Date.now();
+const RUN_SAVE_KEY='project_logic_run_state_v1';
+try{const run=JSON.parse(localStorage.getItem(RUN_SAVE_KEY)||'null');if(run&&Number.isFinite(run.seconds))seconds=Math.max(0,Math.min(720,Math.floor(run.seconds)))}catch(e){}
 const STAGE_SAVE_KEY='project_logic_stage01_save_v1';
-if(__RESET_STAGE_SAVE__){try{localStorage.removeItem(STAGE_SAVE_KEY)}catch(e){}}
+if(__RESET_STAGE_SAVE__){seconds=720;try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem('project_logic_stage02_save_v1');localStorage.removeItem('project_logic_run_state_v1')}catch(e){}}
 let audioContext=null;
 function playTone(freq=880,duration=0.07,volume=0.045){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext)audioContext=new AC();if(audioContext.state==='suspended')audioContext.resume();const osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type='square';osc.frequency.value=freq;gain.gain.setValueAtTime(0.0001,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(volume,audioContext.currentTime+0.008);gain.gain.exponentialRampToValueAtTime(0.0001,audioContext.currentTime+duration);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+duration+0.01)}catch(e){}}
 function playDoorOpen(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext)audioContext=new AC();if(audioContext.state==='suspended')audioContext.resume();const now=audioContext.currentTime;[440,660,880].forEach((frequency,index)=>{const osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type='square';osc.frequency.value=frequency;gain.gain.setValueAtTime(0.0001,now+index*.12);gain.gain.exponentialRampToValueAtTime(.08,now+index*.12+.02);gain.gain.exponentialRampToValueAtTime(.0001,now+index*.12+.18);osc.connect(gain);gain.connect(audioContext.destination);osc.start(now+index*.12);osc.stop(now+index*.12+.2)});}catch(e){}}
@@ -270,10 +298,11 @@ function openHelp(){if(dataOpen||codeOpen||paused||finished)return;if(helpOpen){
 function addItem(id){if(items.some(item=>item.id===id))return;let item;if(id==='ARCHIVE'){item={id,name:'ARCHIVE NOTE',body:'ARCHIVE INCIDENT // FRAGMENT 04\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 이 명령은 기록을 삭제하라는 지시와 함께 저장되었다.”'}}else item={id,name:clues[id].title,body:clues[id].body};items.push(item);const slot=items.length-1;if(slot<inventory.length)inventory[slot]=item;renderInventory()}
 function interact(){if(paused||finished||isOverlayOpen())return;if(!nearby){say('NO TARGET // 가까운 장치로 이동하십시오.');return}const id=nearby.id;if(clues[id]){if(!found[id]){found[id]=true;addItem(id);$('state'+id).textContent='DATA FOUND';say(id+' 기록을 확보했습니다. INVENTORY에서 다시 확인할 수 있습니다.')}showRecord(clues[id].title,clues[id].body);return}if(id==='ARCHIVE'){found.ARCHIVE=true;$('stateArchive').textContent='READ';addItem('ARCHIVE');say('ARCHIVE NOTE 확보 // 네 자리 인증식을 확인하십시오.');showRecord('ARCHIVE NOTE // FRAGMENT 04','ARCHIVE INCIDENT // PERSONAL NOTE\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 기록 삭제 명령은 사고 직전 ECHO의 내부 인증값으로 전송되었다.”');return}if(id==='EXIT'){if(!codeSolved){showCode();return}finishStage();return}}
 function verify(){if(pinBuffer.length!==4){$('codeError').textContent='FOUR DIGITS REQUIRED // 네 자리 모두 입력하십시오.';return}if(pinBuffer===expectedCode){codeSolved=true;$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('pinLight').classList.add('green');$('pinStatus').textContent='ACCESS GRANTED // GREEN';$('codeError').textContent='ACCESS GRANTED // 출구 잠금 해제';playDoorOpen();saveStageState();say('인증 완료. 출구 표시등이 초록색으로 바뀌었습니다. 출구에서 E를 눌러 진입하십시오.');setTimeout(()=>{if(codeOpen)closeCode()},900)}else{$('pinLight').classList.remove('green');$('codeError').textContent='INVALID CODE // 기록의 규칙을 다시 확인하십시오.';$('pinStatus').textContent='ACCESS DENIED // RED';say('인증 실패 // 보안 표시등이 빨간색입니다. 기록과 계산 순서를 다시 대조하십시오.')}}
-function addRestartAndTitleButtons(title,sub,copy){helpOpen=false;inventoryOpen=false;dataOpen=true;codeOpen=false;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';pauseOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent=title;$('windowSub').textContent=sub;$('windowBody').innerHTML=copy+'<div class="stage01-window-actions"><button class="code-button" id="clearRestart" type="button">RESTART</button><a class="code-button" href="?action=title" target="_top" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">TITLE</a></div>';const b=$('clearRestart');if(b)b.onclick=restartStage;dataOpen=true;dataOverlay.style.display='flex'}
-function finishStage(){finished=true;clearKeys();pauseOverlay.style.display='none';addRestartAndTitleButtons('STAGE 01 CLEAR','ARCHIVE ACCESS // COMPLETE','<p>ACCESS GRANTED</p><p>ARCHIVE ACCESS가 완료되었습니다.</p>');say('STAGE 01 CLEAR // 다음 구역의 신호가 감지되었습니다.')}
+function addRestartAndTitleButtons(title,sub,copy){helpOpen=false;inventoryOpen=false;dataOpen=true;codeOpen=false;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';pauseOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent=title;$('windowSub').textContent=sub;$('windowBody').innerHTML=copy+'<div class="stage01-window-actions"><button class="code-button" id="clearRestart" type="button">RESTART</button><a class="code-button" href="?action=title" target="_top" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">TITLE</a></div>';const b=$('clearRestart');if(b)b.onclick=restartViaHost;dataOpen=true;dataOverlay.style.display='flex'}
+function finishStage(){finished=true;paused=true;timerLast=Date.now();clearKeys();pauseOverlay.style.display='none';helpOpen=false;inventoryOpen=false;codeOpen=false;dataOpen=true;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent='SYSTEM HANDOFF';$('windowSub').textContent='ARCHIVE ACCESS // NEXT SECTOR DETECTED';$('windowBody').innerHTML='<div class="system-computer" aria-label="blue pixel computer"><div class="screen"></div><div class="neck"></div><div class="base"></div></div><p> ECHO // 연결된 시스템에서 새로운 신호가 감지되었습니다.</p><p>“이 기록은 끝이 아닙니다. 서버 코어에 남아 있는 원본 로그를 확인해야 합니다.”</p><p>STAGE 02로 이동할 준비가 되었습니다.</p><div class="stage01-window-actions"><button class="code-button" id="continueStage2Btn" type="button">CONTINUE // STAGE 02</button><button class="code-button" id="stage1TitleBtn" type="button">TITLE</button></div>';$('continueStage2Btn').onclick=continueStage2;$('stage1TitleBtn').onclick=saveAndReturnToTitle;dataOverlay.style.display='flex';say('SYSTEM HANDOFF // 타이머 일시정지')}
 function expireGame(){if(finished)return;finished=true;clearKeys();addRestartAndTitleButtons('TIME EXPIRED','SYSTEM LOCKDOWN','<p>제한 시간이 종료되었습니다.</p>');say('TIME EXPIRED // RESTART를 선택하십시오.')}
-function syncTimer(){const now=Date.now();if(!paused&&!finished){const elapsed=(now-timerLast)/1000;if(elapsed>=1){const spent=Math.floor(elapsed);seconds=Math.max(0,seconds-spent);timerLast+=spent*1000;updateTimer();if(seconds===0)expireGame()}}else timerLast=now}
+function introDialogueActive(){return !(echoIndex>=messages.length-1&&typingDone)}
+function syncTimer(){const now=Date.now();if(introDialogueActive()){timerLast=now;return}if(!paused&&!finished){const elapsed=(now-timerLast)/1000;if(elapsed>=1){const spent=Math.floor(elapsed);seconds=Math.max(0,seconds-spent);timerLast+=spent*1000;updateTimer();if(seconds===0)expireGame()}}else timerLast=now}
 function getDistance(obj){return Math.hypot(playerX-(obj.x+obj.w/2),playerY-(obj.y+obj.h/2))}
 function checkInteraction(){nearby=null;let best=Infinity;objects.forEach(obj=>{const d=getDistance(obj);obj.el.classList.remove('near');if(d<12&&d<best){best=d;nearby=obj}});if(nearby&&!paused&&!isOverlayOpen()){nearby.el.classList.add('near');interactionMessage.textContent='E  //  '+nearby.name;interactionMessage.classList.add('visible')}else interactionMessage.classList.remove('visible')}
 function circleHitsRect(cx,cy,r,o){const dx=Math.max(o.x,Math.min(cx,o.x+o.w));const dy=Math.max(o.y,Math.min(cy,o.y+o.h));return Math.hypot(cx-dx,cy-dy)<r}
@@ -284,6 +313,7 @@ function nextEcho(){if(!typingDone){clearTimeout(typingTimer);echoMessage.textCo
 function saveStageState(){
   try{
     localStorage.setItem(STAGE_SAVE_KEY,JSON.stringify({version:1,playerX,playerY,seconds,codeSolved,puzzle,found,items,inventory,echoIndex,echoText:echoMessage.textContent,typingDone,updatedAt:Date.now()}));
+    localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds,stage:1,updatedAt:Date.now()}));
     return true;
   }catch(e){return false}
 }
@@ -306,18 +336,22 @@ function restoreStageState(){
     return true;
   }catch(e){return false}
 }
-function navigateToTitle(){try{const parentWindow=window.parent;const targetUrl=new URL(parentWindow.location.href);targetUrl.search='';targetUrl.hash='';targetUrl.searchParams.set('action','title');parentWindow.history.replaceState({},'',targetUrl.toString());parentWindow.location.reload();return}catch(e){}try{window.top.location.href='?action=title'}catch(e){say('TITLE NAVIGATION BLOCKED // 새로고침 후 CONTINUE를 선택하십시오.')}}
+function clickHostControl(className){try{const btn=window.parent.document.querySelector('.st-key-'+className+' button');if(btn){btn.click();return true}}catch(e){}return false}
+function navigateToTitle(){if(!clickHostControl('host_title_nav')){try{window.top.location.assign(new URL('?action=title',window.top.location.href).toString())}catch(e){say('TITLE NAVIGATION BLOCKED')}}}
 function saveAndReturnToTitle(){
-  paused=true;clearKeys();const gear=$('saveGear'),label=$('saveGearText');gear.classList.add('show');label.textContent='SAVING...';
+  paused=true;timerLast=Date.now();clearKeys();const gear=$('saveGear'),label=$('saveGearText'),fade=$('saveFade');gear.classList.add('show');label.textContent='SAVING...';fade.classList.add('active');
   const ok=saveStageState();
-  setTimeout(()=>{label.textContent=ok?'SAVED // RETURNING':'SAVE FAILED';setTimeout(navigateToTitle,350)},650);
+  label.textContent=ok?'SAVED':'SAVE FAILED';
+  setTimeout(()=>{if(!clickHostControl('host_title_nav'))navigateToTitle()},3000);
 }
-function restartStage(){try{localStorage.removeItem(STAGE_SAVE_KEY)}catch(e){}paused=false;finished=false;codeSolved=false;seconds=720;timerLast=Date.now();playerX=50;playerY=43;nearby=null;helpOpen=inventoryOpen=dataOpen=codeOpen=false;[inventoryOverlay,helpOverlay,dataOverlay,codeOverlay,pauseOverlay].forEach(el=>el.style.display='none');Object.keys(found).forEach(k=>found[k]=false);items.length=0;inventory.fill(null);$('stateA').textContent=$('stateB').textContent=$('stateC').textContent='DATA SEALED';$('stateArchive').textContent='UNREAD';$('statePanel').textContent='LOCKED';$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');pinBuffer='';renderPin();puzzle=puzzleCandidates[Math.floor(Math.random()*puzzleCandidates.length)];expectedCode=makeExpectedCode();rebuildClues();$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');clearPin();renderInventory();updateTimer();player.style.left=playerX+'%';player.style.top=playerY+'%';echoIndex=0;typeEcho(0);say('SYSTEM READY // 접근 가능한 장치 가까이 이동하십시오.');clearKeys();checkInteraction();root.focus()}
+function restartViaHost(){paused=true;clearKeys();try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem(RUN_SAVE_KEY)}catch(e){}if(!clickHostControl('host_restart_nav'))restartStage()}
+function continueStage2(){paused=true;timerLast=Date.now();clearKeys();saveStageState();try{localStorage.removeItem('project_logic_stage02_save_v1');localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds,stage:2,updatedAt:Date.now()}))}catch(e){}if(!clickHostControl('host_stage2_nav')){try{window.top.location.assign(new URL('pages/4_Stage_02.py',window.top.location.href).toString())}catch(e){say('STAGE 02 NAVIGATION BLOCKED')}}}
+function restartStage(){try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem('project_logic_stage02_save_v1');localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds:720,stage:1,updatedAt:Date.now()}))}catch(e){}paused=false;finished=false;codeSolved=false;seconds=720;timerLast=Date.now();playerX=50;playerY=43;nearby=null;helpOpen=inventoryOpen=dataOpen=codeOpen=false;[inventoryOverlay,helpOverlay,dataOverlay,codeOverlay,pauseOverlay].forEach(el=>el.style.display='none');Object.keys(found).forEach(k=>found[k]=false);items.length=0;inventory.fill(null);$('stateA').textContent=$('stateB').textContent=$('stateC').textContent='DATA SEALED';$('stateArchive').textContent='UNREAD';$('statePanel').textContent='LOCKED';$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');pinBuffer='';renderPin();puzzle=puzzleCandidates[Math.floor(Math.random()*puzzleCandidates.length)];expectedCode=makeExpectedCode();rebuildClues();$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('pinLight').classList.remove('green');clearPin();renderInventory();updateTimer();player.style.left=playerX+'%';player.style.top=playerY+'%';echoIndex=0;typeEcho(0);say('SYSTEM READY // 접근 가능한 장치 가까이 이동하십시오.');clearKeys();checkInteraction();root.focus()}
 function resume(){paused=false;pauseOverlay.style.display='none';timerLast=Date.now();root.focus();clearKeys()}
 function focusGame(){try{root.focus({preventScroll:true})}catch(e){root.focus()}}
 
 $('pauseBtn').addEventListener('click',()=>{if(finished)return;if(!paused&&(helpOpen||inventoryOpen||dataOpen||codeOpen))return;paused=!paused;timerLast=Date.now();pauseOverlay.style.display=paused?'flex':'none';clearKeys();if(!paused)focusGame()});
-$('resumeBtn').addEventListener('click',resume);$('restartBtn').addEventListener('click',restartStage);$('saveTitleBtn').addEventListener('click',saveAndReturnToTitle);$('titleBtn').addEventListener('click',e=>{e.preventDefault();saveAndReturnToTitle()});
+$('resumeBtn').addEventListener('click',resume);$('restartBtn').addEventListener('click',restartViaHost);$('saveTitleBtn').addEventListener('click',saveAndReturnToTitle);$('titleBtn').addEventListener('click',e=>{e.preventDefault();saveAndReturnToTitle()});
 $('closeRecord').addEventListener('click',closeRecord);$('closeCode').addEventListener('click',closeCode);$('verifyBtn').addEventListener('click',verify);
 document.querySelectorAll('[data-pin]').forEach(btn=>btn.addEventListener('click',()=>{const action=btn.dataset.pin;if(action==='clear')clearPin();else if(action==='back')backspacePin();else appendPinDigit(action)}));
 document.querySelectorAll('[data-direction]').forEach(btn=>{const k=btn.dataset.direction;const down=e=>{e.preventDefault();keys[k]=true;focusGame()};const up=e=>{e.preventDefault();keys[k]=false};btn.addEventListener('pointerdown',down);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>btn.addEventListener(ev,up))});
