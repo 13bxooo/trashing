@@ -25,24 +25,33 @@ action = st.query_params.get("action")
 
 if action == "restart":
 
-    st.session_state.game_paused = False
-    # New tutorial run starts cleanly; saved progress is intentionally cleared by JS action.
     st.query_params.clear()
-
-    st.rerun()
+    for _key in list(st.session_state.keys()):
+        if _key.startswith(("s1_", "tutorial_", "stage01_")):
+            del st.session_state[_key]
+    st.session_state.tutorial_reset_save = True
+    st.session_state.game_started = True
+    st.session_state.game_paused = False
+    st.session_state.game_finished = False
+    st.session_state.tutorial_complete = False
+    st.session_state.stage01_started = False
+    st.session_state.remaining_seconds = 15 * 60
+    st.switch_page("pages/2_Game.py")
 
 
 elif action == "title":
 
     st.session_state.game_paused = False
-    st.session_state.show_continue_warning = True
+    st.session_state.show_title_warning = True
     st.query_params.clear()
     st.switch_page("main.py")
 
 elif action == "stage01":
 
     st.session_state.game_paused = False
+    st.session_state.game_started = True
     st.session_state.stage01_started = True
+    st.session_state.start_open = False
     st.query_params.clear()
     st.switch_page("pages/3_Stage_01.py")
 
@@ -54,6 +63,9 @@ elif action == "stage01":
 if "game_paused" not in st.session_state:
 
     st.session_state.game_paused = False
+
+# The tutorial page represents an active run, so CONTINUE can return here.
+st.session_state.game_started = True
 
 
 # =========================================================
@@ -149,6 +161,36 @@ footer {{
 }}
 
 
+.st-key-tutorial_restart_native,
+.st-key-tutorial_title_native {{
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 170px !important;
+    height: 42px !important;
+    z-index: 1000001 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}}
+.st-key-tutorial_restart_native {{ top: calc(50vh + 58px) !important; }}
+.st-key-tutorial_title_native {{ top: calc(50vh + 106px) !important; }}
+.st-key-tutorial_restart_native button,
+.st-key-tutorial_title_native button {{
+    width: 170px !important;
+    height: 42px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #000 !important;
+    color: #fff !important;
+    font-family: 'NeoDungGeunMo', monospace !important;
+    font-size: 15px !important;
+}}
+.st-key-tutorial_restart_native button:hover,
+.st-key-tutorial_title_native button:hover {{
+    background: #fff !important;
+    color: #000 !important;
+}}
+
 .st-key-pause_game_button button {{
 
     width: 45px !important;
@@ -232,6 +274,30 @@ if pause_clicked:
 
 
 paused = st.session_state.game_paused
+
+# RESTART / TITLE are native Streamlit buttons, not links inside components.html.
+# Their fixed positions match the original pause-menu button positions.
+if paused:
+    restart_clicked = st.button("RESTART", key="tutorial_restart_native")
+    title_clicked = st.button("TITLE", key="tutorial_title_native")
+
+    if restart_clicked:
+        for _key in list(st.session_state.keys()):
+            if _key.startswith(("s1_", "tutorial_", "stage01_")):
+                del st.session_state[_key]
+        st.session_state.tutorial_reset_save = True
+        st.session_state.game_started = True
+        st.session_state.game_paused = False
+        st.session_state.game_finished = False
+        st.session_state.tutorial_complete = False
+        st.session_state.stage01_started = False
+        st.session_state.remaining_seconds = 15 * 60
+        st.switch_page("pages/2_Game.py")
+
+    if title_clicked:
+        st.session_state.game_paused = False
+        st.session_state.show_title_warning = True
+        st.switch_page("main.py")
 
 
 # =========================================================
@@ -359,23 +425,14 @@ input {
 
 .project-title {
 
-    position:
-        absolute;
-
-    top:
-        24px;
-
-    left:
-        28px;
-
-    font-size:
-        18px;
-
-    letter-spacing:
-        1px;
-
-    z-index:
-        20;
+    position: absolute;
+    top: 24px;
+    left: 28px;
+    font-size: 18px;
+    letter-spacing: 1px;
+    z-index: 20;
+    color: #f4f4f4;
+    text-shadow: none;
 
 }
 
@@ -2012,13 +2069,52 @@ input {
     opacity: 0;
     pointer-events: none;
     transition: opacity 1.5s linear;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
-.fade-screen.active { opacity: 1; }
-.stage-transition-title { position:absolute; inset:0; z-index:310; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000; color:#eee; opacity:0; pointer-events:none; font-family:inherit; text-align:center; letter-spacing:3px; }
-.stage-transition-title.visible { opacity:1; }
-.stage-transition-title .stage-name { font-size:clamp(22px,4vw,42px); animation: stageBlink .65s steps(2,end) infinite; }
-.stage-transition-title .room-name { margin-top:18px; font-size:clamp(12px,2vw,18px); color:#999; animation: stageBlink 1.1s steps(2,end) infinite; }
-@keyframes stageBlink { 50% { opacity:.15; } }
+.fade-screen.active { opacity: 1; pointer-events: auto; }
+.fade-message {
+    color: #e8e8e8;
+    font-family: 'NeoDungGeunMo', monospace;
+    letter-spacing: 3px;
+    text-align: center;
+    padding: 0 18px;
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-shadow: none;
+}
+.fade-stage {
+    font-size: clamp(22px, 3vw, 34px);
+    text-shadow: 0 0 4px #fff, 0 0 12px #777;
+}
+.fade-room {
+    font-size: clamp(12px, 1.4vw, 17px);
+    letter-spacing: 2px;
+    text-shadow: none;
+}
+.fade-screen.active .fade-message {
+    opacity: 1;
+}
+.fade-screen.active .fade-stage {
+    animation: blackoutText 1.5s steps(1, end) forwards;
+}
+@keyframes blackoutText {
+    0% { opacity: 0; }
+    18% { opacity: .95; }
+    24% { opacity: .2; }
+    31% { opacity: 1; }
+    42% { opacity: .45; }
+    50%, 100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .fade-screen { transition: none; }
+    .fade-screen.active .fade-message, .fade-screen.active .fade-stage { animation: none; opacity: 1; }
+}
 
 .reader-slot {
 
@@ -2250,6 +2346,9 @@ input {
 
 
 .pause-actions {
+
+    visibility: hidden;
+    pointer-events: none;
 
     margin-top:
         24px;
@@ -3177,29 +3276,24 @@ input {
 <div class="pause-actions">
 
 
-<button
-    class="code-button"
+<a
+    class="code-button pause-nav-link"
     id="restartButton"
-    type="button"
-    style="width:170px;"
->
-    RESTART
-</button>
+    href="?action=restart"
+    target="_top"
+    rel="noopener"
+    style="width:170px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-decoration:none;"
+>RESTART</a>
 
 
-<button
-    class="code-button"
+<a
+    class="code-button pause-nav-link"
     id="titleButton"
-    type="button"
-    style="
-    width:170px;
-    background:#000;
-    color:#fff;
-    border:1px solid #333;
-    "
->
-    TITLE
-</button>
+    href="?action=title"
+    target="_top"
+    rel="noopener"
+    style="width:170px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-decoration:none;background:#000;color:#fff;border:1px solid #333;"
+>TITLE</a>
 
 
 </div>
@@ -3223,10 +3317,7 @@ input {
 
 </div>
 
-<div class="fade-screen" id="fadeScreen" aria-hidden="true"></div>
-<div id="restartConfirm" style="display:none;position:absolute;inset:0;z-index:500;background:#000e;align-items:center;justify-content:center"><div style="width:min(420px,88%);padding:28px;background:#050505;border:1px solid #666;text-align:center"><div style="font-size:18px;margin-bottom:24px">다시 시작하겠습니까?</div><button id="restartYes" class="code-button" type="button" style="width:120px;margin:6px">YES</button><button id="restartNo" class="code-button" type="button" style="width:120px;margin:6px;background:#000;color:#fff;border:1px solid #555">NO</button></div></div>
-<div id="roomIntro" style="position:absolute;inset:0;z-index:450;background:#000;color:#ddd;display:flex;flex-direction:column;align-items:center;justify-content:center;letter-spacing:3px;text-align:center"><div style="font-size:clamp(22px,4vw,42px);animation:stageBlink .45s steps(2,end) infinite">STAGE 00</div><div style="font-size:clamp(12px,2vw,18px);color:#999;margin-top:18px;animation:stageBlink .7s steps(2,end) infinite">: TUTORIAL</div></div>
-<div class="stage-transition-title" id="stageTransitionTitle" aria-hidden="true"><div class="stage-name">STAGE 01</div><div class="room-name">:( ARCHIVE WING )</div></div>
+<div class="fade-screen" id="fadeScreen" aria-hidden="true"><div class="fade-message" id="fadeMessage"><span class="fade-stage">STAGE 01</span><span class="fade-room">:ARCHIVE ACCESS</span></div></div>
 
 <script>
 
@@ -3633,6 +3724,7 @@ function typeEcho(index) {
             echoNext.classList.add(
                 "ready"
             );
+            saveTutorialState();
 
         }
 
@@ -3655,23 +3747,63 @@ function typeEcho(index) {
  */
 
 function nextEcho() {
-    // SPACE 첫 입력은 현재 문장을 완성한다.
-    // 다음 대사는 이동/조사/암호 입력 등 실제 행동이 완료될 때만
-    // 해당 상호작용 함수에서 typeEcho()로 시작한다.
+    // 첫 SPACE는 타이핑을 완료하고, 두 번째 SPACE는 첫 이동 안내를 연다.
     if (!typingDone) {
         clearTimeout(typingTimer);
         echoMessage.textContent = messages[echoIndex] || "";
         typingDone = true;
         echoNext.classList.add("ready");
+        saveTutorialState();
         return;
     }
 
-    // 행동 조건을 건너뛰어 다음 대사로 진행하지 않도록 한다.
+    if (echoIndex === 0 && tutorialStep === 0) {
+        typeEcho(1);
+        status.textContent = "TUTORIAL // W A S D TO MOVE";
+        saveTutorialState();
+        return;
+    }
+
+    // 이후 대사는 이동·조사 등 실제 행동을 완료했을 때만 바뀐다.
     status.textContent = "ECHO SYSTEM // 안내된 행동을 먼저 완료하십시오.";
+    saveTutorialState();
 }
 
+const TUTORIAL_SAVE_KEY = "project_logic_tutorial_save_v3";
+if (__RESET_TUTORIAL_SAVE__) { try { localStorage.removeItem(TUTORIAL_SAVE_KEY); } catch (e) {} }
+function saveTutorialState() {
+    try {
+        localStorage.setItem(TUTORIAL_SAVE_KEY, JSON.stringify({
+            tutorialStep, echoIndex, echoText: echoMessage.textContent,
+            typingDone, playerX, playerY, keyCollected, cardConsumed,
+            accessCode: ACCESS_CODE, inventory: Array.from(inventorySlots).map(el => el.classList.contains("has-item"))
+        }));
+    } catch (e) {}
+}
+function restoreTutorialState() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(TUTORIAL_SAVE_KEY) || "null");
+        if (!saved) return false;
+        if (Number.isFinite(saved.tutorialStep)) tutorialStep = saved.tutorialStep;
+        if (Number.isFinite(saved.echoIndex)) echoIndex = Math.max(0, Math.min(messages.length - 1, saved.echoIndex));
+        if (Number.isFinite(saved.playerX)) playerX = saved.playerX;
+        if (Number.isFinite(saved.playerY)) playerY = saved.playerY;
+        keyCollected = !!saved.keyCollected;
+        cardConsumed = !!saved.cardConsumed;
+        if (typeof saved.accessCode === "string" && /^\d{4}$/.test(saved.accessCode)) ACCESS_CODE = saved.accessCode;
+        player.style.left = playerX + "%";
+        player.style.top = playerY + "%";
+        echoMessage.textContent = typeof saved.echoText === "string" ? saved.echoText : (messages[echoIndex] || "");
+        typingDone = true; // iframe 재생성 후에는 현재 문장을 보존하고 타이핑 완료 상태로 복구
+        echoNext.classList.add("ready");
+        return true;
+    } catch (e) { return false; }
+}
 
-typeEcho(0);
+const tutorialWasRestored = restoreTutorialState();
+if (!tutorialWasRestored) typeEcho(0);
+setInterval(saveTutorialState, 250);
+window.addEventListener("beforeunload", saveTutorialState);
 
 
 /* =====================================================
@@ -5364,9 +5496,10 @@ function finishCardDrag(
             typingDone = true;
             echoNext.classList.add("ready");
             setTimeout(function () {
+                const fadeMessage = document.getElementById("fadeMessage");
+                if (fadeMessage) fadeMessage.innerHTML = '<span class="fade-stage">STAGE 01</span><span class="fade-room">:ARCHIVE ACCESS</span>';
                 if (fadeScreen) fadeScreen.classList.add("active");
-                var transitionTitle = document.getElementById("stageTransitionTitle");
-                if (transitionTitle) transitionTitle.classList.add("visible");
+                // Leave the black screen and flickering stage sign visible for 3 seconds.
                 setTimeout(function () { parentAction("stage01"); }, 3000);
             }, 1000);
         }, 700);
@@ -5411,90 +5544,32 @@ dragCard.addEventListener(
    RESTART / TITLE
    ===================================================== */
 
-function parentAction(
-    action
-) {
-
-    let target =
-        null;
-
-
-    /*
-     * iframe에서 부모 Streamlit 주소를
-     * 읽을 수 있는 경우 사용
-     */
-
+function parentAction(action) {
+    // components.html is sandboxed: top-level navigation can be rejected after a timer.
+    // If same-origin access is available, update the Streamlit page URL and reload it;
+    // the page's Python action handler then performs st.switch_page().
     try {
+        const parentWindow = window.parent;
+        const targetUrl = new URL(parentWindow.location.href);
+        targetUrl.search = "";
+        targetUrl.hash = "";
+        targetUrl.searchParams.set("action", action);
+        parentWindow.history.replaceState({}, "", targetUrl.toString());
+        parentWindow.location.reload();
+        return;
+    } catch (error) {}
 
-        if (
-            document.referrer
-        ) {
-
-            target =
-                new URL(
-                    document.referrer
-                );
-
-
-            target.searchParams.set(
-                "action",
-                action
-            );
-
-        }
-
+    // User-triggered pause actions are also real target=_top links, so this fallback
+    // is only reached if the timed transition is blocked by the iframe sandbox.
+    const statusNode = document.getElementById("status");
+    if (statusNode) {
+        statusNode.textContent = "NAVIGATION BLOCKED // browser sandbox prevented automatic transition.";
     }
-
-    catch (error) {
-
-        target =
-            null;
-
-    }
-
-
-    if (target) {
-
-        window.top.location.href =
-            target.toString();
-
-    }
-
-    else {
-
-        window.parent.location.href =
-            "?action=" +
-            encodeURIComponent(
-                action
-            );
-
-    }
-
 }
 
 
-document.getElementById("restartButton").addEventListener("click", function () { document.getElementById("restartConfirm").style.display = "flex"; });
-document.getElementById("restartNo").addEventListener("click", function () { document.getElementById("restartConfirm").style.display = "none"; });
-document.getElementById("restartYes").addEventListener("click", function () {
-    try { localStorage.removeItem("project_logic_tutorial_save_v2"); } catch (e) {}
-    parentAction("restart");
-});
-
-
-document
-    .getElementById(
-        "titleButton"
-    )
-    .addEventListener(
-        "click",
-        function () {
-
-            parentAction(
-                "title"
-            );
-
-        }
-    );
+// RESTART and TITLE are target=_top links so their user-activated navigation
+// does not depend on JavaScript being allowed to navigate the sandbox's parent.
 
 
 /* =====================================================
@@ -5549,43 +5624,6 @@ window.addEventListener(
 /* =====================================================
    PAUSE INITIAL STATE
    ===================================================== */
-
-// Persist tutorial progress across Streamlit reruns (pause/resume and title navigation).
-const TUTORIAL_SAVE_KEY = "project_logic_tutorial_save_v2";
-function saveTutorialProgress() {
-    try {
-        localStorage.setItem(TUTORIAL_SAVE_KEY, JSON.stringify({
-            tutorialStep, playerX, playerY, ACCESS_CODE, inventory, keyCollected, cardConsumed, echoIndex, echoText: echoMessage.textContent, typingDone
-        }));
-    } catch (e) {}
-}
-function restoreTutorialProgress() {
-    try {
-        const raw = localStorage.getItem(TUTORIAL_SAVE_KEY);
-        if (!raw) return;
-        const saved = JSON.parse(raw);
-        if (Number.isFinite(saved.tutorialStep)) tutorialStep = saved.tutorialStep;
-        if (Number.isFinite(saved.playerX)) playerX = saved.playerX;
-        if (Number.isFinite(saved.playerY)) playerY = saved.playerY;
-        if (typeof saved.ACCESS_CODE === "string") ACCESS_CODE = saved.ACCESS_CODE;
-        if (Array.isArray(saved.inventory) && saved.inventory.length === inventory.length) {
-            saved.inventory.forEach((item, i) => inventory[i] = item);
-        }
-        if (typeof saved.keyCollected === "boolean") keyCollected = saved.keyCollected;
-        if (typeof saved.cardConsumed === "boolean") cardConsumed = saved.cardConsumed;
-        if (Number.isFinite(saved.echoIndex)) echoIndex = saved.echoIndex;
-        if (typeof saved.echoText === "string" && saved.echoText) echoMessage.textContent = saved.echoText;
-        if (typeof saved.typingDone === "boolean") typingDone = saved.typingDone;
-        if (typingDone) echoNext.classList.add("ready");
-        renderInventory();
-    } catch (e) {}
-}
-restoreTutorialProgress();
-const roomIntro = document.getElementById("roomIntro");
-try { if (sessionStorage.getItem("project_logic_stage00_intro_seen")) roomIntro.style.display = "none"; else { sessionStorage.setItem("project_logic_stage00_intro_seen", "1"); setTimeout(() => { roomIntro.style.opacity = "0"; roomIntro.style.transition = "opacity .35s"; setTimeout(() => roomIntro.remove(), 380); }, 3000); } } catch(e) { setTimeout(() => roomIntro.remove(), 3000); }
-
-setInterval(saveTutorialProgress, 500);
-window.addEventListener("beforeunload", saveTutorialProgress);
 
 if (paused) {
 
@@ -5652,6 +5690,8 @@ html = html.replace(
     if paused
     else "false",
 )
+
+html = html.replace("__RESET_TUTORIAL_SAVE__", "true" if st.session_state.pop("tutorial_reset_save", False) else "false")
 
 
 # =========================================================
