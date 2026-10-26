@@ -2228,18 +2228,22 @@ input {
 .pause-toggle:before,.pause-toggle:after{content:"";position:absolute;width:7px;height:7px;border-color:#8af0ff;border-style:solid}
 .pause-toggle:before{left:-2px;top:-2px;border-width:2px 0 0 2px}.pause-toggle:after{right:-2px;bottom:-2px;border-width:0 2px 2px 0}
 .pause-toggle:hover{background:#d9faff;color:#001018}
+.tutorial-direction-arrow{position:absolute;z-index:1500;display:none;left:50%;top:25%;transform:translateX(-50%);color:#8defff;font-size:58px;line-height:1;font-weight:900;text-shadow:0 0 5px #00dfff,0 0 14px #00dfff;animation:arrowFloat 1s ease-in-out infinite;pointer-events:none;-webkit-text-stroke:1px #d9faff}
+.tutorial-direction-arrow.show{display:block}
+@keyframes arrowFloat{0%,100%{translate:0 0}50%{translate:0 12px}}
+.inventory-card-image{animation:none!important;filter:none!important;box-shadow:none!important}
 /* Reference-matched stage and item-acquired overlays */
 .tutorial-transition{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;background:#000;opacity:1;transition:opacity .45s steps(6,end);pointer-events:auto}
 .tutorial-transition.show{display:flex}.tutorial-transition.hide{opacity:0;pointer-events:none}
 .tutorial-transition-card{position:relative;width:min(350px,78vw);min-height:145px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #57dfff;color:#f5fbff;box-shadow:0 0 0 1px #143d4c,0 0 14px #00cfff22;letter-spacing:2px}
-.tutorial-transition-card{animation:neonFault 1.15s steps(1,end) infinite;text-shadow:0 0 5px #fff,0 0 12px #00dfff;}
+.tutorial-transition-card{text-shadow:0 0 5px #fff,0 0 12px #00dfff;animation:neonFaultOnce .85s steps(1,end) 1 both;}
 .tutorial-transition-card:before,.tutorial-transition-card:after{content:'';position:absolute;width:18px;height:18px;border-color:#78ecff;border-style:solid}
 .tutorial-transition-card:before{top:-2px;left:-2px;border-width:2px 0 0 2px}.tutorial-transition-card:after{right:-2px;bottom:-2px;border-width:0 2px 2px 0}
-.tutorial-transition-stage{font-size:clamp(25px,4vw,36px);line-height:1.6;text-shadow:0 0 5px #fff,0 0 14px #57dfff;animation:neonFault .9s steps(1,end) infinite}.tutorial-transition-room{font-size:clamp(14px,2vw,20px);color:#a8f2ff;letter-spacing:1px;animation:neonFault 1.4s steps(1,end) infinite}
-@keyframes neonFault{0%,18%,22%,61%,65%,100%{opacity:1;filter:none}19%,21%,62%,64%{opacity:.28;filter:brightness(.45)}40%{opacity:.78}41%{opacity:1}}
-.help-panel{position:relative;background:#02070c!important;color:#d9faff!important;border:2px solid #48dfff!important;box-shadow:0 0 0 2px #123c4d,0 0 18px #00cfff22!important;image-rendering:pixelated}
-.help-panel:before,.help-panel:after{content:"";position:absolute;width:14px;height:14px;border-color:#8af0ff;border-style:solid;pointer-events:none}.help-panel:before{left:-3px;top:-3px;border-width:3px 0 0 3px}.help-panel:after{right:-3px;bottom:-3px;border-width:0 3px 3px 0}
-.help-row{border-bottom:1px solid #17495b!important}
+.tutorial-transition-stage{font-size:clamp(25px,4vw,36px);line-height:1.6;text-shadow:0 0 5px #fff,0 0 14px #57dfff;animation:none}.tutorial-transition-room{font-size:clamp(14px,2vw,20px);color:#a8f2ff;letter-spacing:1px;animation:none}
+@keyframes neonFaultOnce{0%,18%,22%,100%{opacity:1;filter:none}19%,21%{opacity:.22;filter:brightness(.4)}}
+.help-panel{position:relative;background:#02070c!important;color:#d9faff!important;border:1px solid #48dfff!important;box-shadow:0 0 0 1px #123c4d,0 0 14px #00cfff22!important;image-rendering:pixelated}
+.help-panel:before,.help-panel:after{content:"";position:absolute;width:12px;height:12px;border-color:#8af0ff;border-style:solid;pointer-events:none}.help-panel:before{left:-2px;top:-2px;border-width:1px 0 0 1px}.help-panel:after{right:-2px;bottom:-2px;border-width:0 1px 1px 0}
+.item-description{background:#02070c!important;color:#d9faff!important;border:1px solid #48dfff!important;box-shadow:0 0 0 1px #123c4d,0 0 12px #00cfff22!important}.help-row{border-bottom:1px solid #17495b!important}
 .help-number,.help-key{border:1px solid #2587a7!important;background:#04121a!important;color:#8defff!important}
 .help-title{color:#8defff!important;text-shadow:0 0 7px #00cfff66!important}
 .item-acquired-notice{position:fixed;left:50%;bottom:5%;transform:translateX(-50%);z-index:500;display:none;grid-template-columns:minmax(120px,.78fr) minmax(240px,1.45fr);gap:14px;width:min(720px,92vw);padding:14px;background:#02070c;border:1px solid #48dfff;box-shadow:0 0 0 1px #123c4d,0 0 16px #00cfff22;cursor:pointer}
@@ -2555,6 +2559,8 @@ input {
     id="gameRoot"
     tabindex="0"
 >
+<div id="tutorialDirectionArrow" class="tutorial-direction-arrow" aria-hidden="true">⬇</div>
+
 
 <button class="pause-toggle" id="pauseToggle" type="button" aria-label="Pause game">Ⅱ</button>
 
@@ -3457,19 +3463,23 @@ function clearKeys() {
    INVENTORY
    ===================================================== */
 
-const inventory = [
+const inventory = Array(12).fill(null);
 
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
 
-];
-
+function updateTutorialArrow() {
+    const arrow = document.getElementById("tutorialDirectionArrow");
+    if (!arrow) return;
+    // Only guide the player at the active tutorial objective.
+    const targets = {0: null, 1: "computer", 2: "computer", 3: "desk", 5: "exitDoor"};
+    const targetId = targets[tutorialStep];
+    const target = targetId ? document.getElementById(targetId) : null;
+    if (!target) { arrow.classList.remove("show"); return; }
+    const gameRect = document.querySelector(".game").getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
+    arrow.style.left = (rect.left + rect.width / 2 - gameRect.left) + "px";
+    arrow.style.top = (rect.top - gameRect.top - 58) + "px";
+    arrow.classList.add("show");
+}
 
 function renderInventory() {
 
@@ -3485,7 +3495,7 @@ function renderInventory() {
                 slot.innerHTML =
                     `
                     <div class="slot-number">${String(index + 1).padStart(2, "0")}</div>
-                    ${item.name === "ACCESS KEY" ? '<img class="access-card-image" src="data:image/png;base64,__CARD_IMAGE_BASE64__" alt="Access card">' : '<div class="item-name">' + item.name + '</div>'}
+                    ${item.name === "ACCESS KEY" ? '<img class="access-card-image inventory-card-image" src="data:image/png;base64,__CARD_IMAGE_BASE64__" alt="Access card">' : '<div class="item-name">' + item.name + '</div>'}
                     `;
 
             }
@@ -3509,6 +3519,7 @@ function renderInventory() {
 
 
 renderInventory();
+window.setInterval(updateTutorialArrow, 180);
 
 
 /* =====================================================
@@ -4544,7 +4555,7 @@ function interact() {
             };
             itemNotice.onclick = dismissItemNotice;
             itemNotice.onkeydown = (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); dismissItemNotice(); } };
-            window.setTimeout(dismissItemNotice, 6500);
+            // Wait for the player to dismiss the card notice before ECHO resumes.
         } else {
             typeEcho(5);
         }
