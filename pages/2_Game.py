@@ -181,12 +181,12 @@ footer {{
 .inventory-panel:after,.pause-menu-panel:after,.item-acquired-dialog:after,.tutorial-transition-card:after{{content:"";position:absolute;right:-2px;bottom:-2px;width:12px;height:12px;border-right:2px solid #8af0ff;border-bottom:2px solid #8af0ff;pointer-events:none}}
 
 /* Reference artwork alignment: keep invisible interaction targets over the matching objects. */
-.object.computer { left:16% !important; top:7% !important; width:49% !important; height:34% !important; }
-.object.monitor { left:33% !important; top:12% !important; width:24% !important; height:17% !important; }
-.object.desk { left:30% !important; top:70% !important; width:32% !important; height:24% !important; }
-.exit-wall { left:78% !important; top:33% !important; width:19% !important; height:39% !important; }
-.exit-sign { display:none !important; }
-.logic-art-layer,.scene-object { display:none !important; }
+.object.computer {{ left:16% !important; top:7% !important; width:49% !important; height:34% !important; }}
+.object.monitor {{ left:33% !important; top:12% !important; width:24% !important; height:17% !important; }}
+.object.desk {{ left:30% !important; top:70% !important; width:32% !important; height:24% !important; }}
+.exit-wall {{ left:78% !important; top:33% !important; width:19% !important; height:39% !important; }}
+.exit-sign {{ display:none !important; }}
+.logic-art-layer,.scene-object {{ display:none !important; }}
 </style>
 """,
     unsafe_allow_html=True,
