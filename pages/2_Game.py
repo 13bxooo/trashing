@@ -2232,9 +2232,16 @@ input {
 .tutorial-transition{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;background:#000;opacity:1;transition:opacity .45s steps(6,end);pointer-events:auto}
 .tutorial-transition.show{display:flex}.tutorial-transition.hide{opacity:0;pointer-events:none}
 .tutorial-transition-card{position:relative;width:min(350px,78vw);min-height:145px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #57dfff;color:#f5fbff;box-shadow:0 0 0 1px #143d4c,0 0 14px #00cfff22;letter-spacing:2px}
+.tutorial-transition-card{animation:neonFault 1.15s steps(1,end) infinite;text-shadow:0 0 5px #fff,0 0 12px #00dfff;}
 .tutorial-transition-card:before,.tutorial-transition-card:after{content:'';position:absolute;width:18px;height:18px;border-color:#78ecff;border-style:solid}
 .tutorial-transition-card:before{top:-2px;left:-2px;border-width:2px 0 0 2px}.tutorial-transition-card:after{right:-2px;bottom:-2px;border-width:0 2px 2px 0}
-.tutorial-transition-stage{font-size:clamp(25px,4vw,36px);line-height:1.6;text-shadow:0 0 5px #fff}.tutorial-transition-room{font-size:clamp(14px,2vw,20px);color:#a8f2ff;letter-spacing:1px}
+.tutorial-transition-stage{font-size:clamp(25px,4vw,36px);line-height:1.6;text-shadow:0 0 5px #fff,0 0 14px #57dfff;animation:neonFault .9s steps(1,end) infinite}.tutorial-transition-room{font-size:clamp(14px,2vw,20px);color:#a8f2ff;letter-spacing:1px;animation:neonFault 1.4s steps(1,end) infinite}
+@keyframes neonFault{0%,18%,22%,61%,65%,100%{opacity:1;filter:none}19%,21%,62%,64%{opacity:.28;filter:brightness(.45)}40%{opacity:.78}41%{opacity:1}}
+.help-panel{position:relative;background:#02070c!important;color:#d9faff!important;border:2px solid #48dfff!important;box-shadow:0 0 0 2px #123c4d,0 0 18px #00cfff22!important;image-rendering:pixelated}
+.help-panel:before,.help-panel:after{content:"";position:absolute;width:14px;height:14px;border-color:#8af0ff;border-style:solid;pointer-events:none}.help-panel:before{left:-3px;top:-3px;border-width:3px 0 0 3px}.help-panel:after{right:-3px;bottom:-3px;border-width:0 3px 3px 0}
+.help-row{border-bottom:1px solid #17495b!important}
+.help-number,.help-key{border:1px solid #2587a7!important;background:#04121a!important;color:#8defff!important}
+.help-title{color:#8defff!important;text-shadow:0 0 7px #00cfff66!important}
 .item-acquired-notice{position:fixed;left:50%;bottom:5%;transform:translateX(-50%);z-index:500;display:none;grid-template-columns:minmax(120px,.78fr) minmax(240px,1.45fr);gap:14px;width:min(720px,92vw);padding:14px;background:#02070c;border:1px solid #48dfff;box-shadow:0 0 0 1px #123c4d,0 0 16px #00cfff22;cursor:pointer}
 .item-acquired-notice.show{display:grid}.item-acquired-art{display:flex;align-items:center;justify-content:center;min-height:120px;position:relative}
 .item-acquired-art .pixel-card-item{width:94px;height:62px;transform:rotate(-10deg) scale(1.05);margin:0;box-shadow:3px 0 #bafaff,-3px 0 #bafaff,0 3px #bafaff,0 -3px #bafaff,0 0 16px #00dfff88}
@@ -3635,7 +3642,8 @@ function saveTutorialState() {
         localStorage.setItem(TUTORIAL_SAVE_KEY, JSON.stringify({
             tutorialStep, echoIndex, echoText: echoMessage.textContent,
             typingDone, playerX, playerY, keyCollected, cardConsumed,
-            accessCode: ACCESS_CODE, inventory: Array.from(inventorySlots).map(el => el.classList.contains("has-item"))
+            accessCode: ACCESS_CODE,
+            inventory: inventory.map(item => item ? {name: item.name, description: item.description} : null)
         }));
     } catch (e) {}
 }
@@ -3649,12 +3657,27 @@ function restoreTutorialState() {
         if (Number.isFinite(saved.playerY)) playerY = saved.playerY;
         keyCollected = !!saved.keyCollected;
         cardConsumed = !!saved.cardConsumed;
+        if (Array.isArray(saved.inventory)) {
+            for (let i = 0; i < inventory.length; i++) {
+                const item = saved.inventory[i];
+                inventory[i] = item && typeof item.name === "string"
+                    ? {name: item.name, description: typeof item.description === "string" ? item.description : ""}
+                    : null;
+            }
+        } else if (keyCollected && inventory.length) {
+            inventory[0] = {name: "ACCESS KEY", description: "ECHO TERMINAL에서 인증된 보안구역 접근 키입니다."};
+        }
         if (typeof saved.accessCode === "string" && /^\d{4}$/.test(saved.accessCode)) ACCESS_CODE = saved.accessCode;
         player.style.left = playerX + "%";
         player.style.top = playerY + "%";
         echoMessage.textContent = typeof saved.echoText === "string" ? saved.echoText : (messages[echoIndex] || "");
         typingDone = true; // iframe 재생성 후에는 현재 문장을 보존하고 타이핑 완료 상태로 복구
         echoNext.classList.add("ready");
+        renderInventory();
+        if (keyCollected) {
+            const keyNode = document.getElementById("accessKey");
+            if (keyNode) keyNode.classList.remove("visible");
+        }
         return true;
     } catch (e) { return false; }
 }
@@ -3663,12 +3686,14 @@ const tutorialWasRestored = restoreTutorialState();
 const tutorialTransition = document.getElementById("tutorialTransition");
 if (!tutorialWasRestored && tutorialTransition) {
     tutorialTransition.classList.add("show");
-    window.setTimeout(() => tutorialTransition.classList.add("hide"), 2550);
-    window.setTimeout(() => tutorialTransition.remove(), 3050);
+    window.setTimeout(() => tutorialTransition.classList.add("hide"), 2700);
+    window.setTimeout(() => tutorialTransition.remove(), 3150);
 }
 if (!tutorialWasRestored) typeEcho(0);
 setInterval(saveTutorialState, 250);
 window.addEventListener("beforeunload", saveTutorialState);
+window.addEventListener("pagehide", saveTutorialState);
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") saveTutorialState(); });
 
 
 /* =====================================================
@@ -4318,6 +4343,28 @@ codeInput.addEventListener(
 );
 
 
+/* Short, bright two-note card-acquired chime (no external audio asset required). */
+function playCardAcquireSound() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        [[880, 0], [1320, 0.105]].forEach(([frequency, offset]) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(frequency, now + offset);
+            gain.gain.setValueAtTime(0.0001, now + offset);
+            gain.gain.exponentialRampToValueAtTime(0.18, now + offset + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.24);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(now + offset); osc.stop(now + offset + 0.25);
+        });
+        window.setTimeout(() => ctx.close().catch(() => {}), 500);
+    } catch (e) {}
+}
+
 /* =====================================================
    INTERACTION
    ===================================================== */
@@ -4484,16 +4531,23 @@ function interact() {
 
         renderInventory();
         const itemNotice = document.getElementById("itemAcquiredNotice");
+        playCardAcquireSound();
         if (itemNotice) {
+            let noticeDismissed = false;
             itemNotice.classList.add("show");
-            const dismissItemNotice = () => itemNotice.classList.remove("show");
+            const dismissItemNotice = () => {
+                if (noticeDismissed) return;
+                noticeDismissed = true;
+                itemNotice.classList.remove("show");
+                // ECHO speaks only after the acquisition notice has disappeared.
+                window.setTimeout(() => typeEcho(5), 180);
+            };
             itemNotice.onclick = dismissItemNotice;
-            itemNotice.onkeydown = (event) => { if (event.key === "Enter" || event.key === " ") dismissItemNotice(); };
+            itemNotice.onkeydown = (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); dismissItemNotice(); } };
             window.setTimeout(dismissItemNotice, 6500);
+        } else {
+            typeEcho(5);
         }
-
-
-        typeEcho(5);
 
 
         status.textContent =
@@ -5441,8 +5495,12 @@ function parentAction(action) {
 }
 
 
-// RESTART and TITLE are target=_top links so their user-activated navigation
-// does not depend on JavaScript being allowed to navigate the sandbox's parent.
+// Route pause-menu navigation through the Streamlit page URL handler.
+// This avoids broken relative links inside the embedded components.html frame.
+const restartButton = document.getElementById("restartButton");
+const titleButton = document.getElementById("titleButton");
+if (restartButton) restartButton.addEventListener("click", function (event) { event.preventDefault(); event.stopPropagation(); parentAction("restart"); });
+if (titleButton) titleButton.addEventListener("click", function (event) { event.preventDefault(); event.stopPropagation(); parentAction("title"); });
 
 
 /* =====================================================
