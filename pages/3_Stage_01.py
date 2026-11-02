@@ -13,6 +13,18 @@ st.set_page_config(
 
 # Hidden host-page navigation controls. The iframe asks the parent Streamlit page
 # to click these after its save/fade animation, avoiding sandboxed top-frame navigation.
+st.markdown("""
+<style>
+html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"],[data-testid="stMainBlockContainer"],.stApp{
+ background:#02050b!important;color:#fff!important;
+}
+[data-testid="stHeader"],[data-testid="stToolbar"],[data-testid="stSidebarCollapsedControl"],footer{display:none!important}
+[data-testid="stMainBlockContainer"],.block-container{padding:0!important;max-width:100vw!important;width:100%!important;margin:0!important}
+[data-testid="stVerticalBlock"]{gap:0!important}
+iframe[title="streamlit.components.v1.html"]{display:block!important;width:100%!important;border:0!important}
+[data-testid="stIFrame"]{width:100%!important}
+</style>
+""",unsafe_allow_html=True)
 st.markdown("<style>.st-key-host_title_nav,.st-key-host_restart_nav,.st-key-host_stage2_nav{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;overflow:hidden!important;}</style>", unsafe_allow_html=True)
 _host_title = st.button("TITLE NAV", key="host_title_nav")
 _host_restart = st.button("RESTART NAV", key="host_restart_nav")
@@ -69,6 +81,7 @@ missing = [name for name in SPRITE_FILES if not (STAGE_ASSETS / (name + ".png"))
 if missing:
     st.error("STAGE 01 에셋 누락: " + ", ".join(missing))
     st.stop()
+# V9: verified complete desk/archive PNGs are embedded fresh on every Streamlit rerun.
 sprite_urls = {name: "data:image/png;base64," + base64.b64encode((STAGE_ASSETS / (name + ".png")).read_bytes()).decode("ascii") for name in SPRITE_FILES}
 
 html = r"""
@@ -258,6 +271,40 @@ __TUTORIAL_CSS__
 @keyframes archiveGlow{0%,100%{filter:drop-shadow(0 0 2px #15c9d9)}50%{filter:drop-shadow(0 0 10px #47ffff) drop-shadow(0 0 4px #11dce9)}}
 #terminalTarget{position:absolute;left:64%;top:13%;width:9%;height:12%;pointer-events:none;z-index:3;animation:archiveGlow 2s infinite}
 #floorLayer{z-index:0!important}#wallLayer{z-index:1!important}
+
+/* No baked-in screenshots: stage is assembled only from individual sprites. */
+html,body{margin:0!important;padding:0!important;width:100%!important;height:100%!important;background:#02050b!important;overflow:hidden!important}
+.game,.game-area,.room,.stage01-layer{background-image:none!important}
+.game{position:relative!important;box-sizing:border-box!important;width:100vw!important;max-width:none!important;height:100vh!important;min-height:0!important;margin:0!important;padding:20px 24px!important;background:#02050b!important;overflow:hidden!important}
+.game:before,.game:after,.game-area:before,.game-area:after,.room:before,.room:after{content:none!important;background:none!important}
+.project-title{top:20px!important;left:24px!important}
+.stage-title{top:53px!important;left:24px!important}
+.stage01-timer{top:27px!important;right:100px!important}
+.game-area{position:absolute!important;top:90px!important;bottom:12px!important;left:24px!important;right:24px!important;width:auto!important;height:auto!important;min-height:0!important;display:flex!important;justify-content:center!important;align-items:center!important;overflow:hidden!important;background:#02050b!important}
+.room{position:relative!important;flex:none!important;width:min(100%,calc((100vh - 110px) * 1.103))!important;height:auto!important;aspect-ratio:1317/1194!important;margin:auto!important;overflow:hidden!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.stage01-layer{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important}
+#floorLayer{z-index:0!important}#wallLayer{z-index:1!important}
+.stage01-decor,.stage01-object,.exit-wall{overflow:visible!important;clip-path:none!important}
+.stage01-decor img,.stage01-object img{object-fit:contain!important;overflow:visible!important}
+.stage01-object:not(.collected){animation:slowCyanPulse 3.4s ease-in-out infinite!important;will-change:filter}
+.stage01-object.collected{animation:none!important;filter:none!important}
+@keyframes slowCyanPulse{0%,100%{filter:drop-shadow(0 0 1px #15dce8)}50%{filter:drop-shadow(0 0 8px #00edff) drop-shadow(0 0 3px #37ffff)}}
+.stage01-pause{display:flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;text-align:center!important;position:absolute!important;top:20px!important;right:24px!important;box-sizing:border-box!important;width:44px!important;height:44px!important;padding:0!important;border:1px solid #59eaff!important;border-radius:0!important;background:#000810!important;color:#bdf9ff!important;font-family:monospace!important;font-size:22px!important;letter-spacing:0!important}
+.pause-overlay{position:fixed!important;inset:0!important;display:none;align-items:center!important;justify-content:center!important;z-index:100000!important;background:rgba(0,0,0,.72)!important}
+.pause-overlay>div{box-sizing:border-box!important;width:min(536px,88vw)!important;height:274px!important;min-height:0!important;max-height:88vh!important;padding:30px 44px!important;display:flex!important;align-items:center!important;border:1px solid #5bdaf2!important;background:#03121e!important;box-shadow:none!important}
+.pause-actions{width:100%!important;margin:0!important;display:flex!important;flex-direction:column!important;gap:8px!important}
+.pause-row{width:100%!important;height:55px!important;display:flex!important;align-items:center!important;gap:16px!important}
+.pause-icon{flex:none!important;width:38px!important;height:38px!important;border:1px solid #59eaff!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.pause-actions .pause-nav-link{flex:none!important;width:auto!important;min-height:40px!important;padding:0!important;border:0!important;background:transparent!important;color:#f0fbff!important;font-size:17px!important;justify-content:flex-start!important}
+.echo-bar{z-index:12!important}
+
+/* Sprite integrity patch: don't clip asset boxes or stretch images */
+.stage01-object,.stage01-decor,.exit-wall{overflow:visible!important;clip-path:none!important;mask:none!important}
+.stage01-object img,.stage01-decor img,.exit-wall img{display:block!important;object-fit:contain!important;object-position:center!important;image-rendering:pixelated!important;max-width:none!important;max-height:none!important;overflow:visible!important}
+
+/* v9: keep complete sprites visible at original aspect ratio */
+#objectB,#objectC{overflow:visible!important;clip-path:none!important;contain:none!important}
+#objectB img,#objectC img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;clip-path:none!important;image-rendering:pixelated!important}
 </style></head><body>
 <div class="game" id="gameRoot" tabindex="0">
   <div class="project-title">PROJECT : LOGIC</div>
@@ -295,7 +342,7 @@ __TUTORIAL_CSS__
       <div class="object stage01-object stage01-archive" id="objectArchive" data-id="ARCHIVE"><img src="__SPR_SCIENCE_BOARD__" alt="science_board"><span class="sub-label" id="stateArchive">UNREAD</span></div>
       <div class="object stage01-object stage01-panel" id="objectPanel" aria-hidden="true"><span class="reader-light" id="panelLight"></span><span class="main-label">EXIT ACCESS</span><span class="sub-label" id="statePanel">LOCKED</span></div>
 
-      <div class="exit-wall" id="exitDoor" data-id="EXIT"><img id="doorSprite" src="__SPR_DOOR_LOCKED__"><span class="reader-light" id="exitLight" aria-label="Exit access indicator"></span></div>
+      <div class="exit-wall" id="exitDoor" data-id="EXIT"><span id="doorSprite" style="display:none"></span><span class="reader-light" id="exitLight" aria-label="Exit access indicator"></span></div>
       <div class="exit-sign"><span class="exit-arrow">↓ ↑</span><br><span>[EXIT] ARCHIVE ACCESS</span></div>
       <div class="player" id="player"></div>
       <div class="interaction-message" id="interactionMessage">PRESS E</div>
@@ -434,7 +481,7 @@ function openHelp(){if(dataOpen||codeOpen||paused||finished)return;if(helpOpen){
 function playWritingSound(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext)audioContext=new AC();audioContext.resume();const n=Math.floor(audioContext.sampleRate*.22),buf=audioContext.createBuffer(1,n,audioContext.sampleRate),a=buf.getChannelData(0);let v=0;for(let i=0;i<n;i++){v=v*.75+(Math.random()*2-1)*.25;a[i]=v*.23*(1-i/n)}const src=audioContext.createBufferSource(),filter=audioContext.createBiquadFilter();filter.type='highpass';filter.frequency.value=850;src.buffer=buf;src.connect(filter);filter.connect(audioContext.destination);src.start()}catch(e){}}
 function addItem(id){if(items.some(item=>item.id===id))return;let item;if(id==='ARCHIVE'){item={id,name:'ARCHIVE NOTE',body:'ARCHIVE INCIDENT // FRAGMENT 04\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 이 명령은 기록을 삭제하라는 지시와 함께 저장되었다.”'}}else item={id,name:clues[id].title,body:clues[id].body};items.push(item);playWritingSound();const slot=items.length-1;if(slot<inventory.length)inventory[slot]=item;renderInventory()}
 function interact(){if(paused||finished||isOverlayOpen())return;if(!nearby){say('NO TARGET // 가까운 장치로 이동하십시오.');return}const id=nearby.id;if(clues[id]){if(!found[id]){found[id]=true;addItem(id);nearby.el.classList.add('collected');$('state'+id).textContent='DATA FOUND';say(id+' 기록을 확보했습니다. INVENTORY에서 다시 확인할 수 있습니다.')}showRecord(clues[id].title,clues[id].body);return}if(id==='ARCHIVE'){found.ARCHIVE=true;nearby.el.classList.add('collected');$('stateArchive').textContent='READ';addItem('ARCHIVE');say('ARCHIVE NOTE 확보 // 네 자리 인증식을 확인하십시오.');showRecord('ARCHIVE NOTE // FRAGMENT 04','ARCHIVE INCIDENT // PERSONAL NOTE\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 기록 삭제 명령은 사고 직전 ECHO의 내부 인증값으로 전송되었다.”');return}if(id==='TERMINAL'){if(!codeSolved)showCode();else say('인증 완료. 출입문에서 E키를 누르십시오.');return}if(id==='EXIT'){if(!codeSolved){say('문 오른쪽 보안 단말기에 암호를 입력하십시오.');return}finishStage();return}}
-function verify(){if(pinBuffer.length!==4){$('codeError').textContent='FOUR DIGITS REQUIRED // 네 자리 모두 입력하십시오.';return}if(pinBuffer===expectedCode){codeSolved=true;$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('room').classList.add('unlocked');$('doorSprite').src='__SPR_DOOR_UNLOCKED__';$('pinLight').classList.add('green');$('pinStatus').textContent='ACCESS GRANTED // GREEN';$('codeError').textContent='ACCESS GRANTED // 출구 잠금 해제';playDoorOpen();saveStageState();say('인증 완료. 출구 표시등이 초록색으로 바뀌었습니다. 출구에서 E를 눌러 진입하십시오.');setTimeout(()=>{if(codeOpen)closeCode()},900)}else{$('pinLight').classList.remove('green');$('codeError').textContent='INVALID CODE // 기록의 규칙을 다시 확인하십시오.';$('pinStatus').textContent='ACCESS DENIED // RED';say('인증 실패 // 보안 표시등이 빨간색입니다. 기록과 계산 순서를 다시 대조하십시오.')}}
+function verify(){if(pinBuffer.length!==4){$('codeError').textContent='FOUR DIGITS REQUIRED // 네 자리 모두 입력하십시오.';return}if(pinBuffer===expectedCode){codeSolved=true;$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('room').classList.add('unlocked');$('exitDoor').classList.add('door-open');$('pinLight').classList.add('green');$('pinStatus').textContent='ACCESS GRANTED // GREEN';$('codeError').textContent='ACCESS GRANTED // 출구 잠금 해제';playDoorOpen();saveStageState();say('인증 완료. 출구 표시등이 초록색으로 바뀌었습니다. 출구에서 E를 눌러 진입하십시오.');setTimeout(()=>{if(codeOpen)closeCode()},900)}else{$('pinLight').classList.remove('green');$('codeError').textContent='INVALID CODE // 기록의 규칙을 다시 확인하십시오.';$('pinStatus').textContent='ACCESS DENIED // RED';say('인증 실패 // 보안 표시등이 빨간색입니다. 기록과 계산 순서를 다시 대조하십시오.')}}
 function addRestartAndTitleButtons(title,sub,copy){helpOpen=false;inventoryOpen=false;dataOpen=true;codeOpen=false;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';pauseOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent=title;$('windowSub').textContent=sub;$('windowBody').innerHTML=copy+'<div class="pause-actions"><div class="pause-row"><span class="pause-icon">↻</span><button class="pause-nav-link" id="clearRestart" type="button">RESTART</button></div><div class="pause-row"><span class="pause-icon">⌂</span><button class="pause-nav-link" id="timeoutTitle" type="button">TITLE</button></div></div>';const b=$('clearRestart');if(b)b.onclick=restartViaHost;const tb=$('timeoutTitle');if(tb)tb.onclick=saveAndReturnToTitle;dataOpen=true;dataOverlay.style.display='flex'}
 function finishStage(){finished=true;paused=true;timerLast=Date.now();clearKeys();pauseOverlay.style.display='none';helpOpen=false;inventoryOpen=false;codeOpen=false;dataOpen=true;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent='SYSTEM HANDOFF';$('windowSub').textContent='ARCHIVE ACCESS // NEXT SECTOR DETECTED';$('windowBody').innerHTML='<div class="system-computer" aria-label="blue pixel computer"><div class="screen"></div><div class="neck"></div><div class="base"></div></div><p> ECHO // 연결된 시스템에서 새로운 신호가 감지되었습니다.</p><p>“이 기록은 끝이 아닙니다. 서버 코어에 남아 있는 원본 로그를 확인해야 합니다.”</p><p>STAGE 02로 이동할 준비가 되었습니다.</p><div class="stage01-window-actions"><button class="code-button" id="continueStage2Btn" type="button">CONTINUE // STAGE 02</button><button class="code-button" id="stage1TitleBtn" type="button">TITLE</button></div>';$('continueStage2Btn').onclick=continueStage2;$('stage1TitleBtn').onclick=saveAndReturnToTitle;dataOverlay.style.display='flex';say('SYSTEM HANDOFF // 타이머 일시정지')}
 function expireGame(){if(finished)return;finished=true;clearKeys();addRestartAndTitleButtons('TIME EXPIRED','SYSTEM LOCKDOWN','<p>제한 시간이 종료되었습니다.</p>');say('TIME EXPIRED // RESTART를 선택하십시오.')}
@@ -474,7 +521,7 @@ function restoreStageState(){
     inventory.fill(null);(Array.isArray(saved.inventory)?saved.inventory:[]).slice(0,inventory.length).forEach((item,i)=>inventory[i]=item);
     ['A','B','C'].forEach(k=>{const el=$('state'+k);if(el)el.textContent=found[k]?'DATA FOUND':'DATA SEALED'});
     $('stateArchive').textContent=found.ARCHIVE?'READ':'UNREAD';
-    if(codeSolved){$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('room').classList.add('unlocked');$('doorSprite').src='__SPR_DOOR_UNLOCKED__';$('pinLight').classList.add('green')}
+    if(codeSolved){$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('room').classList.add('unlocked');$('exitDoor').classList.add('door-open');$('pinLight').classList.add('green')}
     echoIndex=Number.isFinite(saved.echoIndex)?Math.max(0,Math.min(messages.length-1,saved.echoIndex)):0;
     player.style.left=playerX+'%';player.style.top=playerY+'%';renderInventory();updateTimer();
     if(typeof saved.echoText==='string'){echoMessage.textContent=saved.echoText;typingDone=true;echoNext.classList.add('ready')}else typeEcho(echoIndex);
@@ -491,7 +538,7 @@ function saveAndReturnToTitle(){
 }
 function restartViaHost(){paused=true;clearKeys();try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem(RUN_SAVE_KEY)}catch(e){}if(!clickHostControl('host_restart_nav'))restartStage()}
 function continueStage2(){paused=true;timerLast=Date.now();clearKeys();saveStageState();try{localStorage.removeItem('project_logic_stage02_save_v1');localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds,stage:2,updatedAt:Date.now()}))}catch(e){}if(!clickHostControl('host_stage2_nav')){try{window.top.location.assign(new URL('pages/4_Stage_02.py',window.top.location.href).toString())}catch(e){say('STAGE 02 NAVIGATION BLOCKED')}}}
-function restartStage(){try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem('project_logic_stage02_save_v1');localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds:600,stage:1,updatedAt:Date.now()}))}catch(e){}paused=false;finished=false;codeSolved=false;seconds=600;timerLast=Date.now();playerX=50;playerY=55;nearby=null;helpOpen=inventoryOpen=dataOpen=codeOpen=false;[inventoryOverlay,helpOverlay,dataOverlay,codeOverlay,pauseOverlay].forEach(el=>el.style.display='none');Object.keys(found).forEach(k=>found[k]=false);items.length=0;inventory.fill(null);$('stateA').textContent=$('stateB').textContent=$('stateC').textContent='DATA SEALED';$('stateArchive').textContent='UNREAD';$('statePanel').textContent='LOCKED';$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('room').classList.remove('unlocked');$('doorSprite').src='__SPR_DOOR_LOCKED__';$('pinLight').classList.remove('green');pinBuffer='';renderPin();puzzle=puzzleCandidates[Math.floor(Math.random()*puzzleCandidates.length)];expectedCode=makeExpectedCode();rebuildClues();$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('room').classList.remove('unlocked');$('doorSprite').src='__SPR_DOOR_LOCKED__';$('pinLight').classList.remove('green');clearPin();renderInventory();updateTimer();player.style.left=playerX+'%';player.style.top=playerY+'%';echoIndex=0;typeEcho(0);say('SYSTEM READY // 접근 가능한 장치 가까이 이동하십시오.');clearKeys();checkInteraction();root.focus()}
+function restartStage(){try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem('project_logic_stage02_save_v1');localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds:600,stage:1,updatedAt:Date.now()}))}catch(e){}paused=false;finished=false;codeSolved=false;seconds=600;timerLast=Date.now();playerX=50;playerY=55;nearby=null;helpOpen=inventoryOpen=dataOpen=codeOpen=false;[inventoryOverlay,helpOverlay,dataOverlay,codeOverlay,pauseOverlay].forEach(el=>el.style.display='none');Object.keys(found).forEach(k=>found[k]=false);items.length=0;inventory.fill(null);$('stateA').textContent=$('stateB').textContent=$('stateC').textContent='DATA SEALED';$('stateArchive').textContent='UNREAD';$('statePanel').textContent='LOCKED';$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('room').classList.remove('unlocked');$('exitDoor').classList.remove('door-open');$('pinLight').classList.remove('green');pinBuffer='';renderPin();puzzle=puzzleCandidates[Math.floor(Math.random()*puzzleCandidates.length)];expectedCode=makeExpectedCode();rebuildClues();$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('room').classList.remove('unlocked');$('exitDoor').classList.remove('door-open');$('pinLight').classList.remove('green');clearPin();renderInventory();updateTimer();player.style.left=playerX+'%';player.style.top=playerY+'%';echoIndex=0;typeEcho(0);say('SYSTEM READY // 접근 가능한 장치 가까이 이동하십시오.');clearKeys();checkInteraction();root.focus()}
 function resume(){$('pauseBtn').classList.remove('paused');$('pauseBtn').textContent='Ⅱ';paused=false;pauseOverlay.style.display='none';timerLast=Date.now();root.focus();clearKeys()}
 function focusGame(){try{root.focus({preventScroll:true})}catch(e){root.focus()}}
 
@@ -516,4 +563,4 @@ for name, url in sprite_urls.items():
 
 
 html = html.replace("__RESET_STAGE_SAVE__", "true" if st.session_state.pop("stage01_reset_save", False) else "false")
-components.html(html, height=1000, scrolling=False)
+components.html(html, height=1100, scrolling=False)
