@@ -245,6 +245,19 @@ __TUTORIAL_CSS__
 .exit-wall:before,.exit-wall:after{display:none!important}
 .stage01-pause{top:10px!important;right:13px!important;width:44px!important;height:44px!important;border:2px solid #36eaff!important;border-radius:5px!important;background:#000c15!important;color:#fff!important;box-shadow:none!important;font-size:23px!important}
 .pause-overlay>div{width:min(390px,86vw)!important;min-height:0!important;padding:34px!important;background:#02070c!important;border:1px solid #54dfff!important;box-shadow:0 0 0 1px #123c4d,0 0 18px #00cfff22!important}
+
+.stage01-pause{width:44px!important;height:44px!important;border:1px solid #55eaff!important;border-radius:0!important;background:#00050a!important;color:#baf7ff!important;box-shadow:none!important}
+.stage01-pause.paused{background:#baf7ff!important;color:#06151b!important}
+.pause-overlay>div{width:min(536px,88vw)!important;height:274px!important;padding:32px 44px!important;border:1px solid #5eddf5!important;background:#04121d!important;box-shadow:none!important}
+.pause-actions{margin:0!important;gap:8px!important;align-items:flex-start!important}
+.pause-row{height:56px!important;gap:14px!important}
+.pause-icon{width:38px!important;height:38px!important;border:1px solid #5de9ff!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:14px!important}
+.pause-actions button.pause-nav-link{width:250px!important;background:transparent!important;border:0!important;color:#e9fcff!important;justify-content:flex-start!important;font-size:18px!important}
+.stage01-object:not(.collected){animation:archiveGlow 2s ease-in-out infinite!important}
+.stage01-object.collected{animation:none!important}
+@keyframes archiveGlow{0%,100%{filter:drop-shadow(0 0 2px #15c9d9)}50%{filter:drop-shadow(0 0 10px #47ffff) drop-shadow(0 0 4px #11dce9)}}
+#terminalTarget{position:absolute;left:64%;top:13%;width:9%;height:12%;pointer-events:none;z-index:3;animation:archiveGlow 2s infinite}
+#floorLayer{z-index:0!important}#wallLayer{z-index:1!important}
 </style></head><body>
 <div class="game" id="gameRoot" tabindex="0">
   <div class="project-title">PROJECT : LOGIC</div>
@@ -270,13 +283,13 @@ __TUTORIAL_CSS__
 <div class="stage01-decor" style="left:12%;top:57%;width:14%;height:20%"><img src="__SPR_CONTAINMENT__"></div>
 <div class="stage01-decor" style="left:78%;top:65%;width:13%;height:17%"><img src="__SPR_LOCKERS__"></div>
 <div class="stage01-decor" style="left:70%;top:17%;width:15%;height:12%"><img src="__SPR_CRATES__"></div>
-<div class="stage01-decor" style="left:79%;top:80%;width:11%;height:13%"><img src="__SPR_TERMINAL__"></div>
+<div class="stage01-decor" style="left:64%;top:13%;width:9%;height:12%"><img src="__SPR_TERMINAL__"></div>
 <div class="stage01-decor" style="left:33%;top:57%;width:10%;height:8%"><img src="__SPR_VENT__"></div>
 <div class="stage01-decor" style="left:66%;top:57%;width:10%;height:8%"><img src="__SPR_VENT__"></div>
-<div class="room-line-horizontal"></div>
-      <div class="room-line-vertical"></div>
 
-      <div class="object stage01-object stage01-a" id="objectA" data-id="A"><img src="__SPR_SERVERS__" alt="servers"><span class="sub-label" id="stateA">DATA SEALED</span></div>
+      
+
+      <div id="terminalTarget"></div><div class="object stage01-object stage01-a" id="objectA" data-id="A"><img src="__SPR_SERVERS__" alt="servers"><span class="sub-label" id="stateA">DATA SEALED</span></div>
       <div class="object stage01-object stage01-b" id="objectB" data-id="B"><img src="__SPR_DESK__" alt="desk"><span class="sub-label" id="stateB">DATA SEALED</span></div>
       <div class="object stage01-object stage01-c" id="objectC" data-id="C"><img src="__SPR_ARCHIVE_SHELF__" alt="archive_shelf"><span class="sub-label" id="stateC">DATA SEALED</span></div>
       <div class="object stage01-object stage01-archive" id="objectArchive" data-id="ARCHIVE"><img src="__SPR_SCIENCE_BOARD__" alt="science_board"><span class="sub-label" id="stateArchive">UNREAD</span></div>
@@ -375,11 +388,11 @@ const keys={w:false,a:false,s:false,d:false};
 const inventory=Array(8).fill(null);
 const items=[];
 const messages=[
- 'STAGE 01. ARCHIVE ACCESS에 진입했습니다. 저는 ECHO입니다. 이곳은 외부에서 삭제된 기록의 사본을 보관하는 구역입니다.',
- '7년 전 사고 당일, 누군가 중앙 기록을 삭제했습니다. 그러나 세 단말기 A, B, C에는 서로 다른 기록 조각이 남아 있습니다.',
- '각 기록에서 복구되는 숫자는 출구 암호가 아닙니다. 보관실의 ARCHIVE NOTE를 찾아 기록의 조합 규칙을 확인하십시오.',
- '이상합니다. 삭제 명령의 발신자 서명이 제 내부 인증값과 일치합니다. 하지만 저는 그 명령을 내린 기억이 없습니다.',
- '제한 시간은 10분입니다. A, B, C의 기록을 조사하고 ARCHIVE NOTE로 네 자리 코드를 복원한 뒤 출구에서 E키로 인증하십시오.'
+'STAGE 01 // ARCHIVE ACCESS. 이곳은 연구소 사고의 기록을 보관하는 자료실입니다.',
+'사고 이후 중앙 기록이 삭제되었지만, 서버와 연구원의 작업대, 보관함에 사본이 남아 있습니다.',
+'세 곳을 조사해 A·B·C 기록값을 수집하십시오. 왼쪽 위 화이트보드에는 네 자리 암호의 복원 규칙이 있습니다.',
+'복원한 암호를 문 오른쪽 보안 단말기에 입력하면 잠금이 해제됩니다. 이후 출입문에서 E키를 누르십시오.',
+'다만 삭제 명령에 사용된 인증 정보가 제 시스템과 일치합니다. 그 이유를 밝혀야 합니다.'
 ];
 const puzzleCandidates=[];
 for(let a=2;a<=9;a++)for(let b=1;b<a;b++)for(let c=a+1;c<=Math.min(9,a+b-1);c++)puzzleCandidates.push({A:a,B:b,C:c});
@@ -389,9 +402,9 @@ function makeExpectedCode(){const checksum=(puzzle.A+puzzle.B+puzzle.C)%9||9;ret
 const found={A:false,B:false,C:false,ARCHIVE:false};
 const clues={};
 function rebuildClues(){
- clues.A={title:'SECTOR A // ACCESS LOG',body:`출입 기록 04-A\n\n보안 담당자는 02:13에 서버실을 나갔다. 2분 뒤 중앙 로그에 삭제 명령이 기록되었다.\n\nA 기록값: ${puzzle.A}\nRECOVERED VALUE: ${puzzle.A}`};
- clues.B={title:'COMPUTER / SECTOR B',body:`시스템 진단 로그\n\n02:15:08 — ARCHIVE INDEX ACCESS\n02:15:11 — DELETE REQUEST REJECTED\n02:15:12 — REQUEST SOURCE: ECHO\n\nB 기록값: ${puzzle.B}\nRECOVERED VALUE: ${puzzle.B}`};
- clues.C={title:'SECTOR C // MAINTENANCE',body:`정비 기록 17-C\n\n출구 잠금은 원격 조작으로 전환되었다. 수동 해제는 인증 코드 복구 후에만 허용된다.\n\nC 기록값: ${puzzle.C}\nRECOVERED VALUE: ${puzzle.C}`};
+ clues.A={title:'SERVER A // 출입 기록',body:`출입 기록 04-A\n\n보안 담당자는 02:13에 서버실을 나갔다. 2분 뒤 중앙 로그에 삭제 명령이 기록되었다.\n\nA 기록값: ${puzzle.A}\nRECOVERED VALUE: ${puzzle.A}`};
+ clues.B={title:'DESK B // 작업 기록',body:`시스템 진단 로그\n\n02:15:08 — ARCHIVE INDEX ACCESS\n02:15:11 — DELETE REQUEST REJECTED\n02:15:12 — REQUEST SOURCE: ECHO\n\nB 기록값: ${puzzle.B}\nRECOVERED VALUE: ${puzzle.B}`};
+ clues.C={title:'ARCHIVE C // 보관 기록',body:`정비 기록 17-C\n\n출구 잠금은 원격 조작으로 전환되었다. 수동 해제는 인증 코드 복구 후에만 허용된다.\n\nC 기록값: ${puzzle.C}\nRECOVERED VALUE: ${puzzle.C}`};
 }
 rebuildClues();
 const objects=[
@@ -399,9 +412,9 @@ const objects=[
  {id:'B',name:'DESK RECORDS',x:35,y:69,w:30,h:16,el:$('objectB')},
  {id:'C',name:'ARCHIVE SHELF',x:72,y:30,w:17,h:20,el:$('objectC')},
  {id:'ARCHIVE',name:'ARCHIVE NOTE',x:14,y:15,w:20,h:19,el:$('objectArchive')},
- {id:'EXIT',name:'EXIT',x:38,y:5,w:24,h:25,el:$('exitDoor')}
+ {id:'TERMINAL',name:'SECURITY TERMINAL',x:64,y:13,w:9,h:12,el:$('terminalTarget')}, {id:'EXIT',name:'EXIT',x:38,y:5,w:24,h:25,el:$('exitDoor')}
 ];
-const obstacles=objects.filter(o=>o.id!=='EXIT').map(o=>({x:o.x,y:o.y,w:o.w,h:o.h}));
+const obstacles=objects.filter(o=>o.id!=='EXIT'&&o.id!=='TERMINAL').map(o=>({x:o.x,y:o.y,w:o.w,h:o.h}));
 function say(t){status.textContent=t}
 function updateTimer(){const m=Math.floor(seconds/60),s=seconds%60;timerNode.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function clearKeys(){Object.keys(keys).forEach(k=>keys[k]=false)}
@@ -414,11 +427,13 @@ function clearPin(){pinBuffer='';renderPin();$('codeError').textContent='';$('pi
 function backspacePin(){if(!codeOpen)return;pinBuffer=pinBuffer.slice(0,-1);renderPin();$('pinStatus').textContent='AUTHENTICATION // '+pinBuffer.length+'/4'}
 function showCode(){if(!['A','B','C','ARCHIVE'].every(k=>found[k])){showRecord('EXIT // ACCESS LOCKED','ACCESS DENIED\n\n출구 인증을 시작하려면 A·B·C 구역 기록과 ARCHIVE NOTE를 먼저 모두 확보하십시오.');return}codeOpen=true;pinBuffer='';renderPin();codeOverlay.style.display='flex';$('codeTitle').textContent='EXIT ACCESS READER';$('codeError').textContent='';$('pinStatus').textContent='ACCESS LOCKED // ENTER CODE';$('pinLight').classList.remove('green');clearKeys()}
 function closeCode(){codeOpen=false;codeOverlay.style.display='none';root.focus()}
-function renderInventory(){document.querySelectorAll('.inventory-slot').forEach((slot,i)=>{const item=inventory[i];slot.innerHTML=item?`<div class="slot-number">${String(i+1).padStart(2,'0')}</div><div class="item-name">${item.name}</div>`:`<div class="slot-number">${String(i+1).padStart(2,'0')}</div><div class="empty-text">EMPTY</div>`;slot.classList.remove('selected')})}
+const paperIcon='<svg viewBox="0 0 44 52" width="36" height="42"><path d="M5 2h25l9 9v39H5z" fill="#c7e8ef" stroke="#28d9ed" stroke-width="2"/><path d="M30 2v9h9M11 19h22M11 24h15M11 29h22M11 34h15" fill="none" stroke="#39788c" stroke-width="2"/><path d="M12 43l7-7 5 4 7-8" fill="none" stroke="#00a6bb" stroke-width="2"/></svg>';
+function renderInventory(){document.querySelectorAll('.inventory-slot').forEach((slot,i)=>{const item=inventory[i];slot.innerHTML=item?`<div class="slot-number">${String(i+1).padStart(2,'0')}</div><div>${paperIcon}</div><div class="item-name">${item.name}</div>`:`<div class="slot-number">${String(i+1).padStart(2,'0')}</div><div class="empty-text">EMPTY</div>`;slot.classList.remove('selected')})}
 function openInventory(){if(dataOpen||codeOpen||paused||finished)return;if(inventoryOpen){inventoryOpen=false;inventoryOverlay.style.display='none';root.focus();return}helpOpen=false;helpOverlay.style.display='none';inventoryOpen=true;inventoryOverlay.style.display='flex';$('itemDescription').innerHTML='ITEM DESCRIPTION<br><br>기록을 선택하면 설명이 표시됩니다.';renderInventory();clearKeys()}
 function openHelp(){if(dataOpen||codeOpen||paused||finished)return;if(helpOpen){helpOpen=false;helpOverlay.style.display='none';root.focus();return}inventoryOpen=false;inventoryOverlay.style.display='none';helpOpen=true;helpOverlay.style.display='flex';clearKeys()}
-function addItem(id){if(items.some(item=>item.id===id))return;let item;if(id==='ARCHIVE'){item={id,name:'ARCHIVE NOTE',body:'ARCHIVE INCIDENT // FRAGMENT 04\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 이 명령은 기록을 삭제하라는 지시와 함께 저장되었다.”'}}else item={id,name:clues[id].title,body:clues[id].body};items.push(item);const slot=items.length-1;if(slot<inventory.length)inventory[slot]=item;renderInventory()}
-function interact(){if(paused||finished||isOverlayOpen())return;if(!nearby){say('NO TARGET // 가까운 장치로 이동하십시오.');return}const id=nearby.id;if(clues[id]){if(!found[id]){found[id]=true;addItem(id);$('state'+id).textContent='DATA FOUND';say(id+' 기록을 확보했습니다. INVENTORY에서 다시 확인할 수 있습니다.')}showRecord(clues[id].title,clues[id].body);return}if(id==='ARCHIVE'){found.ARCHIVE=true;$('stateArchive').textContent='READ';addItem('ARCHIVE');say('ARCHIVE NOTE 확보 // 네 자리 인증식을 확인하십시오.');showRecord('ARCHIVE NOTE // FRAGMENT 04','ARCHIVE INCIDENT // PERSONAL NOTE\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 기록 삭제 명령은 사고 직전 ECHO의 내부 인증값으로 전송되었다.”');return}if(id==='EXIT'){if(!codeSolved){showCode();return}finishStage();return}}
+function playWritingSound(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext)audioContext=new AC();audioContext.resume();const n=Math.floor(audioContext.sampleRate*.22),buf=audioContext.createBuffer(1,n,audioContext.sampleRate),a=buf.getChannelData(0);let v=0;for(let i=0;i<n;i++){v=v*.75+(Math.random()*2-1)*.25;a[i]=v*.23*(1-i/n)}const src=audioContext.createBufferSource(),filter=audioContext.createBiquadFilter();filter.type='highpass';filter.frequency.value=850;src.buffer=buf;src.connect(filter);filter.connect(audioContext.destination);src.start()}catch(e){}}
+function addItem(id){if(items.some(item=>item.id===id))return;let item;if(id==='ARCHIVE'){item={id,name:'ARCHIVE NOTE',body:'ARCHIVE INCIDENT // FRAGMENT 04\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 이 명령은 기록을 삭제하라는 지시와 함께 저장되었다.”'}}else item={id,name:clues[id].title,body:clues[id].body};items.push(item);playWritingSound();const slot=items.length-1;if(slot<inventory.length)inventory[slot]=item;renderInventory()}
+function interact(){if(paused||finished||isOverlayOpen())return;if(!nearby){say('NO TARGET // 가까운 장치로 이동하십시오.');return}const id=nearby.id;if(clues[id]){if(!found[id]){found[id]=true;addItem(id);nearby.el.classList.add('collected');$('state'+id).textContent='DATA FOUND';say(id+' 기록을 확보했습니다. INVENTORY에서 다시 확인할 수 있습니다.')}showRecord(clues[id].title,clues[id].body);return}if(id==='ARCHIVE'){found.ARCHIVE=true;nearby.el.classList.add('collected');$('stateArchive').textContent='READ';addItem('ARCHIVE');say('ARCHIVE NOTE 확보 // 네 자리 인증식을 확인하십시오.');showRecord('ARCHIVE NOTE // FRAGMENT 04','ARCHIVE INCIDENT // PERSONAL NOTE\n\n첫째 자리 = A − B.\n둘째 자리 = C − A.\n셋째 자리 = A + B − C.\n넷째 자리 = A + B + C를 9로 나눈 나머지. 나머지가 0이면 9로 기록한다.\n\n“ECHO에게 묻지 말 것. 기록 삭제 명령은 사고 직전 ECHO의 내부 인증값으로 전송되었다.”');return}if(id==='TERMINAL'){if(!codeSolved)showCode();else say('인증 완료. 출입문에서 E키를 누르십시오.');return}if(id==='EXIT'){if(!codeSolved){say('문 오른쪽 보안 단말기에 암호를 입력하십시오.');return}finishStage();return}}
 function verify(){if(pinBuffer.length!==4){$('codeError').textContent='FOUR DIGITS REQUIRED // 네 자리 모두 입력하십시오.';return}if(pinBuffer===expectedCode){codeSolved=true;$('statePanel').textContent='UNLOCKED';$('panelLight').classList.add('green');$('exitLight').classList.add('green');$('room').classList.add('unlocked');$('doorSprite').src='__SPR_DOOR_UNLOCKED__';$('pinLight').classList.add('green');$('pinStatus').textContent='ACCESS GRANTED // GREEN';$('codeError').textContent='ACCESS GRANTED // 출구 잠금 해제';playDoorOpen();saveStageState();say('인증 완료. 출구 표시등이 초록색으로 바뀌었습니다. 출구에서 E를 눌러 진입하십시오.');setTimeout(()=>{if(codeOpen)closeCode()},900)}else{$('pinLight').classList.remove('green');$('codeError').textContent='INVALID CODE // 기록의 규칙을 다시 확인하십시오.';$('pinStatus').textContent='ACCESS DENIED // RED';say('인증 실패 // 보안 표시등이 빨간색입니다. 기록과 계산 순서를 다시 대조하십시오.')}}
 function addRestartAndTitleButtons(title,sub,copy){helpOpen=false;inventoryOpen=false;dataOpen=true;codeOpen=false;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';pauseOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent=title;$('windowSub').textContent=sub;$('windowBody').innerHTML=copy+'<div class="pause-actions"><div class="pause-row"><span class="pause-icon">↻</span><button class="pause-nav-link" id="clearRestart" type="button">RESTART</button></div><div class="pause-row"><span class="pause-icon">⌂</span><button class="pause-nav-link" id="timeoutTitle" type="button">TITLE</button></div></div>';const b=$('clearRestart');if(b)b.onclick=restartViaHost;const tb=$('timeoutTitle');if(tb)tb.onclick=saveAndReturnToTitle;dataOpen=true;dataOverlay.style.display='flex'}
 function finishStage(){finished=true;paused=true;timerLast=Date.now();clearKeys();pauseOverlay.style.display='none';helpOpen=false;inventoryOpen=false;codeOpen=false;dataOpen=true;helpOverlay.style.display='none';inventoryOverlay.style.display='none';codeOverlay.style.display='none';$('closeRecord').style.display='none';$('windowTitle').textContent='SYSTEM HANDOFF';$('windowSub').textContent='ARCHIVE ACCESS // NEXT SECTOR DETECTED';$('windowBody').innerHTML='<div class="system-computer" aria-label="blue pixel computer"><div class="screen"></div><div class="neck"></div><div class="base"></div></div><p> ECHO // 연결된 시스템에서 새로운 신호가 감지되었습니다.</p><p>“이 기록은 끝이 아닙니다. 서버 코어에 남아 있는 원본 로그를 확인해야 합니다.”</p><p>STAGE 02로 이동할 준비가 되었습니다.</p><div class="stage01-window-actions"><button class="code-button" id="continueStage2Btn" type="button">CONTINUE // STAGE 02</button><button class="code-button" id="stage1TitleBtn" type="button">TITLE</button></div>';$('continueStage2Btn').onclick=continueStage2;$('stage1TitleBtn').onclick=saveAndReturnToTitle;dataOverlay.style.display='flex';say('SYSTEM HANDOFF // 타이머 일시정지')}
@@ -477,10 +492,10 @@ function saveAndReturnToTitle(){
 function restartViaHost(){paused=true;clearKeys();try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem(RUN_SAVE_KEY)}catch(e){}if(!clickHostControl('host_restart_nav'))restartStage()}
 function continueStage2(){paused=true;timerLast=Date.now();clearKeys();saveStageState();try{localStorage.removeItem('project_logic_stage02_save_v1');localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds,stage:2,updatedAt:Date.now()}))}catch(e){}if(!clickHostControl('host_stage2_nav')){try{window.top.location.assign(new URL('pages/4_Stage_02.py',window.top.location.href).toString())}catch(e){say('STAGE 02 NAVIGATION BLOCKED')}}}
 function restartStage(){try{localStorage.removeItem(STAGE_SAVE_KEY);localStorage.removeItem('project_logic_stage02_save_v1');localStorage.setItem(RUN_SAVE_KEY,JSON.stringify({seconds:600,stage:1,updatedAt:Date.now()}))}catch(e){}paused=false;finished=false;codeSolved=false;seconds=600;timerLast=Date.now();playerX=50;playerY=55;nearby=null;helpOpen=inventoryOpen=dataOpen=codeOpen=false;[inventoryOverlay,helpOverlay,dataOverlay,codeOverlay,pauseOverlay].forEach(el=>el.style.display='none');Object.keys(found).forEach(k=>found[k]=false);items.length=0;inventory.fill(null);$('stateA').textContent=$('stateB').textContent=$('stateC').textContent='DATA SEALED';$('stateArchive').textContent='UNREAD';$('statePanel').textContent='LOCKED';$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('room').classList.remove('unlocked');$('doorSprite').src='__SPR_DOOR_LOCKED__';$('pinLight').classList.remove('green');pinBuffer='';renderPin();puzzle=puzzleCandidates[Math.floor(Math.random()*puzzleCandidates.length)];expectedCode=makeExpectedCode();rebuildClues();$('panelLight').classList.remove('green');$('exitLight').classList.remove('green');$('room').classList.remove('unlocked');$('doorSprite').src='__SPR_DOOR_LOCKED__';$('pinLight').classList.remove('green');clearPin();renderInventory();updateTimer();player.style.left=playerX+'%';player.style.top=playerY+'%';echoIndex=0;typeEcho(0);say('SYSTEM READY // 접근 가능한 장치 가까이 이동하십시오.');clearKeys();checkInteraction();root.focus()}
-function resume(){paused=false;pauseOverlay.style.display='none';timerLast=Date.now();root.focus();clearKeys()}
+function resume(){$('pauseBtn').classList.remove('paused');$('pauseBtn').textContent='Ⅱ';paused=false;pauseOverlay.style.display='none';timerLast=Date.now();root.focus();clearKeys()}
 function focusGame(){try{root.focus({preventScroll:true})}catch(e){root.focus()}}
 
-$('pauseBtn').addEventListener('click',()=>{if(finished)return;if(!paused&&(helpOpen||inventoryOpen||dataOpen||codeOpen))return;paused=!paused;timerLast=Date.now();pauseOverlay.style.display=paused?'flex':'none';clearKeys();if(!paused)focusGame()});
+$('pauseBtn').addEventListener('click',()=>{if(finished)return;if(!paused&&(helpOpen||inventoryOpen||dataOpen||codeOpen))return;paused=!paused;$('pauseBtn').classList.toggle('paused',paused);$('pauseBtn').textContent=paused?'▶':'Ⅱ';timerLast=Date.now();pauseOverlay.style.display=paused?'flex':'none';clearKeys();if(!paused)focusGame()});
 $('resumeBtn').addEventListener('click',resume);$('restartBtn').addEventListener('click',restartViaHost);$('titleBtn').addEventListener('click',e=>{e.preventDefault();saveAndReturnToTitle()});
 $('closeRecord').addEventListener('click',closeRecord);$('closeCode').addEventListener('click',closeCode);$('verifyBtn').addEventListener('click',verify);
 document.querySelectorAll('[data-pin]').forEach(btn=>btn.addEventListener('click',()=>{const action=btn.dataset.pin;if(action==='clear')clearPin();else if(action==='back')backspacePin();else appendPinDigit(action)}));
