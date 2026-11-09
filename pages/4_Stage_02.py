@@ -81,8 +81,32 @@ html, body, .stApp,
 st.markdown(_SCROLL_LOCK_CSS, unsafe_allow_html=True)
 
 title = st.button("TITLE NAV", key="stage02_title_nav")
+end_nav = st.button("END TO TITLE", key="stage02_end_nav")
 restart = st.button("RESTART NAV", key="stage02_restart_nav")
-st.markdown("<style>.st-key-stage02_title_nav,.st-key-stage02_restart_nav{position:fixed!important;left:-10000px!important;top:0!important}</style>", unsafe_allow_html=True)
+st.markdown("<style>.st-key-stage02_title_nav,.st-key-stage02_restart_nav,.st-key-stage02_end_nav{position:fixed!important;left:-10000px!important;top:0!important}</style>", unsafe_allow_html=True)
+if end_nav:
+    # 엔딩에서만 진행 기록 전체 초기화; 일반 TITLE 버튼은 기존 저장 기능 유지.
+    for key in list(st.session_state.keys()):
+        if key.startswith(("s1_", "s2_", "tutorial_", "stage01_", "stage02_")) or key in (
+            "game_started", "game_finished", "game_paused", "remaining_seconds", "tutorial_step"
+        ):
+            del st.session_state[key]
+    st.session_state.update({
+        "tutorial_reset_save": True,
+        "stage01_reset_save": True,
+        "stage02_reset_save": True,
+        "tutorial_complete": False,
+        "stage01_started": False,
+        "stage02_started": False,
+        "game_started": False,
+        "game_finished": False,
+        "game_paused": False,
+        "remaining_seconds": 15 * 60,
+        "start_open": False,
+        "error_popup": False,
+        "warning_popup": False,
+    })
+    st.switch_page("main.py")
 if title:
     st.session_state["stage02_started"] = True
     st.session_state["game_started"] = True
@@ -494,12 +518,66 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
     </div>
   </section>
   <div id="preludeGlitch" aria-hidden="true"></div>
-</div><div class="stage-transition prelude-locked" id="stageTransition"><div class="stage-transition-card"><div class="stage-transition-stage">STAGE 02</div><div class="stage-transition-room">:LOWER ENGINE</div></div></div><script>(()=>{
+</div><div class="stage-transition prelude-locked" id="stageTransition"><div class="stage-transition-card"><div class="stage-transition-stage">STAGE 02</div><div class="stage-transition-room">:LOWER ENGINE</div></div></div>
+<style id="logic-stage02-ending-style">
+/* 엔딩 연출: 모든 일반 UI 및 일시정지보다 높은 독립 레이어 */
+#echoFinale{display:none;position:fixed;inset:0;z-index:2147483000;background:#000;overflow:hidden;color:#d9fbff;font-family:NeoDungGeunMo,monospace;pointer-events:all}
+#echoFinale.active{display:block}
+#echoFinale .ending-room{display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:#000;padding:2vh 3vw}
+#echoFinale .ending-room.visible{display:flex}
+#echoFinale .ending-viewer{width:min(1120px,92vw);max-height:96vh;border:1px solid #2a809c;background:#02070c;box-shadow:0 0 0 1px #081e2b;display:flex;flex-direction:column;position:relative}
+#echoFinale .ending-viewer img{display:block;width:100%;height:auto;max-height:72vh;object-fit:contain;image-rendering:pixelated}
+#echoFinale .ending-msg{min-height:84px;position:relative;padding:12px 20px 20px;border-top:1px solid #2b8fa8;background:#01070b;color:#dfedf2;font-size:clamp(11px,1.25vw,15px);line-height:1.6}
+#echoFinale .ending-label{display:block;margin-bottom:8px;color:#64e4fc;font-size:11px;letter-spacing:1px}
+#echoFinale .ending-msg-text{white-space:pre-wrap}
+#echoFinale .ending-caret{display:inline-block;width:7px;height:10px;margin-left:4px;background:#4be1ed;animation:endingCaret .7s steps(1) infinite}
+@keyframes endingCaret{50%{opacity:0}}
+/* 전 화면 전자 간섭 + 화면 가로 조각 + RGB 채널 어긋남 */
+#echoFinale .ending-glitch{display:none;position:absolute;inset:0;z-index:40;pointer-events:none;overflow:hidden;mix-blend-mode:screen;background:repeating-linear-gradient(0deg,#00e5ff08 0px,#00e5ff08 2px,#050b1500 2px,#050b1500 8px)}
+#echoFinale .ending-glitch.active{display:block;animation:endingShake .065s steps(2,end) infinite}
+#echoFinale .ending-glitch.strong{background:repeating-linear-gradient(0deg,#ff294624 0px,#ff294624 3px,transparent 3px,transparent 9px),linear-gradient(90deg,#00f7ff18 0 35%,transparent 35% 65%,#fc285023 65% 100%)}
+#echoFinale .ending-glitch .ending-slice{position:absolute;display:block;background:#38f7ff;box-shadow:7px 0 0 #f0446d,-6px 0 0 #00e8ff;image-rendering:pixelated}
+@keyframes endingShake{0%{transform:translate(-9px,3px) skewX(2deg)}50%{transform:translate(10px,-5px) skewX(-2deg)}100%{transform:translate(-2px,4px)}}
+#echoFinale .ending-black{display:none;position:absolute;inset:0;background:#000;z-index:35}
+#echoFinale .ending-black.visible{display:block}
+/* 레퍼런스의 오류창 구조를 게임 UI의 시안/적색 픽셀창으로 재구성 */
+#echoFinale .ending-errors{position:absolute;inset:0;z-index:50;pointer-events:none}
+#echoFinale .ending-error{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%) scale(.91);width:clamp(208px,25vw,335px);min-height:135px;border:2px solid #54dfff;background:#071119;box-shadow:5px 5px 0 #000,0 0 0 2px #102635,0 0 24px #f12a4944;opacity:0;animation:endingErrorPop .16s steps(3,end) forwards;color:#e9f5fc}
+@keyframes endingErrorPop{from{opacity:0;transform:translate(-50%,-50%) scale(.91) translateY(-9px)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+#echoFinale .ending-error-bar{background:#092736;border-bottom:2px solid #3a8dac;display:flex;align-items:center;justify-content:space-between;padding:7px 10px;font-size:12px;letter-spacing:1px;color:#e0f5fc}
+#echoFinale .ending-error-x{display:grid;place-items:center;width:18px;height:18px;border:1px solid #87a9b7;color:#f5faff;font-size:13px}
+#echoFinale .ending-error-content{display:flex;gap:14px;align-items:center;padding:12px 15px 6px}
+#echoFinale .ending-error-icon{display:grid;place-items:center;flex:none;width:34px;height:34px;background:#df2b46;border:2px solid #ff607b;color:white;font-size:25px}
+#echoFinale .ending-error-code{font-size:12px;line-height:1.6;color:#fb526e}
+#echoFinale .ending-error-sub{font-size:10px;color:#9eb8c6;line-height:1.6}
+#echoFinale .ending-error-ok{display:block;margin:2px auto 10px;text-align:center;border:1px solid #5ba3b6;width:76px;padding:4px 8px;background:#0f2631;color:#f0ffff;font-size:11px}
+/* 카메라 전원 차단과 SIGNAL LOST */
+#echoFinale .ending-signal{position:absolute;inset:0;z-index:90;background:#000;display:none;align-items:center;justify-content:center;flex-direction:column}
+#echoFinale .ending-signal.visible{display:flex}
+#echoFinale .ending-power-line{position:absolute;left:0;right:0;top:50%;height:100vh;background:#e1ffff;box-shadow:0 0 18px #a7f8ff;transform-origin:center;animation:endingPowerCut .8s steps(14,end) forwards}
+@keyframes endingPowerCut{0%{transform:scaleY(1);opacity:.55}55%{transform:scaleY(.012);opacity:1}82%{transform:scaleX(.1) scaleY(.003);opacity:.9}100%{transform:scaleX(0) scaleY(0);opacity:0}}
+#echoFinale .ending-signal-text{font-size:clamp(24px,5vw,46px);letter-spacing:.23em;color:#eef7f9;text-shadow:0 0 9px #5ec8db;opacity:0}
+#echoFinale .ending-signal-text.visible{opacity:1;animation:endingSignalBlink 1.8s steps(1,end) infinite}
+@keyframes endingSignalBlink{0%,100%{opacity:1}18%{opacity:.38}24%{opacity:1}77%{opacity:.72}}
+@media(max-width:640px){#echoFinale .ending-viewer{width:96vw}#echoFinale .ending-error{width:clamp(160px,42vw,240px)}#echoFinale .ending-error-content{padding:7px 8px;gap:8px}#echoFinale .ending-error-sub{font-size:8px}}
+</style>
+
+<div id="echoFinale" aria-hidden="true">
+  <div id="endingRoom" class="ending-room"><div class="ending-viewer">
+    <img id="endingRoomImage" src="__ECHO_NORMAL__" alt="ECHO MAIN CONTROL ROOM">
+    <div class="ending-msg"><span class="ending-label">ECHO // MAIN SYSTEM</span><span id="endingMsgText" class="ending-msg-text"></span><span id="endingCaret" class="ending-caret"></span></div>
+  </div></div>
+  <div id="endingBlank" class="ending-black"></div>
+  <div id="endingGlitch" class="ending-glitch" aria-hidden="true"></div>
+  <div id="endingErrors" class="ending-errors" aria-hidden="true"></div>
+  <div id="endingSignal" class="ending-signal"><div class="ending-power-line"></div><div id="endingSignalText" class="ending-signal-text">SIGNAL LOST</div></div>
+</div><script>(()=>{
 const $=id=>document.getElementById(id),player=$('player'),keys=new Set();
 const saveKey='project_logic_stage02_progress_v1',handoffKey='project_logic_stage02_handoff_v1';
 if(__RESET_SAVE__){try{localStorage.removeItem(saveKey);localStorage.removeItem(handoffKey)}catch(e){}}
 let saved=null,handoff=null;try{saved=JSON.parse(localStorage.getItem(saveKey)||'null');handoff=JSON.parse(localStorage.getItem(handoffKey)||'null')}catch(e){}
 let entering=true;
+let finaleActive=false;
 const transition=$('stageTransition');
 const prelude=$('echoPrelude');
 let cinematicActive=!saved;
@@ -532,9 +610,28 @@ let wallAlpha=null;
 const collisionCtx=collisionCanvas.getContext('2d',{willReadFrequently:true});
 function buildWallCollision(){try{collisionCtx.clearRect(0,0,1200,900);collisionCtx.drawImage($('wallLayer'),0,0,1200,900);wallAlpha=collisionCtx.getImageData(0,0,1200,900).data}catch(e){wallAlpha=null}}
 if($('wallLayer').complete)buildWallCollision();else $('wallLayer').addEventListener('load',buildWallCollision,{once:true});
+// 오브제 이미지를 기준으로 실제 충돌 영역을 설정합니다. 그림자는 충돌하지 않습니다.
+const physicalProps=['core','diagnostic','maintenance','document','circuit','warning','wall_panel'];
+function blockedByProp(nx,ny){
+ const roomRect=$('room').getBoundingClientRect();
+ if(roomRect.width<=0||roomRect.height<=0)return false;
+ const cx=roomRect.left+nx/100*roomRect.width;
+ const cy=roomRect.top+ny/100*roomRect.height;
+ const rx=(player.offsetWidth||22)*.34,ry=(player.offsetHeight||28)*.22;
+ for(const id of physicalProps){
+  const el=$('stage02-prop-'+id);if(!el)continue;
+  const r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)continue;
+  // 가장자리 투명 픽셀은 제외하고 본체 주변만 막습니다.
+  const left=r.left+r.width*.085,right=r.right-r.width*.085;
+  const top=r.top+r.height*.08,bottom=r.bottom-r.height*.07;
+  if(cx+rx>left&&cx-rx<right&&cy+ry>top&&cy-ry<bottom)return true;
+ }
+ return false;
+}
 function valid(nx,ny){
  const px=Math.round(nx*12),py=Math.round(ny*9);
  if(px<0||px>=1200||py<0||py>=900)return false;
+ if(blockedByProp(nx,ny))return false;
  if(!wallAlpha)return true;
  // 캐릭터 발 위치 기준으로 벽 이미지의 불투명한 픽셀만 충돌 처리.
  for(const [dx,dy] of [[-9,-9],[9,-9],[-9,9],[9,9],[0,0]]){
@@ -544,10 +641,10 @@ function valid(nx,ny){
  return true;
 }
 if(!valid(x,y)){x=50;y=50}
-function save(){if(cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,puzzle:stage2Puzzle,updatedAt:Date.now()}))}catch(e){}}
+function save(){if(finaleActive||cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,puzzle:stage2Puzzle,updatedAt:Date.now()}))}catch(e){}}
 function draw(){player.style.left=x+'%';player.style.top=y+'%';const s=Math.ceil(remaining);$('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function togglePause(force){paused=typeof force==='boolean'?force:!paused;$('pauseOverlay').style.display=paused?'flex':'none';$('pauseToggle').textContent=paused?'▶':'Ⅱ';$('pauseToggle').classList.toggle('paused',paused);keys.clear();last=performance.now();save()}
-$('pauseToggle').onclick=()=>{if(entering||cinematicActive)return;togglePause();};$('resumeButton').onclick=()=>togglePause(false);
+$('pauseToggle').onclick=()=>{if(entering||cinematicActive||finaleActive)return;togglePause();};$('resumeButton').onclick=()=>togglePause(false);
 function hostAction(action){if(action!=='restart')save();try{const selector=action==='title'?'[class*=st-key-stage02_title_nav] button':'[class*=st-key-stage02_restart_nav] button';const btn=window.parent.document.querySelector(selector);if(btn){btn.click();return}}catch(e){}window.parent.postMessage({type:'stage02_nav',target:action},'*')}
 $('titleButton').onclick=()=>{save();$('dataSavingScreen').classList.add('active');togglePause(true);setTimeout(()=>hostAction('title'),3000)};$('restartButton').onclick=()=>{try{localStorage.removeItem(saveKey);localStorage.removeItem(handoffKey);localStorage.removeItem('project_logic_stage01_progress_v6')}catch(e){}hostAction('restart')};
 const panels=['inventoryOverlay','helpOverlay'];function isPanelOpen(){return panels.some(id=>$(id).style.display==='flex')};function closePanels(){panels.forEach(id=>$(id).style.display='none');keys.clear()};function togglePanel(id){if(paused)return;const was=$(id).style.display==='flex';closePanels();if(!was)$(id).style.display='flex'}
@@ -592,7 +689,7 @@ function nearestObject(){
 }
 function updateObjectHint(){
  const hint=$('objectHint');
- if(cinematicActive||entering||paused||isPanelOpen()||objectDialogOpen()||echoIndex<echoLines.length-1||!typingDone){hint.hidden=true;return}
+ if(finaleActive||cinematicActive||entering||paused||isPanelOpen()||objectDialogOpen()||echoIndex<echoLines.length-1||!typingDone){hint.hidden=true;return}
  const nearby=nearestObject();hint.hidden=!nearby;
  if(nearby)hint.textContent=objById[nearby].prompt;
 }
@@ -652,7 +749,7 @@ function renderObjectPanel(){if(!activeObject)return;
  $('objectPanelBody').innerHTML=objectPanelHTML(activeObject);
 }
 function openObjectDialog(id){
- if(cinematicActive||entering||paused||isPanelOpen()||objectDialogOpen())return;
+ if(finaleActive||cinematicActive||entering||paused||isPanelOpen()||objectDialogOpen())return;
  activeObject=id;objectResultEcho=null;
  $('objectOverlay').style.display='flex';setObjectFeedback('');renderObjectPanel();
  $('objectHint').hidden=true;keys.clear();
@@ -717,9 +814,8 @@ function handleObjectAction(el){
  }
  if(action==='stabilize'){
   if(!stage2Puzzle.power){setObjectFeedback('POWER DISTRIBUTION INCOMPLETE','bad');return}
-  stage2Puzzle.stabilized=true;save();puzzleTone(true);
-  objectResultEcho='중앙 코어 안정화가 완료되었습니다. 하부 엔진이 정상 작동합니다. 다음 구역 접근을 준비하십시오.';
-  setObjectFeedback('STABILIZATION COMPLETE // ENGINE ONLINE // EXIT READY','good');renderObjectPanel();return;
+  stage2Puzzle.stabilized=true;puzzleTone(true);
+  startEndingSequence();return;
  }
 }
 $('objectPanelBody').addEventListener('click',e=>{
@@ -727,6 +823,80 @@ $('objectPanelBody').addEventListener('click',e=>{
 });
 $('objectClose').addEventListener('click',closeObjectDialog);
 $('objectOverlay').addEventListener('click',e=>{if(e.target===$('objectOverlay'))closeObjectDialog()});
+
+
+// 최종 컷신: 성공 순간 모든 입력·타이머·자동저장을 멈춥니다.
+const endingWait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+let endingGlitchTimer=null;
+function endingGlitch(strong){
+ const box=$('endingGlitch');box.className='ending-glitch active'+(strong?' strong':'');
+ if(!box.children.length){for(let i=0;i<22;i++){const el=document.createElement('span');el.className='ending-slice';box.appendChild(el)}}
+ function refresh(){for(const el of box.children){el.style.top=(Math.random()*100)+'%';el.style.left=(Math.random()*38-10)+'%';el.style.width=(30+Math.random()*70)+'%';el.style.height=(1+Math.floor(Math.random()*(strong?22:10)))+'px';el.style.opacity=String(.2+Math.random()*.78);el.style.background=['#31e7ff','#effaff','#f73158','#142e42'][Math.floor(Math.random()*4)];el.style.transform='translateX('+(Math.random()*90-45)+'px)'}}
+ refresh();clearInterval(endingGlitchTimer);endingGlitchTimer=setInterval(refresh,strong?36:60);
+}
+function endGlitch(){clearInterval(endingGlitchTimer);endingGlitchTimer=null;$('endingGlitch').className='ending-glitch'}
+function endingErrorSound(index){
+ try{
+  const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
+  glitchAudioCtx=glitchAudioCtx||new Audio();glitchAudioCtx.resume();
+  const ctx=glitchAudioCtx,now=ctx.currentTime;
+  for(const [i,frequency] of [0,1].map(i=>[i,880-index*48-i*210])){
+   const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.setValueAtTime(frequency,now+i*.07);
+   g.gain.setValueAtTime(.0001,now+i*.07);g.gain.exponentialRampToValueAtTime(.035,now+i*.07+.012);g.gain.exponentialRampToValueAtTime(.0001,now+i*.07+.11);
+   o.connect(g).connect(ctx.destination);o.start(now+i*.07);o.stop(now+i*.07+.12);
+  }
+ }catch(e){}
+}
+function createEndingError(index){
+ // 두 방향으로 대각선을 따라 쏟아지는 14개의 시스템 오류 창.
+ const positions=[[14,16],[25,24],[36,32],[47,40],[58,48],[69,56],[80,64],
+                  [88,74],[18,73],[28,63],[39,53],[50,43],[61,33],[72,23]];
+ const [x,y]=positions[index%positions.length];const err=document.createElement('div');err.className='ending-error';
+ err.style.setProperty('--x',x+'%');err.style.setProperty('--y',y+'%');err.style.zIndex=String(2+index);
+ err.innerHTML='<div class="ending-error-bar"><span>SYSTEM FAILURE // 0'+(index+1)+'</span><span class="ending-error-x">×</span></div>'+
+ '<div class="ending-error-content"><span class="ending-error-icon">×</span><div><div class="ending-error-code">ERROR CODE // E-'+String(401+index)+'</div><div class="ending-error-sub">CRITICAL PROCESS TERMINATED</div></div></div><div class="ending-error-ok">OK</div>';
+ $('endingErrors').appendChild(err);endingErrorSound(index);
+}
+function clearAllGameStorage(){
+ for(const store of [window.localStorage,window.sessionStorage]){
+  try{const targets=[];for(let i=0;i<store.length;i++){const key=store.key(i);if(key&&(key.startsWith('project_logic_')||key.startsWith('logic_tutorial_')))targets.push(key)}targets.forEach(key=>store.removeItem(key));}catch(e){}
+ }
+}
+function returnToFreshTitle(){
+ clearAllGameStorage();
+ try{const b=window.parent.document.querySelector('[class*=st-key-stage02_end_nav] button');if(b){b.click();return;}}catch(e){}
+ // Streamlit의 기존 내비게이션 메시지 지원용 보조 경로.
+ try{window.parent.postMessage({type:'stage02_nav',target:'end_title_reset'},'*')}catch(e){}
+}
+async function startEndingSequence(){
+ if(finaleActive)return;
+ finaleActive=true;keys.clear();paused=false;
+ $('objectOverlay').style.display='none';activeObject=null;
+ $('pauseOverlay').style.display='none';$('pauseToggle').disabled=true;
+ $('inventoryOverlay').style.display='none';$('helpOverlay').style.display='none';
+ clearTimeout(typingTimer);
+ const screen=$('echoFinale');screen.classList.add('active');screen.setAttribute('aria-hidden','false');
+ // 0.65초 전체 화면 글리치 → 짧은 암전.
+ endingGlitch(true);playGlitchSound(.65,true);
+ await endingWait(650);endGlitch();$('endingBlank').classList.add('visible');
+ await endingWait(340);$('endingBlank').classList.remove('visible');
+ $('endingRoom').classList.add('visible');
+ $('endingMsgText').textContent='';$('endingRoomImage').src='__ECHO_NORMAL__';
+ const line='중앙 코어 안정화가 확인되었습니다. 모든 시스템이 정상화되었으며, 다음 절차를 안내하겠습니';
+ for(let i=0;i<line.length;i++){if(!finaleActive)return;$('endingMsgText').textContent+=line[i];await endingWait(29)}
+ $('endingMsgText').textContent='......';$('endingCaret').style.display='none';
+ // 말이 끊긴 뒤 정확히 1초 동안 정적.
+ await endingWait(1000);
+ endingGlitch(true);playGlitchSound(.8,true);
+ await endingWait(430);$('endingRoomImage').src='__ECHO_ERROR__';
+ await endingWait(370);endGlitch();
+ // 마지막 오류 창이 나타난 다음 지체하지 않고 SIGNAL LOST로 넘어갑니다.
+ for(let i=0;i<14;i++){createEndingError(i);await endingWait(100)}
+ const lost=$('endingSignal');lost.classList.add('visible');playCameraPowerOffSound();
+ await endingWait(810);$('endingSignalText').classList.add('visible');
+ await endingWait(1800);
+ returnToFreshTitle();
+}
 
 // 정상적인 안내 → ECHO 영상 오류 → 오류 부정 → Stage 02 진입.
 const preludeLines=[
@@ -900,7 +1070,7 @@ if(cinematicActive)preludeSay(0);
 
 // 스테이지 안내가 끝난 뒤에만 본편 ECHO 메시지를 시작합니다.
 document.addEventListener('keydown',e=>{
- if(cinematicActive||entering)return;const k=e.key.toLowerCase();
+ if(cinematicActive||entering||finaleActive)return;const k=e.key.toLowerCase();
  if(['arrowup','arrowdown','arrowleft','arrowright',' ','e'].includes(k))e.preventDefault();
  if(k==='escape'){
   if(paused)togglePause(false);else if(objectDialogOpen())closeObjectDialog();else if(isPanelOpen())closePanels();return;
@@ -917,7 +1087,7 @@ document.addEventListener('keydown',e=>{
  if(k==='e'){if(!e.repeat)interactNearest();return}
  keys.add(k)
 });document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
-function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!isPanelOpen()&&!objectDialogOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0){togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();updateObjectHint();requestAnimationFrame(tick)}
+function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!finaleActive&&!isPanelOpen()&&!objectDialogOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&!finaleActive&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0){togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();updateObjectHint();requestAnimationFrame(tick)}
 setInterval(save,1200);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});draw();save();requestAnimationFrame(tick);$('gameRoot').focus();
 })();</script><div class="data-saving-screen" id="dataSavingScreen"><div class="data-saving-label"><span class="data-saving-gear">⚙</span>DATA SAVING...</div></div></body></html>"""
 html = html.replace("__ECHO_NORMAL__", image(root / "assets/stage02/echo_control_normal.png"))
