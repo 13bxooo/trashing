@@ -586,10 +586,16 @@ function objectDistance(o){
  const r=objectRect(o),dx=Math.max(0,Math.abs(x-r.cx)-r.hw),dy=Math.max(0,Math.abs(y-r.cy)-r.hh);
  return Math.hypot(dx*.843,dy*.619);
 }
+// NOTE와 키패드는 일반 터미널보다 멀리서 조사할 수 있습니다.
+function interactionRange(o){return o.k==='EXIT'?8:o.k==='NOTE'?7.5:o.k==='KEYPAD'?11:4.8}
 function nearest(){
  let best=null,dist=Infinity;
- for(const o of objects){if(o.k==='EXIT'&&!doorOpen)continue;const d=objectDistance(o);if(d<dist){best=o;dist=d}}
- return dist<(best?.k==='EXIT'?8:best?.k==='KEYPAD'?8.5:4.8)?best:null;
+ for(const o of objects){
+  if(o.k==='EXIT'&&!doorOpen)continue;
+  const d=objectDistance(o);
+  if(d<interactionRange(o)&&d<dist){best=o;dist=d}
+ }
+ return best;
 }
 function updateHint(){const o=nearest();$('interactionHint').style.display=o&&!leaving&&!dialogOpen&&!paused?'block':'none';if(o)$('interactionHint').textContent=o.k==='NOTE'?'E // READ NOTE':o.k==='KEYPAD'?'E // ACCESS KEYPAD':o.k==='EXIT'?'E // EXIT':`E // INVESTIGATE TERMINAL ${o.k}`}
 function openDialog(content){dialogOpen=true;$('gameRoot').classList.add('dialog-active');keys.clear();$('dialogContent').innerHTML=content+`<div style="text-align:right"><button onclick="closeDialog()">CLOSE [SPACE]</button></div>`;$('dialogOverlay').style.display='flex'}
@@ -642,7 +648,7 @@ function leaveStage(){
  document.body.appendChild(fade);requestAnimationFrame(()=>fade.style.opacity='1');
  setTimeout(()=>hostAction('next'),1000);
 }
-objects.filter(o=>o.k!=='EXIT').forEach(o=>$(o.id).addEventListener('click',()=>{if(!paused&&!entering&&typingDone&&echoIndex>=echoLines.length){const d=objectDistance(o);if(d<(o.k==='KEYPAD'?8.5:4.8)){interact();}else echoSay('오브제 가까이 이동한 후 E키로 조사하십시오.')}}));
+objects.filter(o=>o.k!=='EXIT').forEach(o=>$(o.id).addEventListener('click',()=>{if(!paused&&!entering&&typingDone&&echoIndex>=echoLines.length){const d=objectDistance(o);if(d<interactionRange(o)){interact();}else echoSay('오브제 가까이 이동한 후 E키로 조사하십시오.')}}));
 
 </script><div class="data-saving-screen" id="dataSavingScreen"><div class="data-saving-label"><span class="data-saving-gear">⚙</span>DATA SAVING...</div></div></body></html>"""
 for token,name in {"__FLOOR__":"floor.png","__WALLS__":"walls.png","__WALLSOPEN__":"walls_open.png","__TERMINALA__":"terminal_A.png","__TERMINALB__":"terminal_B.png","__TERMINALC__":"terminal_C.png","__NOTE__":"note.png","__KEYPAD__":"keypad.png","__RECORDA__":"record_A.png","__RECORDB__":"record_B.png","__RECORDC__":"record_C.png"}.items():
