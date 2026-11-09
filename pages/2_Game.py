@@ -265,11 +265,68 @@ footer {{
   box-shadow:none !important;
   border:0 !important;
 }}
+
+/* v8: consistent overlays, compact scroll-free controls and pause glow */
+#helpOverlay,#inventoryOverlay{{position:fixed!important;inset:0!important;z-index:4000!important;background:rgba(0,0,0,.70)!important;overflow:hidden!important}}
+#helpOverlay .help-panel{{width:min(760px,90vw)!important;max-height:min(720px,90vh)!important;overflow:hidden!important;padding:28px 32px!important}}
+#helpOverlay .help-row{{display:grid!important;grid-template-columns:32px 230px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;padding:11px 0!important}}
+#helpOverlay .help-number{{width:auto!important;color:#5fe9ff!important;border:0!important;background:none!important}}
+#helpOverlay .help-key{{width:auto!important;color:#61e8ff!important;border:0!important;background:none!important;display:flex!important;align-items:center!important;gap:10px!important}}
+#helpOverlay .help-key .control-label{{color:#63e8ff!important;min-width:88px!important}}
+#helpOverlay .help-key .control-separator{{color:#637985!important}}
+#helpOverlay .help-key .control-button{{color:#f2fbff!important}}
+#helpOverlay .help-description{{color:#8c9da7!important}}
+#inventoryOverlay .inventory-panel{{max-height:90vh!important;overflow:hidden!important}}
+#pauseOverlay{{position:fixed!important;inset:0!important;z-index:9000!important;background:rgba(0,0,0,.72)!important}}
+#pauseOverlay .pause-menu-panel{{box-shadow:0 0 0 1px #123c4d,0 0 22px #00cfff55,0 0 100px #00cfff20!important}}
+.pause-toggle{{z-index:9100!important}}
+.item-acquired-dialog .item-acquired-text{{font-size:14px!important;line-height:1.6!important}}
+#tutorialTransition{{z-index:9998!important}}
 </style>
 """,
     unsafe_allow_html=True,
 )
 
+
+
+# Lock the host page and game iframe to the visible viewport.
+# The in-game interfaces and all gameplay JS remain unchanged.
+_SCROLL_LOCK_CSS = """<style id="logic-other-stage-scroll-lock">
+html, body, .stApp,
+[data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+}
+[data-testid="stMainBlockContainer"], .block-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+}
+.stApp iframe[data-testid="stIFrame"],
+.stApp [data-testid="stCustomComponentV1"] iframe,
+.stApp iframe {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    z-index: 20 !important;
+    display: block !important;
+}
+</style>"""
+st.markdown(_SCROLL_LOCK_CSS, unsafe_allow_html=True)
 
 # Pause state is handled inside the game iframe so RESUME never reloads Streamlit.
 paused = st.session_state.game_paused
@@ -3178,7 +3235,170 @@ button,.game button,.code-button,.help-key{border-radius:0!important}
 @keyframes doorReveal {from{clip-path:polygon(0 0,0 0,0 100%,0 100%);}to{clip-path:polygon(0 0,68% 8%,100% 29%,100% 100%,47% 90%,0 64%);}}
 </style>
 
-</head>
+<style id="logic-v10-iframe-ui">
+
+/* v10: shared popups, kept INSIDE the components.html iframe. */
+#helpOverlay, #inventoryOverlay {
+ position:fixed!important; inset:0!important; z-index:4000!important;
+ background:rgba(0,0,0,.72)!important; align-items:center!important;
+ justify-content:center!important; overflow:hidden!important;
+ scrollbar-width:none!important; padding:16px!important;
+}
+#helpOverlay::-webkit-scrollbar,#inventoryOverlay::-webkit-scrollbar,
+#helpOverlay *::-webkit-scrollbar,#inventoryOverlay *::-webkit-scrollbar{display:none!important}
+#helpOverlay .help-panel,#helpOverlay .utility-panel {
+ position:relative!important; box-sizing:border-box!important; flex:none!important;
+ width:min(700px,94vw)!important; height:auto!important; max-width:94vw!important;
+ max-height:calc(100vh - 44px)!important; padding:29px 34px 24px!important;
+ background:#02070c!important; border:1px solid #4bdcff!important;
+ box-shadow:0 0 0 1px #123c4d,0 0 19px #00cfff20!important;
+ border-radius:0!important; display:block!important;
+ overflow:hidden!important; overflow-x:hidden!important; overflow-y:hidden!important;
+ scrollbar-width:none!important; font-size:12px!important; line-height:1.5!important;
+}
+#helpOverlay .help-header{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ margin:0 0 15px!important;padding:0 0 15px!important;border-bottom:1px solid #244b58!important;
+ min-height:30px!important;
+}
+#helpOverlay .help-title{font-size:18px!important;font-weight:bold!important;line-height:1.3!important;color:#75ebff!important;margin:0!important}
+#helpOverlay .help-close{font-size:9px!important;color:#82939d!important;white-space:nowrap!important}
+#helpOverlay .help-row{
+ display:grid!important;grid-template-columns:27px 218px minmax(0,1fr)!important;
+ align-items:center!important;column-gap:12px!important;row-gap:0!important;
+ padding:9px 0!important;margin:0!important;min-height:43px!important;
+ border-bottom:1px solid #204458!important;
+ background:none!important;box-shadow:none!important;
+}
+#helpOverlay .help-number {
+ display:block!important;align-self:center!important;width:auto!important;min-width:0!important;
+ color:#61e9ff!important;background:transparent!important;border:0!important;
+ margin:0!important;padding:0!important;line-height:1.4!important;font-size:12px!important;
+ position:static!important;transform:none!important;box-shadow:none!important;
+}
+#helpOverlay .help-key {
+ display:grid!important;grid-template-columns:106px 10px minmax(0,1fr)!important;
+ align-items:center!important;gap:7px!important;
+ position:static!important;width:100%!important;min-width:0!important;height:auto!important;
+ margin:0!important;padding:0!important;background:none!important;border:0!important;
+ box-shadow:none!important;transform:none!important;overflow:visible!important;
+}
+#helpOverlay .help-key .control-label {
+ display:inline!important;position:static!important;transform:none!important;
+ margin:0!important;padding:0!important;border:0!important;background:none!important;
+ color:#64e6ff!important;font-size:12px!important;line-height:1.5!important;
+ white-space:nowrap!important;letter-spacing:0!important;box-shadow:none!important;
+}
+#helpOverlay .help-key .control-separator {
+ display:inline!important;position:static!important;transform:none!important;
+ margin:0!important;padding:0!important;border:0!important;background:none!important;
+ color:#647681!important;font-size:12px!important;line-height:1.5!important;
+ box-shadow:none!important;
+}
+/* "control-button" is ALSO the game's mobile D-pad class: explicitly reset it here. */
+#helpOverlay .help-key .control-button {
+ all:unset!important; display:inline!important;position:static!important;
+ width:auto!important;min-width:0!important;max-width:none!important;height:auto!important;
+ transform:none!important;clip-path:none!important;
+ color:#f8fcff!important;font:12px/1.5 NeoDungGeunMo,monospace!important;
+ white-space:nowrap!important;box-shadow:none!important;
+}
+#helpOverlay .help-description {
+ display:block!important;position:static!important;grid-column:3!important;grid-row:auto!important;
+ width:auto!important;min-width:0!important;color:#98a8b1!important;
+ font-size:11px!important;line-height:1.55!important;white-space:normal!important;
+ margin:0!important;padding:0!important;background:none!important;overflow:visible!important;
+}
+#helpOverlay .help-important {
+ display:block!important;margin-top:17px!important;padding:13px 15px!important;
+ background:#070a0d!important;border:0!important;border-left:2px solid #ccd8df!important;
+ color:#9dabaf!important;font-size:10px!important;line-height:1.8!important;
+}
+#helpOverlay .help-important-title {color:#e6fbff!important;font-size:11px!important;margin-bottom:5px!important}
+#inventoryOverlay .inventory-panel,#inventoryOverlay .utility-panel {
+ position:relative!important;box-sizing:border-box!important;width:min(715px,92vw)!important;
+ height:min(646px,calc(100vh - 64px))!important;max-height:calc(100vh - 64px)!important;
+ padding:23px 23px 20px!important;background:#02070c!important;
+ border:1px solid #4bdcff!important;border-radius:0!important;
+ box-shadow:0 0 0 1px #123c4d,0 0 18px #00cfff20!important;
+ display:flex!important;flex-direction:column!important;gap:0!important;overflow:hidden!important;
+}
+#inventoryOverlay .inventory-header,#inventoryOverlay .panel-header {
+ display:flex!important;justify-content:space-between!important;align-items:center!important;
+ flex:0 0 auto!important;min-height:42px!important;margin:0 0 13px!important;
+ padding:0 0 13px!important;border-bottom:1px solid #255369!important;
+}
+#inventoryOverlay .inventory-title,#inventoryOverlay .panel-header h3 {
+ font:17px/1.2 NeoDungGeunMo,monospace!important;margin:0!important;color:#70e7ff!important;
+}
+#inventoryOverlay .inventory-close,#inventoryOverlay .panel-hint {
+ font:9px/1.3 NeoDungGeunMo,monospace!important;color:#80a3b1!important;
+}
+#inventoryOverlay .inventory-grid {
+ display:grid!important;position:relative!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ grid-template-rows:repeat(3,minmax(0,1fr))!important;gap:8px!important;
+ flex:1 1 auto!important;height:auto!important;max-height:none!important;min-height:0!important;
+ overflow:hidden!important;margin:0!important;padding:0!important;
+}
+#inventoryOverlay .inventory-slot {
+ display:flex!important;position:relative!important;align-items:center!important;justify-content:center!important;
+ aspect-ratio:auto!important;width:100%!important;height:100%!important;min-height:0!important;
+ padding:0!important;box-sizing:border-box!important;background:#01060b!important;
+ border:1px solid #28546a!important;border-radius:0!important;
+ box-shadow:none!important;color:#e5faff!important;
+}
+#inventoryOverlay .inventory-slot .slot-number {
+ position:absolute!important;top:7px!important;left:8px!important;color:#677f8b!important;
+ font-size:9px!important;line-height:1.2!important;
+}
+#inventoryOverlay .inventory-slot img{max-width:82%!important;max-height:78%!important;object-fit:contain!important;image-rendering:pixelated!important}
+#inventoryOverlay .item-description {
+ flex:0 0 76px!important;box-sizing:border-box!important;height:76px!important;min-height:76px!important;
+ margin:14px 0 0!important;padding:11px 13px!important;display:block!important;
+ background:#01060b!important;border:1px solid #4bdcff!important;
+ color:#d6ebf0!important;font-size:11px!important;line-height:1.55!important;overflow:hidden!important;
+}
+#inventoryOverlay .item-description strong{display:block!important;margin-bottom:6px!important;color:#d8f6ff!important}
+#inventoryOverlay .item-description p{margin:6px 0 0!important}
+#inventoryOverlay .inventory-footer{display:none!important}
+/* Pause ALWAYS beats all non-pause panels; button remains clickable above it. */
+#pauseOverlay,.pause-overlay {
+ position:fixed!important;inset:0!important;z-index:11000!important;
+ background:rgba(0,0,0,.78)!important;backdrop-filter:blur(3px)!important;
+ justify-content:center!important;align-items:center!important;
+}
+#pauseOverlay .pause-menu-panel,.pause-overlay .pause-menu-panel {
+ box-shadow:0 0 0 1px #16495b,0 0 30px #00cfff65,0 0 95px #00cfff23!important;
+ border:1px solid #54dfff!important;
+}
+#pauseToggle,.pause-toggle{z-index:12000!important;position:absolute!important}
+#dialogOverlay,#itemAcquiredNotice,.item-acquired-notice,.computer-overlay,.card-overlay {z-index:4500!important}
+.item-acquired-text {font-size:11px!important;line-height:1.55!important}
+/* For the ECHO prompt: tutorial's dim/bright blinking convention. */
+.echo-next,.echo-next:not(.ready){color:#6c8791!important;opacity:1!important}
+.echo-next.ready{color:#f5ffff!important;opacity:1!important}
+.echo-bar{box-sizing:border-box!important;padding-bottom:29px!important;min-height:88px!important}
+.echo-bar #echoText,.echo-bar .echo-message{display:block!important;margin:0!important;padding:0 0 8px!important;
+ max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important}
+.echo-bar .echo-next{position:absolute!important;right:14px!important;bottom:7px!important;font-size:9px!important;
+ line-height:1.4!important;pointer-events:none!important}
+#floorLayer,#wallLayer {position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ transform:none!important;object-fit:fill!important;image-rendering:pixelated!important}
+#dataSavingScreen {display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+#dataSavingScreen.active {display:block!important;position:fixed!important;inset:0!important;z-index:999999!important;background:#000!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+#tutorialDataSaving{z-index:999999!important}
+/* Smaller screens: leave all five help entries legible without any scrollbar. */
+@media(max-width:690px) {
+ #helpOverlay .help-panel{padding:17px 13px!important}
+ #helpOverlay .help-row{grid-template-columns:24px 156px minmax(0,1fr)!important;gap:6px!important;min-height:39px!important;padding:6px 0!important}
+ #helpOverlay .help-key{grid-template-columns:76px 7px minmax(0,1fr)!important;gap:4px!important}
+ #helpOverlay .help-key .control-label,#helpOverlay .help-key .control-button{font-size:10px!important}
+ #helpOverlay .help-description{font-size:10px!important}
+ #helpOverlay .help-important{font-size:9px!important;padding:9px!important}
+ #inventoryOverlay .inventory-panel{width:94vw!important;padding:13px!important}
+}
+
+</style></head>
 
 
 <body>
@@ -3189,6 +3409,8 @@ button,.game button,.code-button,.help-key{border-radius:0!important}
     id="gameRoot"
     tabindex="0"
 >
+<div class="tutorial-transition show" id="tutorialTransition" aria-hidden="true"><div class="tutorial-transition-card"><div class="tutorial-transition-stage">STAGE 00</div><div class="tutorial-transition-room">:TUTORIAL</div></div></div>
+
 <div id="tutorialDirectionArrow" class="tutorial-direction-arrow" aria-hidden="true">⬇</div>
 
 
@@ -3487,159 +3709,19 @@ button,.game button,.code-button,.help-key{border-radius:0!important}
      HELP
      ===================================================== -->
 
-<div
-    class="overlay"
-    id="helpOverlay"
-    style="display:none;"
->
-
-<div class="help-panel">
-
-
-<div class="help-header">
-
-    <div class="help-title">
-        HOW TO PLAY
-    </div>
-
-    <div class="help-close">
-        H / ESC TO CLOSE
-    </div>
-
-</div>
-
-
-<div class="help-row">
-
-    <div class="help-number">
-        01
-    </div>
-
-    <div class="help-key">
-        MOVEMENT<br>
-        W A S D
-    </div>
-
-    <div class="help-description">
-        연구시설 내부를 이동합니다.
-    </div>
-
-</div>
-
-
-<div class="help-row">
-
-    <div class="help-number">
-        02
-    </div>
-
-    <div class="help-key">
-        INTERACTION<br>
-        E
-    </div>
-
-    <div class="help-description">
-        가까운 물체를 조사하거나 아이템을 획득합니다.
-    </div>
-
-</div>
-
-
-<div class="help-row">
-
-    <div class="help-number">
-        03
-    </div>
-
-    <div class="help-key">
-        INVENTORY<br>
-        I
-    </div>
-
-    <div class="help-description">
-        획득한 아이템을 확인합니다.
-    </div>
-
-</div>
-
-
-<div class="help-row">
-
-    <div class="help-number">
-        04
-    </div>
-
-    <div class="help-key">
-        SYSTEM<br>
-        SPACE
-    </div>
-
-    <div class="help-description">
-        ECHO의 채팅을 끝까지 표시하거나 다음 채팅으로 넘어갑니다.
-    </div>
-
-</div>
-
-
-<div class="help-row">
-
-    <div class="help-number">
-        05
-    </div>
-
-    <div class="help-key">
-        CONTROLS<br>
-        H
-    </div>
-
-    <div class="help-description">
-        조작 방법을 다시 확인합니다.
-    </div>
-
-</div>
-
-
-<div
-    style="
-    margin-top:22px;
-    padding:16px;
-    background:#090909;
-    border-left:2px solid #ffffff;
-    "
->
-
-    <div
-        style="
-        margin-bottom:8px;
-        font-size:13px;
-        "
-    >
-        IMPORTANT
-    </div>
-
-
-    <div
-        style="
-        color:#888888;
-        font-size:11px;
-        line-height:1.8;
-        "
-    >
-
-        시설 내부의 물체와 기록을 자세히 조사하세요.<br>
-
-        ECHO가 제공하는 모든 정보가 사실이라고 가정해서는 안 됩니다.<br>
-
-        서로 모순되는 단서가 발견될 수도 있습니다.
-
-    </div>
-
-</div>
-
-
-</div>
-
-</div>
+<div id="helpOverlay" class="overlay logic-utility-overlay" style="display:none">
+<div class="help-panel logic-help-panel">
+<div class="help-header"><div class="help-title">HOW TO PLAY</div><div class="help-close">H / ESC TO CLOSE</div></div>
+<div class="help-row"><span class="help-number">01</span><span class="help-key"><span class="control-label">MOVEMENT</span><span class="control-separator">|</span><span class="control-button">W A S D</span></span><span class="help-description">연구시설 내부를 이동합니다.</span></div>
+<div class="help-row"><span class="help-number">02</span><span class="help-key"><span class="control-label">INTERACTION</span><span class="control-separator">|</span><span class="control-button">E</span></span><span class="help-description">가까운 물체를 조사하거나 아이템을 획득합니다.</span></div>
+<div class="help-row"><span class="help-number">03</span><span class="help-key"><span class="control-label">INVENTORY</span><span class="control-separator">|</span><span class="control-button">I</span></span><span class="help-description">획득한 아이템을 확인합니다.</span></div>
+<div class="help-row"><span class="help-number">04</span><span class="help-key"><span class="control-label">SYSTEM</span><span class="control-separator">|</span><span class="control-button">SPACE</span></span><span class="help-description">ECHO의 채팅을 끝까지 표시하거나 다음 채팅으로 넘어갑니다.</span></div>
+<div class="help-row"><span class="help-number">05</span><span class="help-key"><span class="control-label">CONTROLS</span><span class="control-separator">|</span><span class="control-button">H</span></span><span class="help-description">조작 방법을 다시 확인합니다.</span></div>
+<div class="help-important"><div class="help-important-title">IMPORTANT</div>
+<div>시설 내부의 물체와 기록을 자세히 조사하세요.</div>
+<div>ECHO가 제공하는 모든 정보가 사실이라고 가정해서는 안 됩니다.</div>
+<div>서로 모순되는 단서가 발견될 수도 있습니다.</div>
+</div></div></div>
 
 
 <!-- =====================================================
@@ -3795,7 +3877,7 @@ button,.game button,.code-button,.help-key{border-radius:0!important}
 
 <div class="item-acquired-notice" id="itemAcquiredNotice" role="button" tabindex="0" aria-label="아이템 획득 알림을 닫으려면 클릭"><div class="item-acquired-art"><img class="access-card-image" src="__SWIPE_IMAGE_795a41e9c430__" alt="Access card"></div><div class="item-acquired-dialog"><div class="item-acquired-tag">ECHO</div><div class="item-acquired-text">카드가 인벤토리에 추가되었습니다.
 이 카드는 특정 장비를 작동시키거나 인증할 때 사용됩니다.</div><div class="item-acquired-close">CLICK TO CLOSE</div></div></div>
-<div class="tutorial-transition" id="tutorialTransition" aria-hidden="true"><div class="tutorial-transition-card"><div class="tutorial-transition-stage">STAGE 00</div><div class="tutorial-transition-room">:TUTORIAL</div></div></div>
+
 <div class="pause-overlay" id="pauseOverlay"><div class="pause-menu-panel"><div class="pause-actions"><div class="pause-row"><span class="pause-icon">Ⅱ</span><button class="pause-nav-link pause-menu-button" id="resumeButton" type="button">RESUME</button></div><div class="pause-row"><span class="pause-icon">↻</span><a class="pause-nav-link" id="restartButton" href="?action=restart" target="_top" rel="noopener">RESTART</a></div><div class="pause-row"><span class="pause-icon">⌂</span><a class="pause-nav-link" id="titleButton" href="?action=title" target="_top" rel="noopener">TITLE</a></div></div></div></div>
 
 <div
@@ -4285,7 +4367,7 @@ function nextEcho() {
 
     if (echoIndex === 0 && tutorialStep === 0) {
         typeEcho(1);
-        status.textContent = "TUTORIAL // W A S D TO MOVE";
+        status.textContent = "ECHO SYSTEM // ONLINE";
         saveTutorialState();
         return;
     }
@@ -4296,7 +4378,10 @@ function nextEcho() {
 }
 
 const TUTORIAL_SAVE_KEY = "project_logic_tutorial_save_v3";
-if (__RESET_TUTORIAL_SAVE__) { try { localStorage.removeItem(TUTORIAL_SAVE_KEY); } catch (e) {} }
+if (__RESET_TUTORIAL_SAVE__) { try {
+    ['project_logic_tutorial_save_v3','project_logic_stage01_progress_v6',
+     'project_logic_stage02_progress_v1','project_logic_stage02_handoff_v1'].forEach(k=>localStorage.removeItem(k));
+} catch (e) {} }
 function saveTutorialState() {
     try {
         localStorage.setItem(TUTORIAL_SAVE_KEY, JSON.stringify({
@@ -4342,9 +4427,11 @@ function restoreTutorialState() {
     } catch (e) { return false; }
 }
 
-const tutorialWasRestored = false;
-localStorage.removeItem(TUTORIAL_SAVE_KEY);
+// 저장된 튜토리얼 진행 상황을 CONTINUE에서 복원합니다.
+const tutorialWasRestored = restoreTutorialState();
+window.addEventListener("pagehide",saveTutorialState);
 const tutorialTransition = document.getElementById("tutorialTransition");
+if (tutorialWasRestored && tutorialTransition) tutorialTransition.remove();
 if (!tutorialWasRestored && tutorialTransition) {
     tutorialTransition.classList.add("show");
     window.setTimeout(() => tutorialTransition.classList.add("hide"), 2700);
@@ -4840,7 +4927,7 @@ function updateMovement() {
             1;
 
 
-        typeEcho(1);
+        if (echoIndex === 0) typeEcho(1);
 
 
         status.textContent =
@@ -6088,6 +6175,13 @@ function dragCardMove(
 }
 
 
+function playVerificationChime(){
+  try{const C=window.AudioContext||window.webkitAudioContext;const ctx=new C();ctx.resume();
+    [659.25,880,1318.5].forEach((hz,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.value=hz;const t=ctx.currentTime+i*.11;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.055,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+.27)});
+    setTimeout(()=>ctx.close().catch(()=>{}),1000);
+  }catch(e){}
+}
+
 function finishCardDrag(
     event
 ) {
@@ -6168,6 +6262,7 @@ function finishCardDrag(
         cardConsumed = true;
         renderInventory();
         if (readerLight) readerLight.classList.add("green");
+        playVerificationChime();
         cardStatus.textContent = "ACCESS GRANTED // CARD CONSUMED";
         // 인증 완료 후 출입구에서 E키를 눌러 이동한다.
         cardStatus.textContent =
@@ -6260,7 +6355,17 @@ function parentAction(action) {
 const restartButton = document.getElementById("restartButton");
 const titleButton = document.getElementById("titleButton");
 if (restartButton) restartButton.addEventListener("click", function (event) { event.preventDefault(); event.stopPropagation(); parentAction("restart"); });
-if (titleButton) titleButton.addEventListener("click", function (event) { event.preventDefault(); event.stopPropagation(); parentAction("title"); });
+if (titleButton) titleButton.addEventListener("click", function (event) {
+    event.preventDefault();event.stopPropagation();saveTutorialState();
+    let overlay=document.getElementById('tutorialDataSaving');
+    if(!overlay){overlay=document.createElement('div');overlay.id='tutorialDataSaving';
+      overlay.style.cssText='position:fixed;inset:0;background:#000;z-index:999999;';
+      overlay.innerHTML='<div style="position:absolute;left:28px;bottom:25px;color:#9beaff;font-size:13px;display:flex;gap:12px;align-items:center"><span class="savingGear">⚙</span>DATA SAVING...</div>';
+      document.body.appendChild(overlay);
+      const style=document.createElement('style');style.textContent='.savingGear{font-size:23px;display:inline-block;animation:saveGearSpin .9s linear infinite}@keyframes saveGearSpin{to{transform:rotate(360deg)}}';document.head.appendChild(style);
+    }
+    setTimeout(()=>parentAction('title'),3000);
+});
 
 
 /* =====================================================
@@ -6560,9 +6665,10 @@ for _placeholder, _filename in _SWIPE_ASSET_FILES.items():
     _data = base64.b64encode(_path.read_bytes()).decode("ascii")
     html = html.replace(_placeholder, f"data:image/{_extension};base64,{_data}")
 
+html = html.replace("</head>", '<style id="logic-v9-iframe-ui">\n/* This style lives INSIDE the components.html iframe, unlike v8\'s Streamlit-level CSS. */\n#helpOverlay,#inventoryOverlay{position:fixed!important;inset:0!important;z-index:4000!important;background:rgba(0,0,0,.70)!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}\n#helpOverlay .help-panel,#helpOverlay .utility-panel{box-sizing:border-box!important;width:min(760px,90vw)!important;max-width:90vw!important;max-height:90vh!important;overflow:hidden!important;padding:24px 32px!important}\n#helpOverlay .help-row{display:grid!important;grid-template-columns:32px 260px minmax(0,1fr)!important;grid-template-rows:auto!important;gap:2px 14px!important;align-items:center!important;padding:9px 0!important;min-width:0!important;border-bottom:1px solid #17495b!important}\n#helpOverlay .help-number{grid-column:1!important;grid-row:1!important;display:block!important;width:auto!important;min-width:0!important;height:auto!important;color:#61e8ff!important;border:0!important;background:none!important;box-shadow:none!important}\n#helpOverlay .help-key{grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;gap:12px!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;font-size:12px!important}\n#helpOverlay .help-key .control-label{position:static!important;display:inline!important;flex:0 0 128px!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;transform:none!important;clip-path:none!important;border:0!important;background:none!important;box-shadow:none!important;color:#63e8ff!important;font-size:12px!important}\n#helpOverlay .help-key .control-separator{position:static!important;display:inline!important;flex:0 0 auto!important;color:#637985!important}\n#helpOverlay .help-key .control-button{position:static!important;display:inline!important;flex:0 0 auto!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;transform:none!important;clip-path:none!important;border:0!important;background:none!important;box-shadow:none!important;color:#f2fbff!important;font-size:12px!important;line-height:1.4!important}\n#helpOverlay .help-description{grid-column:3!important;grid-row:1!important;color:#8c9da7!important;font-size:11px!important;line-height:1.5!important;min-width:0!important}\n#helpOverlay .help-important{margin-top:14px!important;padding:12px 14px!important}\n#inventoryOverlay .inventory-panel,#inventoryOverlay .utility-panel{box-sizing:border-box!important;width:min(760px,90vw)!important;max-height:90vh!important;overflow:hidden!important;padding:24px!important}\n#inventoryOverlay .inventory-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;gap:8px!important;max-height:min(55vh,470px)!important;overflow:hidden!important}\n#inventoryOverlay .inventory-slot{position:relative!important;min-width:0!important;min-height:0!important;aspect-ratio:1.1!important;background:#01060b!important;border:1px solid #28546a!important}\n#inventoryOverlay .item-description{margin-top:12px!important;min-height:56px!important;padding:12px!important;border:1px solid #48dfff!important;color:#d9faff!important}\n#pauseOverlay,.pause-overlay{z-index:9000!important;background:rgba(0,0,0,.72)!important;backdrop-filter:blur(3px)!important}\n#pauseOverlay .pause-menu-panel,.pause-overlay .pause-menu-panel{box-shadow:0 0 0 1px #123c4d,0 0 22px #00cfff55,0 0 100px #00cfff20!important}\n#pauseToggle,.pause-toggle{z-index:9100!important}\n.item-acquired-notice.show{z-index:4500!important}\n.item-acquired-text{font-size:12px!important;line-height:1.6!important}\n.echo-next{color:#4b8da0!important;opacity:.85!important}\n#dataSavingScreen:not(.active){display:none!important}\n#floorLayer,#wallLayer{width:100%!important;height:100%!important;object-fit:fill!important}\n</style>' + "</head>", 1)
 components.html(
     html,
-    height=1000,
+    height=800,
     scrolling=False,
 )
 
