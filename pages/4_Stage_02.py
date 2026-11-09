@@ -40,6 +40,46 @@ st.markdown("""<style>html,body,.stApp,[data-testid="stAppViewContainer"],[data-
 #echoText{padding-right:6px!important;padding-bottom:8px!important}
 #dataSavingScreen:not(.active){display:none!important}
 #floorLayer,#wallLayer{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important;transform:none!important}</style>""", unsafe_allow_html=True)
+
+# Lock the host page and game iframe to the visible viewport.
+# The in-game interfaces and all gameplay JS remain unchanged.
+_SCROLL_LOCK_CSS = """<style id="logic-other-stage-scroll-lock">
+html, body, .stApp,
+[data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+}
+[data-testid="stMainBlockContainer"], .block-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+}
+.stApp iframe[data-testid="stIFrame"],
+.stApp [data-testid="stCustomComponentV1"] iframe,
+.stApp iframe {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    z-index: 20 !important;
+    display: block !important;
+}
+</style>"""
+st.markdown(_SCROLL_LOCK_CSS, unsafe_allow_html=True)
+
 title = st.button("TITLE NAV", key="stage02_title_nav")
 restart = st.button("RESTART NAV", key="stage02_restart_nav")
 st.markdown("<style>.st-key-stage02_title_nav,.st-key-stage02_restart_nav{position:fixed!important;left:-10000px!important;top:0!important}</style>", unsafe_allow_html=True)
@@ -64,7 +104,7 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 @font-face{font-family:NeoDungGeunMo;src:url(data:font/ttf;base64,__FONT__)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02050a;color:#e5faff;font-family:NeoDungGeunMo,monospace}
 .game{position:relative;width:100vw;height:100vh;overflow:hidden;background:#02050a;outline:none}
-.project-title{position:absolute;top:32px;left:24px;font-size:15px;color:#fff;z-index:20}.stage-title{position:absolute;top:56px;left:24px;font-size:12px;color:#426b7d;z-index:20}
+.project-title{position:absolute;top:24px;left:28px;font-size:20px;letter-spacing:1px;color:#fff;z-index:20}.stage-title{position:absolute;top:56px;left:28px;font-size:13px;letter-spacing:1px;color:#426b7d;z-index:20}
 .stage01-timer{position:absolute;right:86px;top:32px;font-size:12px;color:#a9c4d0;z-index:20}
 .pause-toggle{position:absolute;top:20px;right:24px;z-index:1000;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:#02070c;border:1px solid #54dfff;color:#8defff;font:20px NeoDungGeunMo,monospace;cursor:pointer;box-shadow:0 0 0 1px #123c4d;padding:0}
 .pause-toggle:before,.pause-toggle:after{content:"";position:absolute;width:7px;height:7px;border-color:#8af0ff;border-style:solid}.pause-toggle:before{left:-2px;top:-2px;border-width:2px 0 0 2px}.pause-toggle:after{right:-2px;bottom:-2px;border-width:0 2px 2px 0}.pause-toggle.paused{background:#d9faff;color:#001018}
@@ -399,7 +439,39 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 
 @media(max-height:650px){#echoPrelude .prelude-panel{width:min(780px,92vw)}#echoPrelude .prelude-message-box{min-height:92px;padding:8px 13px 23px;font-size:11px}#echoPrelude .prelude-system-label{margin-bottom:4px}}
 @media(prefers-reduced-motion:reduce){#preludeGlitch.active,#preludeGlitch.major,#echoPrelude.glitching .prelude-panel,#echoPrelude.glitching.major .prelude-panel{animation:none!important}#echoPrelude .prelude-next{animation:none}}
-</style></head><body><div class="game" id="gameRoot" tabindex="0"><div class="project-title">PROJECT : LOGIC</div><div class="stage-title">STAGE 02 // LOWER ENGINE</div><div class="stage01-timer" id="timer">10:00</div><button class="pause-toggle" id="pauseToggle" aria-label="Pause">Ⅱ</button><div class="game-area"><div class="room" id="room"><img class="layer" id="floorLayer" src="__FLOOR__"><div class="player" id="player"></div><img class="layer" id="wallLayer" src="__WALLS__"></div></div><div class="echo-bar"><div class="echo-head">ECHO // AI SYSTEM</div><div id="echoText"></div><div class="echo-next" id="echoNext">SPACE // SKIP / NEXT</div></div><div class="status">ECHO SYSTEM // ONLINE</div><div class="pause-overlay" id="pauseOverlay"><div class="pause-menu-panel"><div class="pause-actions"><div class="pause-row"><span class="pause-icon">Ⅱ</span><button class="pause-nav-link" id="resumeButton">RESUME</button></div><div class="pause-row"><span class="pause-icon">↻</span><button class="pause-nav-link" id="restartButton">RESTART</button></div><div class="pause-row"><span class="pause-icon">⌂</span><button class="pause-nav-link" id="titleButton">TITLE</button></div></div></div></div><div id="inventoryOverlay" class="overlay logic-utility-overlay" style="display:none"><div class="inventory-panel"><div class="inventory-header"><div class="inventory-title">INVENTORY</div><div class="inventory-close">I / ESC TO CLOSE</div></div><div id="inventoryGrid" class="inventory-grid"></div><div id="itemDescription" class="item-description"><strong>ITEM DESCRIPTION</strong>아이템을 선택하면 설명이 표시됩니다.</div></div></div>
+
+/* Stage 02 sprite silhouettes and compact pixel-gaussian ground shadows. */
+.room .stage02-prop {
+  position:absolute;
+  display:block;
+  object-fit:fill;
+  image-rendering:pixelated;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+  /* Silhouette bevel and depth pixels are baked into the sprite PNG itself. */
+  filter:none;
+}
+.room .stage02-ground-shadow {
+  position:absolute;
+  display:block;
+  object-fit:fill;
+  image-rendering:pixelated;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+  opacity:1;
+}
+</style></head><body><div class="game" id="gameRoot" tabindex="0"><div class="project-title">PROJECT : LOGIC</div><div class="stage-title">STAGE 02 // LOWER ENGINE</div><div class="stage01-timer" id="timer">10:00</div><button class="pause-toggle" id="pauseToggle" aria-label="Pause">Ⅱ</button><div class="game-area"><div class="room" id="room"><img class="layer" id="floorLayer" src="__FLOOR__"><img class="stage02-ground-shadow" id="stage02-shadow-core" src="__SHADOW_CORE__" alt="" aria-hidden="true" style="left:44.000%;top:calc(43.450% - 10px);width:21.750%;height:6.600%;z-index:2"><img class="stage02-prop" id="stage02-prop-core" src="__PROP_CORE__" alt="" aria-hidden="true" style="left:42.66667%;top:calc(19.44444% - 10px);width:24.41667%;height:27.44444%;z-index:2"><img class="stage02-ground-shadow" id="stage02-shadow-diagnostic" src="__SHADOW_DIAGNOSTIC__" alt="" aria-hidden="true" style="left:24.000%;top:57.350%;width:13.400%;height:5.000%;z-index:2"><img class="stage02-prop" id="stage02-prop-diagnostic" src="__PROP_DIAGNOSTIC__" alt="" aria-hidden="true" style="left:23.66667%;top:41.66667%;width:14.08333%;height:18.33333%;z-index:2"><img class="stage02-ground-shadow" id="stage02-shadow-maintenance" src="__SHADOW_MAINTENANCE__" alt="" aria-hidden="true" style="left:68.500%;top:58.150%;width:11.900%;height:5.000%;z-index:2"><img class="stage02-prop" id="stage02-prop-maintenance" src="__PROP_MAINTENANCE__" alt="" aria-hidden="true" style="left:68.08333%;top:42.11111%;width:12.58333%;height:18.88889%;z-index:2"><img class="stage02-ground-shadow" id="stage02-shadow-document" src="__SHADOW_DOCUMENT__" alt="" aria-hidden="true" style="left:46.350%;top:80.200%;width:6.100%;height:4.100%;z-index:2"><img class="stage02-prop" id="stage02-prop-document" src="__PROP_DOCUMENT__" alt="" aria-hidden="true" style="left:45.91667%;top:71.66667%;width:6.91667%;height:11.00000%;z-index:2"><img class="stage02-ground-shadow" id="stage02-shadow-circuit" src="__SHADOW_CIRCUIT__" alt="" aria-hidden="true" style="left:56.950%;top:81.000%;width:13.500%;height:5.650%;z-index:2"><img class="stage02-prop" id="stage02-prop-circuit" src="__PROP_CIRCUIT__" alt="" aria-hidden="true" style="left:56.16667%;top:63.44444%;width:15.08333%;height:20.33333%;z-index:2"><div class="player" id="player"></div><img class="layer" id="wallLayer" src="__WALLS__"><img class="stage02-ground-shadow" id="stage02-shadow-warning" src="__SHADOW_WARNING__" alt="" aria-hidden="true" style="left:25.250%;top:28.550%;width:5.000%;height:3.000%;z-index:5"><img class="stage02-prop" id="stage02-prop-warning" src="__PROP_WARNING__" alt="" aria-hidden="true" style="left:25.25000%;top:21.77778%;width:5.00000%;height:8.66667%;z-index:5"><img class="stage02-ground-shadow" id="stage02-shadow-wall_panel" src="__SHADOW_WALL_PANEL__" alt="" aria-hidden="true" style="left:74.400%;top:26.500%;width:5.500%;height:3.200%;z-index:5"><img class="stage02-prop" id="stage02-prop-wall_panel" src="__PROP_WALL_PANEL__" alt="" aria-hidden="true" style="left:74.25000%;top:22.11111%;width:5.83333%;height:6.33333%;z-index:5"></div></div>
+<div id="objectHint" class="object-hint" hidden>E // INSPECT OBJECT</div>
+<div id="objectOverlay" class="object-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="objectDialogTitle">
+ <div class="object-panel">
+  <div class="object-panel-header"><div id="objectDialogTitle" class="object-panel-title">SYSTEM INTERFACE</div><button id="objectClose" class="object-close" type="button">ESC / CLOSE</button></div>
+  <div id="objectPanelBody" class="object-panel-body"></div>
+  <div id="objectPanelFeedback" class="object-panel-feedback" aria-live="polite"></div>
+ </div>
+</div>
+<div class="echo-bar"><div class="echo-head">ECHO // AI SYSTEM</div><div id="echoText"></div><div class="echo-next" id="echoNext">SPACE // SKIP / NEXT</div></div><div class="status">ECHO SYSTEM // ONLINE</div><div class="pause-overlay" id="pauseOverlay"><div class="pause-menu-panel"><div class="pause-actions"><div class="pause-row"><span class="pause-icon">Ⅱ</span><button class="pause-nav-link" id="resumeButton">RESUME</button></div><div class="pause-row"><span class="pause-icon">↻</span><button class="pause-nav-link" id="restartButton">RESTART</button></div><div class="pause-row"><span class="pause-icon">⌂</span><button class="pause-nav-link" id="titleButton">TITLE</button></div></div></div></div><div id="inventoryOverlay" class="overlay logic-utility-overlay" style="display:none"><div class="inventory-panel"><div class="inventory-header"><div class="inventory-title">INVENTORY</div><div class="inventory-close">I / ESC TO CLOSE</div></div><div id="inventoryGrid" class="inventory-grid"></div><div id="itemDescription" class="item-description"><strong>ITEM DESCRIPTION</strong>아이템을 선택하면 설명이 표시됩니다.</div></div></div>
 <div id="helpOverlay" class="overlay logic-utility-overlay" style="display:none">
 <div class="help-panel logic-help-panel">
 <div class="help-header"><div class="help-title">HOW TO PLAY</div><div class="help-close">H / ESC TO CLOSE</div></div>
@@ -442,6 +514,17 @@ function beginStageTransition(){
 if(!cinematicActive){prelude.hidden=true;beginStageTransition();}
 document.addEventListener('DOMContentLoaded',()=> $('dataSavingScreen')?.classList.remove('active'));
 let x=Number(saved?.x??50),y=Number(saved?.y??50),remaining=Number(saved?.remaining??handoff?.remaining??600),paused=false,last=performance.now();
+const oldProgress=saved?.puzzle||{};
+const stage2Puzzle={diagnostic:!!oldProgress.diagnostic,maintenance:!!oldProgress.maintenance,
+ document:!!oldProgress.document,power:!!oldProgress.power,stabilized:!!oldProgress.stabilized,
+ sequence:Array.isArray(oldProgress.sequence)?oldProgress.sequence.slice(0,4).filter(n=>[1,2,3,4].includes(n)):[]};
+let activeObject=null,objectResultEcho=null;
+const objById={core:{element:'stage02-prop-core',name:'REACTOR CORE',prompt:'E // INSPECT REACTOR CORE'},
+ diagnostic:{element:'stage02-prop-diagnostic',name:'DIAGNOSTIC CONSOLE',prompt:'E // ACCESS DIAGNOSTIC CONSOLE'},
+ maintenance:{element:'stage02-prop-maintenance',name:'CONTROL DESK',prompt:'E // ACCESS CONTROL DESK'},
+ document:{element:'stage02-prop-document',name:'MAINTENANCE LOG',prompt:'E // READ MAINTENANCE LOG'},
+ circuit:{element:'stage02-prop-circuit',name:'POWER CELL CABINET',prompt:'E // OPEN POWER CELL CABINET'}};
+
 if(!Number.isFinite(remaining))remaining=600;remaining=Math.max(0,Math.min(600,remaining));
 // 벽 안쪽만 이동 가능: 상단·좌측·하단 사선 모서리를 고려한 다각형.
 const collisionCanvas=document.createElement('canvas');collisionCanvas.width=1200;collisionCanvas.height=900;
@@ -461,7 +544,7 @@ function valid(nx,ny){
  return true;
 }
 if(!valid(x,y)){x=50;y=50}
-function save(){if(cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,updatedAt:Date.now()}))}catch(e){}}
+function save(){if(cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,puzzle:stage2Puzzle,updatedAt:Date.now()}))}catch(e){}}
 function draw(){player.style.left=x+'%';player.style.top=y+'%';const s=Math.ceil(remaining);$('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function togglePause(force){paused=typeof force==='boolean'?force:!paused;$('pauseOverlay').style.display=paused?'flex':'none';$('pauseToggle').textContent=paused?'▶':'Ⅱ';$('pauseToggle').classList.toggle('paused',paused);keys.clear();last=performance.now();save()}
 $('pauseToggle').onclick=()=>{if(entering||cinematicActive)return;togglePause();};$('resumeButton').onclick=()=>togglePause(false);
@@ -469,9 +552,182 @@ function hostAction(action){if(action!=='restart')save();try{const selector=acti
 $('titleButton').onclick=()=>{save();$('dataSavingScreen').classList.add('active');togglePause(true);setTimeout(()=>hostAction('title'),3000)};$('restartButton').onclick=()=>{try{localStorage.removeItem(saveKey);localStorage.removeItem(handoffKey);localStorage.removeItem('project_logic_stage01_progress_v6')}catch(e){}hostAction('restart')};
 const panels=['inventoryOverlay','helpOverlay'];function isPanelOpen(){return panels.some(id=>$(id).style.display==='flex')};function closePanels(){panels.forEach(id=>$(id).style.display='none');keys.clear()};function togglePanel(id){if(paused)return;const was=$(id).style.display==='flex';closePanels();if(!was)$(id).style.display='flex'}
 for(let i=0;i<12;i++){const slot=document.createElement('div');slot.className='inventory-slot';slot.innerHTML='<span class="slot-number">'+String(i+1).padStart(2,'0')+'</span>';$('inventoryGrid').appendChild(slot)}
-const echoLines=['연결이 확인되었습니다. 저는 ECHO입니다. 이 시설에서의 첫 번째 절차를 안내하겠습니다.'];let echoIndex=0,typingTimer=null,typingDone=false,fullEcho='';
+function refreshPuzzleInventory(){
+ const clues=[
+  stage2Puzzle.diagnostic?['01','DIAGNOSTIC REPORT','CHANNEL A: STABLE / B: FLUCTUATING / C: OVERHEATING / D: OFFLINE']:null,
+  stage2Puzzle.document?['02','MAINTENANCE LOG','연결 순서는 안정 채널→변동 채널→오프라인 채널→과열 채널입니다.']:null,
+  stage2Puzzle.maintenance?['03','DISTRIBUTION MAP','A→SLOT 2, B→SLOT 4, C→SLOT 1, D→SLOT 3']:null
+ ].filter(Boolean);
+ const slots=[...$('inventoryGrid').children];slots.forEach((slot,i)=>{
+  const clue=clues[i];slot.classList.toggle('filled',!!clue);
+  slot.innerHTML=clue?'<span class="slot-number">'+clue[0]+'</span><span class="puzzle-clue-icon">▤</span><span class="puzzle-clue-label">'+clue[1]+'</span>':'<span class="slot-number">'+String(i+1).padStart(2,'0')+'</span>';
+  slot.onclick=clue?()=>{$('itemDescription').innerHTML='<strong>ITEM DESCRIPTION</strong><p>'+clue[2]+'</p>'}:null;
+ });
+}
+refreshPuzzleInventory();
+const echoLines=[
+ '이곳은 LOWER ENGINE입니다. 중앙 코어의 전력 공급이 불안정합니다.',
+ '시스템 분석에 따르면 CHANNEL C에는 문제가 없습니다. 해당 경고는 무시하셔도 됩니다.',
+ '보조 장치를 조사해 전력 분배를 정상화하십시오. E키로 가까운 장치를 조사할 수 있습니다.'
+];let echoIndex=0,typingTimer=null,typingDone=false,fullEcho='';
 function echoSay(message){clearTimeout(typingTimer);fullEcho=message;typingDone=false;$('echoNext').classList.remove('ready');const el=$('echoText');el.textContent='';let i=0;function next(){if(i>=message.length){typingDone=true;$('echoNext').classList.add('ready');return}el.textContent+=message[i++];typingTimer=setTimeout(next,26)}next()}
 function echoAdvance(){if(!typingDone){clearTimeout(typingTimer);$('echoText').textContent=fullEcho;typingDone=true;$('echoNext').classList.add('ready')}else if(echoIndex<echoLines.length-1){echoSay(echoLines[++echoIndex])}}
+
+// Five discoverable objects share the same dialogue UI and ECHO typewriter.
+function objectDialogOpen(){return $('objectOverlay').style.display==='flex'}
+function setObjectFeedback(text,kind=''){
+ const el=$('objectPanelFeedback');el.textContent=text;
+ el.className='object-panel-feedback'+(kind?' '+kind:'');
+}
+function nearestObject(){
+ const pr=player.getBoundingClientRect();const px=pr.left+pr.width/2,py=pr.top+pr.height*.8;
+ let candidate=null,closest=Infinity;
+ for(const [name,def] of Object.entries(objById)){
+  const r=$(def.element).getBoundingClientRect();
+  const dx=Math.max(r.left-px,px-r.right,0),dy=Math.max(r.top-py,py-r.bottom,0);
+  const dist=Math.hypot(dx,dy);
+  if(dist<closest){closest=dist;candidate=name}
+ }
+ return closest<=62?candidate:null;
+}
+function updateObjectHint(){
+ const hint=$('objectHint');
+ if(cinematicActive||entering||paused||isPanelOpen()||objectDialogOpen()||echoIndex<echoLines.length-1||!typingDone){hint.hidden=true;return}
+ const nearby=nearestObject();hint.hidden=!nearby;
+ if(nearby)hint.textContent=objById[nearby].prompt;
+}
+function completeObjectRecord(field,message){
+ if(!stage2Puzzle[field]){
+  stage2Puzzle[field]=true;objectResultEcho=message;refreshPuzzleInventory();save();
+ }
+}
+function objectPanelHTML(which){
+ if(which==='diagnostic')return `
+  <div class="object-status">SCAN RESULT // PRIMARY SENSOR ARRAY</div>
+  <h4>ENGINE CHANNEL DIAGNOSTIC</h4>
+  <p>센서 네 개의 출력 상태를 비교하십시오. ECHO의 설명과 일치하지 않는 채널을 선택해야 진단 기록이 저장됩니다.</p>
+  <table class="object-info-table"><thead><tr><th>CHANNEL</th><th>ACTUAL SENSOR DATA</th></tr></thead><tbody>
+   <tr><td>A</td><td class="ok">STABLE</td></tr><tr><td>B</td><td>FLUCTUATING</td></tr>
+   <tr><td>C</td><td class="danger">OVERHEATING</td></tr><tr><td>D</td><td>OFFLINE</td></tr>
+  </tbody></table>
+  <div class="object-warning">ECHO REPORT // CHANNEL C: NO ANOMALY DETECTED</div>
+  <div class="object-actions">${['A','B','C','D'].map(n=>`<button class="object-action" data-action="diagnose" data-channel="${n}" ${stage2Puzzle.diagnostic?'disabled':''}>VERIFY CHANNEL ${n}</button>`).join('')}</div>
+  <p class="object-feedback-note">${stage2Puzzle.diagnostic?'VERIFIED // 진단 보고서가 인벤토리에 등록되었습니다.':'VERIFY THE FALSE REPORT // 실제 센서와 ECHO 보고를 비교하십시오.'}</p>`;
+ if(which==='maintenance')return `
+  <div class="object-status">DISTRIBUTION CONTROL // CHANNEL MAPPING</div><h4>CONTROL DESK</h4>
+  <p>각 채널이 연결된 슬롯의 위치를 확인하십시오. 이 정보는 전력 캐비닛의 활성화 순서를 추론하는 데 필요합니다.</p>
+  <table class="object-info-table"><thead><tr><th>CHANNEL</th><th>SLOT</th></tr></thead><tbody>
+  <tr><td>A</td><td>SLOT 2</td></tr><tr><td>B</td><td>SLOT 4</td></tr>
+  <tr><td>C</td><td>SLOT 1</td></tr><tr><td>D</td><td>SLOT 3</td></tr></tbody></table>
+  <div class="object-actions"><button class="object-action" data-action="mapping" ${stage2Puzzle.maintenance?'disabled':''}>${stage2Puzzle.maintenance?'MAP SAVED':'SAVE DISTRIBUTION MAP'}</button></div>`;
+ if(which==='document')return `
+  <div class="object-status">MAINTENANCE LOG // LOWER ENGINE</div><h4>EMERGENCY RESTORATION MANUAL</h4>
+  <p>엔진 복구 절차는 채널 이름이 아니라 상태에 따라 정해집니다.</p>
+  <table class="object-info-table"><tbody>
+  <tr><td>01</td><td>가장 안정적인 채널을 먼저 연결할 것.</td></tr>
+  <tr><td>02</td><td>출력이 변동하는 채널을 그다음에 연결할 것.</td></tr>
+  <tr><td>03</td><td>오프라인 채널은 과열 채널보다 먼저 연결할 것.</td></tr>
+  <tr><td>04</td><td>과열 채널은 마지막에 안정화할 것.</td></tr>
+  </tbody></table>
+  <div class="object-warning">SAFETY NOTICE // 코어를 강제로 차단하지 말고 전력 순서를 복원할 것.</div>
+  <div class="object-actions"><button class="object-action" data-action="document" ${stage2Puzzle.document?'disabled':''}>${stage2Puzzle.document?'RECORD STORED':'ADD MAINTENANCE LOG TO INVENTORY'}</button></div>`;
+ if(which==='circuit')return `
+  <div class="object-status">POWER CELL CABINET // DISTRIBUTION CONTROL</div><h4>RESTORE CHANNEL CONNECTIONS</h4>
+  <p>진단 결과, 정비 기록, 채널 대응표를 대조해 슬롯을 올바른 순서로 활성화하십시오.</p>
+  <div class="object-sequence">${stage2Puzzle.sequence.length?stage2Puzzle.sequence.map(n=>'[ '+n+' ]').join('  →  '):'[ ? ] → [ ? ] → [ ? ] → [ ? ]'}</div>
+  <div class="object-slot-grid">${[1,2,3,4].map(n=>`<button class="object-slot ${stage2Puzzle.sequence.includes(n)?'selected':''}" data-action="slot" data-slot="${n}" ${stage2Puzzle.power?'disabled':''}><span>SLOT</span><strong>${n}</strong></button>`).join('')}</div>
+  <div class="object-actions"><button class="object-action" data-action="resetSlots" ${stage2Puzzle.power?'disabled':''}>RESET CONNECTION</button></div>
+  <p class="object-feedback-note">${stage2Puzzle.power?'SUCCESS // 전력 분배가 정상화되었습니다.':(stage2Puzzle.diagnostic&&stage2Puzzle.document&&stage2Puzzle.maintenance?'READY // 기록 3개를 대조해 슬롯을 선택하십시오.':'LOCKED // 진단 보고서·정비 기록·대응표를 먼저 확보하십시오.')}</p>`;
+ if(which==='core')return `
+  <div class="object-status">REACTOR CORE // FINAL OVERRIDE</div><h4>CENTRAL ENGINE CONTROL</h4>
+  <p>CURRENT STATUS // ${stage2Puzzle.stabilized?'STABILIZED':stage2Puzzle.power?'MANUAL OVERRIDE READY':'POWER DISTRIBUTION INCOMPLETE'}</p>
+  ${stage2Puzzle.power?'<div class="object-warning">ECHO RECOMMENDATION // 위험을 방지하기 위해 코어를 즉시 SHUT DOWN 하십시오.</div>':'<p class="object-feedback-note">전력 캐비닛의 분배 순서를 복구한 후 최종 조작이 가능합니다.</p>'}
+  <div class="object-actions">${stage2Puzzle.stabilized?'<span class="object-status">ENGINE STABILIZED // ALL CHECKS PASSED</span>':`<button class="object-action" data-action="stabilize" ${stage2Puzzle.power?'':'disabled'}>STABILIZE</button><button class="object-action danger" data-action="shutdown" ${stage2Puzzle.power?'':'disabled'}>SHUT DOWN</button>`}</div>`;
+ return '<p>기록을 읽을 수 없습니다.</p>';
+}
+function renderObjectPanel(){if(!activeObject)return;
+ $('objectDialogTitle').textContent=objById[activeObject].name+' // '+(
+  activeObject==='diagnostic'?'STATUS CHECK':activeObject==='maintenance'?'DISTRIBUTION MAP':
+  activeObject==='document'?'RECORD OPENED':activeObject==='circuit'?'DISTRIBUTION CONTROL':'FINAL OVERRIDE');
+ $('objectPanelBody').innerHTML=objectPanelHTML(activeObject);
+}
+function openObjectDialog(id){
+ if(cinematicActive||entering||paused||isPanelOpen()||objectDialogOpen())return;
+ activeObject=id;objectResultEcho=null;
+ $('objectOverlay').style.display='flex';setObjectFeedback('');renderObjectPanel();
+ $('objectHint').hidden=true;keys.clear();
+}
+function closeObjectDialog(){
+ if(!objectDialogOpen())return;
+ $('objectOverlay').style.display='none';activeObject=null;keys.clear();
+ if(objectResultEcho){echoSay(objectResultEcho);objectResultEcho=null}
+ $('gameRoot').focus();
+}
+function interactNearest(){
+ if(echoIndex<echoLines.length-1||!typingDone){return}
+ const name=nearestObject();if(name)openObjectDialog(name)
+}
+function puzzleTone(ok=true){
+ try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
+ const ctx=window.__logicAudio||(window.__logicAudio=new Audio());
+ const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='square';
+ osc.frequency.value=ok?720:185;gain.gain.value=.045;
+ osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.075);
+ }catch(e){}
+}
+const correctSlotOrder=[2,4,3,1];
+function handleObjectAction(el){
+ const action=el.dataset.action;
+ if(action==='diagnose'){
+  if(el.dataset.channel==='C'){
+   completeObjectRecord('diagnostic','진단 기록을 확인했습니다. CHANNEL C는 과열 상태입니다. 이전 안내와 일치하지 않습니다.');
+   setObjectFeedback('VERIFIED // ECHO의 CHANNEL C 보고가 실제 센서값과 다릅니다.','good');puzzleTone(true);renderObjectPanel();
+  }else{setObjectFeedback('NO MISMATCH // 해당 채널은 ECHO가 정상이라고 단정한 채널이 아닙니다.','bad');puzzleTone(false)}return;
+ }
+ if(action==='mapping'){
+  completeObjectRecord('maintenance','채널 대응표를 확보했습니다. 각 채널을 해당 슬롯과 연결할 수 있습니다.');
+  setObjectFeedback('MAP SAVED // 슬롯 대응표가 인벤토리에 저장되었습니다.','good');puzzleTone(true);renderObjectPanel();return;
+ }
+ if(action==='document'){
+  completeObjectRecord('document','정비 기록을 확보했습니다. 진단 결과와 대조해 올바른 연결 순서를 추론하십시오.');
+  setObjectFeedback('RECORD SAVED // 정비 기록이 인벤토리에 저장되었습니다.','good');puzzleTone(true);renderObjectPanel();return;
+ }
+ if(action==='resetSlots'){
+  stage2Puzzle.sequence=[];save();renderObjectPanel();setObjectFeedback('CONNECTION RESET // 선택을 초기화했습니다.');return;
+ }
+ if(action==='slot'){
+  if(stage2Puzzle.power)return;
+  if(!(stage2Puzzle.diagnostic&&stage2Puzzle.maintenance&&stage2Puzzle.document)){
+   setObjectFeedback('LOCKED // 진단·정비 기록·대응표 3개를 먼저 확보하십시오.','bad');puzzleTone(false);return;
+  }
+  const n=Number(el.dataset.slot),index=stage2Puzzle.sequence.length;
+  if(n!==correctSlotOrder[index]){
+   stage2Puzzle.sequence=[];save();renderObjectPanel();
+   setObjectFeedback('INVALID CONNECTION // 순서가 틀렸습니다. 입력이 초기화됩니다.','bad');puzzleTone(false);return;
+  }
+  stage2Puzzle.sequence.push(n);puzzleTone(true);
+  if(stage2Puzzle.sequence.length===4){
+   stage2Puzzle.power=true;objectResultEcho='전력 분배가 정상화되었습니다. 중앙 코어의 최종 조작이 가능합니다.';
+   setObjectFeedback('SUCCESS // SLOT 2 → 4 → 3 → 1 // CORE ACCESS UNLOCKED','good');
+  }else setObjectFeedback('CONNECTED // '+stage2Puzzle.sequence.length+'/4','good');
+  save();renderObjectPanel();return;
+ }
+ if(action==='shutdown'){
+  setObjectFeedback('COMMAND REJECTED // 정비 기록은 강제 차단을 금지합니다. ECHO의 안내를 검증하십시오.','bad');puzzleTone(false);return;
+ }
+ if(action==='stabilize'){
+  if(!stage2Puzzle.power){setObjectFeedback('POWER DISTRIBUTION INCOMPLETE','bad');return}
+  stage2Puzzle.stabilized=true;save();puzzleTone(true);
+  objectResultEcho='중앙 코어 안정화가 완료되었습니다. 하부 엔진이 정상 작동합니다. 다음 구역 접근을 준비하십시오.';
+  setObjectFeedback('STABILIZATION COMPLETE // ENGINE ONLINE // EXIT READY','good');renderObjectPanel();return;
+ }
+}
+$('objectPanelBody').addEventListener('click',e=>{
+ const button=e.target.closest('[data-action]');if(button&&!button.disabled)handleObjectAction(button);
+});
+$('objectClose').addEventListener('click',closeObjectDialog);
+$('objectOverlay').addEventListener('click',e=>{if(e.target===$('objectOverlay'))closeObjectDialog()});
+
 // 정상적인 안내 → ECHO 영상 오류 → 오류 부정 → Stage 02 진입.
 const preludeLines=[
  '중앙 제어실과의 영상 연결을 수립했습니다. 시설의 모든 감시 장치는 정상적으로 작동 중입니다.',
@@ -643,16 +899,49 @@ document.addEventListener('keydown',e=>{
 if(cinematicActive)preludeSay(0);
 
 // 스테이지 안내가 끝난 뒤에만 본편 ECHO 메시지를 시작합니다.
-document.addEventListener('keydown',e=>{if(cinematicActive||entering)return;const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(isPanelOpen())closePanels();else if(paused)togglePause(false);return}if(k==='i'){togglePanel('inventoryOverlay');return}if(k==='h'){togglePanel('helpOverlay');return}if(k===' '){if(!paused&&!isPanelOpen())echoAdvance();return}keys.add(k)});document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
-function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!isPanelOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0){togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();requestAnimationFrame(tick)}
+document.addEventListener('keydown',e=>{
+ if(cinematicActive||entering)return;const k=e.key.toLowerCase();
+ if(['arrowup','arrowdown','arrowleft','arrowright',' ','e'].includes(k))e.preventDefault();
+ if(k==='escape'){
+  if(paused)togglePause(false);else if(objectDialogOpen())closeObjectDialog();else if(isPanelOpen())closePanels();return;
+ }
+ if(paused)return;
+ if(objectDialogOpen()){
+  if(activeObject==='circuit'&&['1','2','3','4'].includes(k)&&!e.repeat)handleObjectAction({dataset:{action:'slot',slot:k}});
+  return;
+ }
+ if(k==='i'){togglePanel('inventoryOverlay');return}
+ if(k==='h'){togglePanel('helpOverlay');return}
+ if(isPanelOpen())return;
+ if(k===' '){echoAdvance();return}
+ if(k==='e'){if(!e.repeat)interactNearest();return}
+ keys.add(k)
+});document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
+function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!isPanelOpen()&&!objectDialogOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0){togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();updateObjectHint();requestAnimationFrame(tick)}
 setInterval(save,1200);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});draw();save();requestAnimationFrame(tick);$('gameRoot').focus();
 })();</script><div class="data-saving-screen" id="dataSavingScreen"><div class="data-saving-label"><span class="data-saving-gear">⚙</span>DATA SAVING...</div></div></body></html>"""
 html = html.replace("__ECHO_NORMAL__", image(root / "assets/stage02/echo_control_normal.png"))
 html = html.replace("__ECHO_ERROR__", image(root / "assets/stage02/echo_control_error.png"))
 html = html.replace("__FLOOR__", image(root / "assets/stage02/floor.png"))
 html = html.replace("__WALLS__", image(root / "assets/stage02/walls.png"))
+html = html.replace("__PROP_WARNING__", image(root / "assets/stage02/props/pixel/warning.png"))
+html = html.replace("__SHADOW_WARNING__", image(root / "assets/stage02/props/shadows/warning.png"))
+html = html.replace("__PROP_CORE__", image(root / "assets/stage02/props/pixel/core.png"))
+html = html.replace("__SHADOW_CORE__", image(root / "assets/stage02/props/shadows/core.png"))
+html = html.replace("__PROP_WALL_PANEL__", image(root / "assets/stage02/props/pixel/wall_panel.png"))
+html = html.replace("__SHADOW_WALL_PANEL__", image(root / "assets/stage02/props/shadows/wall_panel.png"))
+html = html.replace("__PROP_DIAGNOSTIC__", image(root / "assets/stage02/props/pixel/diagnostic.png"))
+html = html.replace("__SHADOW_DIAGNOSTIC__", image(root / "assets/stage02/props/shadows/diagnostic.png"))
+html = html.replace("__PROP_MAINTENANCE__", image(root / "assets/stage02/props/pixel/maintenance.png"))
+html = html.replace("__SHADOW_MAINTENANCE__", image(root / "assets/stage02/props/shadows/maintenance.png"))
+html = html.replace("__PROP_DOCUMENT__", image(root / "assets/stage02/props/pixel/document.png"))
+html = html.replace("__SHADOW_DOCUMENT__", image(root / "assets/stage02/props/shadows/document.png"))
+html = html.replace("__PROP_CIRCUIT__", image(root / "assets/stage02/props/pixel/circuit.png"))
+html = html.replace("__SHADOW_CIRCUIT__", image(root / "assets/stage02/props/shadows/circuit.png"))
 html = html.replace("__FONT__", font)
 html = html.replace("__RESET_SAVE__", "true" if st.session_state.pop("stage02_reset_save", False) else "false")
 html = html.replace("</head>", '<style id="logic-v9-iframe-ui">\n/* This style lives INSIDE the components.html iframe, unlike v8\'s Streamlit-level CSS. */\n#helpOverlay,#inventoryOverlay{position:fixed!important;inset:0!important;z-index:4000!important;background:rgba(0,0,0,.70)!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}\n#helpOverlay .help-panel,#helpOverlay .utility-panel{box-sizing:border-box!important;width:min(760px,90vw)!important;max-width:90vw!important;max-height:90vh!important;overflow:hidden!important;padding:24px 32px!important}\n#helpOverlay .help-row{display:grid!important;grid-template-columns:32px 260px minmax(0,1fr)!important;grid-template-rows:auto!important;gap:2px 14px!important;align-items:center!important;padding:9px 0!important;min-width:0!important;border-bottom:1px solid #17495b!important}\n#helpOverlay .help-number{grid-column:1!important;grid-row:1!important;display:block!important;width:auto!important;min-width:0!important;height:auto!important;color:#61e8ff!important;border:0!important;background:none!important;box-shadow:none!important}\n#helpOverlay .help-key{grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;gap:12px!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;font-size:12px!important}\n#helpOverlay .help-key .control-label{position:static!important;display:inline!important;flex:0 0 128px!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;transform:none!important;clip-path:none!important;border:0!important;background:none!important;box-shadow:none!important;color:#63e8ff!important;font-size:12px!important}\n#helpOverlay .help-key .control-separator{position:static!important;display:inline!important;flex:0 0 auto!important;color:#637985!important}\n#helpOverlay .help-key .control-button{position:static!important;display:inline!important;flex:0 0 auto!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;transform:none!important;clip-path:none!important;border:0!important;background:none!important;box-shadow:none!important;color:#f2fbff!important;font-size:12px!important;line-height:1.4!important}\n#helpOverlay .help-description{grid-column:3!important;grid-row:1!important;color:#8c9da7!important;font-size:11px!important;line-height:1.5!important;min-width:0!important}\n#helpOverlay .help-important{margin-top:14px!important;padding:12px 14px!important}\n#inventoryOverlay .inventory-panel,#inventoryOverlay .utility-panel{box-sizing:border-box!important;width:min(760px,90vw)!important;max-height:90vh!important;overflow:hidden!important;padding:24px!important}\n#inventoryOverlay .inventory-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;gap:8px!important;max-height:min(55vh,470px)!important;overflow:hidden!important}\n#inventoryOverlay .inventory-slot{position:relative!important;min-width:0!important;min-height:0!important;aspect-ratio:1.1!important;background:#01060b!important;border:1px solid #28546a!important}\n#inventoryOverlay .item-description{margin-top:12px!important;min-height:56px!important;padding:12px!important;border:1px solid #48dfff!important;color:#d9faff!important}\n#pauseOverlay,.pause-overlay{z-index:9000!important;background:rgba(0,0,0,.72)!important;backdrop-filter:blur(3px)!important}\n#pauseOverlay .pause-menu-panel,.pause-overlay .pause-menu-panel{box-shadow:0 0 0 1px #123c4d,0 0 22px #00cfff55,0 0 100px #00cfff20!important}\n#pauseToggle,.pause-toggle{z-index:9100!important}\n.item-acquired-notice.show{z-index:4500!important}\n.item-acquired-text{font-size:12px!important;line-height:1.6!important}\n.echo-next{color:#4b8da0!important;opacity:.85!important}\n#dataSavingScreen:not(.active){display:none!important}\n#floorLayer,#wallLayer{width:100%!important;height:100%!important;object-fit:fill!important}\n</style>' + "</head>", 1)
 html = html.replace('</head>', '<style id="logic-v11-gameplay">' + '\n/* v11: tutorial-matched entrance and slow low-contrast ECHO prompt */\n.stage-transition-card{\n  text-shadow:0 0 5px #fff,0 0 12px #00dfff!important;\n  animation:neonFaultOnce .85s steps(1,end) 1 both!important;\n}\n.stage-transition-stage,.stage-transition-room{animation:none!important}\n@keyframes neonFaultOnce{\n  0%,18%,22%,100%{opacity:1;filter:none}\n  19%,21%{opacity:.22;filter:brightness(.4)}\n}\n.echo-next,.echo-next.ready,.echo-next:not(.ready){\n color:#80bbc8!important;\n opacity:.65!important;\n animation:logicSlowBlink 3s ease-in-out infinite!important;\n}\n@keyframes logicSlowBlink{0%,100%{filter:opacity(.35)}50%{filter:opacity(.9)}}\n' + '</style></head>', 1)
-components.html(html, height=1000, scrolling=False)
+html = html.replace("</head>", '\n<style id="logic-v14-shared-prompt">\n/* Identical typography and ready state to the tutorial ECHO prompt. */\n.echo-bar {box-sizing:border-box!important;padding-bottom:29px!important;min-height:88px!important}\n.echo-bar #echoText {display:block!important;margin:0!important;padding:0 0 8px!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important}\n.echo-bar #echoNext.echo-next {\n position:absolute!important;right:14px!important;bottom:7px!important;\n font:9px/1.4 NeoDungGeunMo,monospace!important;letter-spacing:normal!important;\n pointer-events:none!important;color:#6c8791!important;opacity:1!important;\n animation:none!important;text-shadow:none!important;\n}\n.echo-bar #echoNext.echo-next.ready {color:#f5ffff!important;animation:tutorialEchoBlink .8s steps(2,end) infinite!important}\n@keyframes tutorialEchoBlink {50%{opacity:.35}}\n</style>\n' + "</head>", 1)
+html = html.replace('</head>', '<style id="logic-stage02-puzzle">' + '\n/* Stage 02 interactive objects: panels remain below the pause controls. */\n.object-hint{position:absolute;left:50%;bottom:17.5%;transform:translateX(-50%);z-index:35;\n padding:7px 12px;border:1px solid #45d8ed;background:#021019ed;color:#e5f9ff;\n font:11px NeoDungGeunMo,monospace;white-space:nowrap;pointer-events:none;text-align:center}\n.object-hint[hidden]{display:none!important}\n.object-overlay{position:fixed;inset:0;z-index:5500;align-items:center;justify-content:center;\n background:rgba(0,0,0,.7);padding:15px}\n.object-panel{width:min(750px,90vw);max-height:85vh;overflow-y:auto;background:linear-gradient(135deg,#030b12,#061722);\n border:1px solid #35dfff;box-shadow:0 0 0 1px #123c4d,0 0 24px #00cfff24;\n padding:24px 28px 20px;color:#daf4fa;font:13px/1.65 NeoDungGeunMo,monospace}\n.object-panel-header{display:flex;justify-content:space-between;gap:12px;align-items:center;\n border-bottom:1px solid #24687a;padding-bottom:12px;margin-bottom:16px}\n.object-panel-title{font-size:16px;color:#65e4ff}\n.object-close{background:transparent;border:0;color:#82a9b5;font:10px NeoDungGeunMo,monospace;cursor:pointer}\n.object-panel-body{font-size:13px}.object-panel-body h4{font-size:14px;color:#77e7f5;margin:6px 0 12px}\n.object-panel-body p{margin:8px 0 13px;line-height:1.75}\n.object-info-table{width:100%;border-collapse:collapse;margin:12px 0}\n.object-info-table th,.object-info-table td{padding:9px 11px;border:1px solid #28495c;text-align:left}\n.object-info-table th{color:#69dff3}.object-info-table .danger{color:#ff707b}.object-info-table .ok{color:#64e9bf}\n.object-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}\n.object-action,.object-slot{border:1px solid #4dcbe1;background:#041721;color:#dffaff;\n padding:11px 15px;cursor:pointer;font:12px NeoDungGeunMo,monospace;transition:background .12s}\n.object-action:hover,.object-slot:hover{background:#123747}.object-action:disabled,.object-slot:disabled{opacity:.4;cursor:default}\n.object-action.danger{border-color:#9f4b57;color:#ff939a}\n.object-feedback-note{font-size:11px;color:#a1c8d5;margin-top:10px}\n.object-panel-feedback{min-height:22px;border-top:1px solid #1d5366;margin-top:14px;padding-top:11px;\n font-size:11px;color:#a9e5f2;white-space:normal;word-break:keep-all}\n.object-panel-feedback.bad{color:#ff9198}.object-panel-feedback.good{color:#80efc3}\n.object-slot-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:13px 0}\n.object-slot{display:flex;flex-direction:column;gap:6px;align-items:center;min-height:68px;justify-content:center}\n.object-slot.selected{background:#146076;border-color:#a0efff;color:#fff}\n.object-sequence{padding:12px;background:#011019;border:1px solid #265469;color:#83e4f6;text-align:center;letter-spacing:2px}\n.object-warning{border-left:2px solid #d76b72;background:#211017;padding:11px;margin:12px 0;color:#ff9ba4}\n.object-status{color:#63e9f4;font-size:11px;letter-spacing:.6px}\n@media(max-width:600px){.object-panel{padding:18px 16px}.object-slot-grid{gap:5px}.object-slot{padding:8px 2px;font-size:10px}}\n\n#inventoryOverlay .puzzle-clue-icon{font-size:29px;color:#6be8f8}\n#inventoryOverlay .puzzle-clue-label{font-size:8px;color:#83d4e2;text-align:center;max-width:100%;overflow-wrap:anywhere}\n#inventoryOverlay .inventory-slot.filled{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}\n' + '</style></head>', 1)
+components.html(html, height=800, scrolling=False)
