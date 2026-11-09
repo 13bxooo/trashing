@@ -82,10 +82,11 @@ st.markdown(_SCROLL_LOCK_CSS, unsafe_allow_html=True)
 
 title = st.button("TITLE NAV", key="stage02_title_nav")
 end_nav = st.button("END TO TITLE", key="stage02_end_nav")
+timeout_title = st.button("TIMEOUT TITLE", key="stage02_timeout_title")
 restart = st.button("RESTART NAV", key="stage02_restart_nav")
-st.markdown("<style>.st-key-stage02_title_nav,.st-key-stage02_restart_nav,.st-key-stage02_end_nav{position:fixed!important;left:-10000px!important;top:0!important}</style>", unsafe_allow_html=True)
-if end_nav:
-    # 엔딩에서만 진행 기록 전체 초기화; 일반 TITLE 버튼은 기존 저장 기능 유지.
+st.markdown("<style>.st-key-stage02_title_nav,.st-key-stage02_restart_nav,.st-key-stage02_end_nav,.st-key-stage02_timeout_title{position:fixed!important;left:-10000px!important;top:0!important}</style>", unsafe_allow_html=True)
+if end_nav or timeout_title:
+    # 엔딩 또는 시간 초과 TITLE에서는 저장 없이 전체 진행 상태를 초기화합니다.
     for key in list(st.session_state.keys()):
         if key.startswith(("s1_", "s2_", "tutorial_", "stage01_", "stage02_")) or key in (
             "game_started", "game_finished", "game_paused", "remaining_seconds", "tutorial_step"
@@ -551,14 +552,29 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 #echoFinale .ending-error-code{font-size:12px;line-height:1.6;color:#fb526e}
 #echoFinale .ending-error-sub{font-size:10px;color:#9eb8c6;line-height:1.6}
 #echoFinale .ending-error-ok{display:block;margin:2px auto 10px;text-align:center;border:1px solid #5ba3b6;width:76px;padding:4px 8px;background:#0f2631;color:#f0ffff;font-size:11px}
-/* 카메라 전원 차단과 SIGNAL LOST */
-#echoFinale .ending-signal{position:absolute;inset:0;z-index:90;background:#000;display:none;align-items:center;justify-content:center;flex-direction:column}
+/* 진입 컷신과 같은 CRT 카메라 종료 방식. 새로운 전원 차단 애니메이션을 만들지 않습니다. */
+#echoFinale.powering-down .ending-room,
+#echoFinale.powering-down .ending-errors{
+ transform-origin:50% 50%;pointer-events:none;
+ animation:cameraPowerCollapse .78s cubic-bezier(.6,0,.75,1) both!important;
+}
+#echoFinale.powering-down::after{
+ content:"";pointer-events:none;position:absolute;z-index:85;top:50%;left:50%;
+ width:min(950px,92vw);height:3px;transform:translate(-50%,-50%) scaleX(0);
+ background:#d8ffff;box-shadow:0 0 7px #caffff,0 0 24px #00daff;
+ animation:cameraPowerLine .78s steps(12,end) forwards;
+}
+/* SIGNAL LOST는 STAGE 00 진입창과 동일한 테두리·모서리·크기 클래스를 재사용합니다. */
+#echoFinale .ending-signal{position:absolute;inset:0;z-index:90;background:#000;display:none;align-items:center;justify-content:center}
 #echoFinale .ending-signal.visible{display:flex}
-#echoFinale .ending-power-line{position:absolute;left:0;right:0;top:50%;height:100vh;background:#e1ffff;box-shadow:0 0 18px #a7f8ff;transform-origin:center;animation:endingPowerCut .8s steps(14,end) forwards}
-@keyframes endingPowerCut{0%{transform:scaleY(1);opacity:.55}55%{transform:scaleY(.012);opacity:1}82%{transform:scaleX(.1) scaleY(.003);opacity:.9}100%{transform:scaleX(0) scaleY(0);opacity:0}}
-#echoFinale .ending-signal-text{font-size:clamp(24px,5vw,46px);letter-spacing:.23em;color:#eef7f9;text-shadow:0 0 9px #5ec8db;opacity:0}
+#echoFinale .ending-signal-card{width:min(350px,78vw);min-height:145px}
+#echoFinale .ending-signal-text{font-size:clamp(25px,4vw,36px);line-height:1.6;letter-spacing:2px;color:#f5fbff;text-shadow:0 0 5px #fff,0 0 14px #57dfff;opacity:0}
 #echoFinale .ending-signal-text.visible{opacity:1;animation:endingSignalBlink 1.8s steps(1,end) infinite}
 @keyframes endingSignalBlink{0%,100%{opacity:1}18%{opacity:.38}24%{opacity:1}77%{opacity:.72}}
+@media(prefers-reduced-motion:reduce){
+ #echoFinale.powering-down .ending-room,#echoFinale.powering-down .ending-errors{animation:none!important;opacity:0!important}
+ #echoFinale.powering-down::after{animation:none!important;opacity:0!important}
+}
 @media(max-width:640px){#echoFinale .ending-viewer{width:96vw}#echoFinale .ending-error{width:clamp(160px,42vw,240px)}#echoFinale .ending-error-content{padding:7px 8px;gap:8px}#echoFinale .ending-error-sub{font-size:8px}}
 </style>
 
@@ -570,7 +586,7 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
   <div id="endingBlank" class="ending-black"></div>
   <div id="endingGlitch" class="ending-glitch" aria-hidden="true"></div>
   <div id="endingErrors" class="ending-errors" aria-hidden="true"></div>
-  <div id="endingSignal" class="ending-signal"><div class="ending-power-line"></div><div id="endingSignalText" class="ending-signal-text">SIGNAL LOST</div></div>
+  <div id="endingSignal" class="ending-signal"><div class="stage-transition-card ending-signal-card"><div id="endingSignalText" class="stage-transition-stage ending-signal-text">SIGNAL LOST</div></div></div>
 </div><script>(()=>{
 const $=id=>document.getElementById(id),player=$('player'),keys=new Set();
 const saveKey='project_logic_stage02_progress_v1',handoffKey='project_logic_stage02_handoff_v1';
@@ -578,6 +594,7 @@ if(__RESET_SAVE__){try{localStorage.removeItem(saveKey);localStorage.removeItem(
 let saved=null,handoff=null;try{saved=JSON.parse(localStorage.getItem(saveKey)||'null');handoff=JSON.parse(localStorage.getItem(handoffKey)||'null')}catch(e){}
 let entering=true;
 let finaleActive=false;
+let timedOut=false;
 const transition=$('stageTransition');
 const prelude=$('echoPrelude');
 let cinematicActive=!saved;
@@ -641,12 +658,12 @@ function valid(nx,ny){
  return true;
 }
 if(!valid(x,y)){x=50;y=50}
-function save(){if(finaleActive||cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,puzzle:stage2Puzzle,updatedAt:Date.now()}))}catch(e){}}
+function save(){if(timedOut||finaleActive||cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,puzzle:stage2Puzzle,updatedAt:Date.now()}))}catch(e){}}
 function draw(){player.style.left=x+'%';player.style.top=y+'%';const s=Math.ceil(remaining);$('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function togglePause(force){paused=typeof force==='boolean'?force:!paused;$('pauseOverlay').style.display=paused?'flex':'none';$('pauseToggle').textContent=paused?'▶':'Ⅱ';$('pauseToggle').classList.toggle('paused',paused);keys.clear();last=performance.now();save()}
-$('pauseToggle').onclick=()=>{if(entering||cinematicActive||finaleActive)return;togglePause();};$('resumeButton').onclick=()=>togglePause(false);
-function hostAction(action){if(action!=='restart')save();try{const selector=action==='title'?'[class*=st-key-stage02_title_nav] button':'[class*=st-key-stage02_restart_nav] button';const btn=window.parent.document.querySelector(selector);if(btn){btn.click();return}}catch(e){}window.parent.postMessage({type:'stage02_nav',target:action},'*')}
-$('titleButton').onclick=()=>{save();$('dataSavingScreen').classList.add('active');togglePause(true);setTimeout(()=>hostAction('title'),3000)};$('restartButton').onclick=()=>{try{localStorage.removeItem(saveKey);localStorage.removeItem(handoffKey);localStorage.removeItem('project_logic_stage01_progress_v6')}catch(e){}hostAction('restart')};
+$('pauseToggle').onclick=()=>{if(entering||cinematicActive||finaleActive||timedOut)return;togglePause();};$('resumeButton').onclick=()=>{if(!timedOut)togglePause(false)};
+function hostAction(action){if(action!=='restart'&&action!=='timeout_title')save();try{const selector=action==='timeout_title'?'[class*=st-key-stage02_timeout_title] button':action==='title'?'[class*=st-key-stage02_title_nav] button':'[class*=st-key-stage02_restart_nav] button';const btn=window.parent.document.querySelector(selector);if(btn){btn.click();return}}catch(e){}window.parent.postMessage({type:'stage02_nav',target:action},'*')}
+$('titleButton').onclick=()=>{if(timedOut){finaleActive=true;keys.clear();clearAllGameStorage();hostAction('timeout_title');return}save();$('dataSavingScreen').classList.add('active');togglePause(true);setTimeout(()=>hostAction('title'),3000)};$('restartButton').onclick=()=>{try{localStorage.removeItem(saveKey);localStorage.removeItem(handoffKey);localStorage.removeItem('project_logic_stage01_progress_v6')}catch(e){}hostAction('restart')};
 const panels=['inventoryOverlay','helpOverlay'];function isPanelOpen(){return panels.some(id=>$(id).style.display==='flex')};function closePanels(){panels.forEach(id=>$(id).style.display='none');keys.clear()};function togglePanel(id){if(paused)return;const was=$(id).style.display==='flex';closePanels();if(!was)$(id).style.display='flex'}
 for(let i=0;i<12;i++){const slot=document.createElement('div');slot.className='inventory-slot';slot.innerHTML='<span class="slot-number">'+String(i+1).padStart(2,'0')+'</span>';$('inventoryGrid').appendChild(slot)}
 function refreshPuzzleInventory(){
@@ -840,26 +857,32 @@ function endingErrorSound(index){
   const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
   glitchAudioCtx=glitchAudioCtx||new Audio();glitchAudioCtx.resume();
   const ctx=glitchAudioCtx,now=ctx.currentTime;
-  for(const [i,frequency] of [0,1].map(i=>[i,880-index*48-i*210])){
+  for(const [i,frequency] of [0,1].map(i=>[i,920-(index%13)*34-i*160])){
    const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.setValueAtTime(frequency,now+i*.07);
-   g.gain.setValueAtTime(.0001,now+i*.07);g.gain.exponentialRampToValueAtTime(.035,now+i*.07+.012);g.gain.exponentialRampToValueAtTime(.0001,now+i*.07+.11);
+   g.gain.setValueAtTime(.0001,now+i*.07);g.gain.exponentialRampToValueAtTime(.020,now+i*.07+.012);g.gain.exponentialRampToValueAtTime(.0001,now+i*.07+.11);
    o.connect(g).connect(ctx.destination);o.start(now+i*.07);o.stop(now+i*.07+.12);
   }
  }catch(e){}
 }
 function createEndingError(index){
- // 두 방향으로 대각선을 따라 쏟아지는 14개의 시스템 오류 창.
- const positions=[[14,16],[25,24],[36,32],[47,40],[58,48],[69,56],[80,64],
-                  [88,74],[18,73],[28,63],[39,53],[50,43],[61,33],[72,23]];
- const [x,y]=positions[index%positions.length];const err=document.createElement('div');err.className='ending-error';
+ // 양쪽 대각선을 따라 36개의 오류창이 촘촘히 쌓입니다.
+ const step=Math.floor(index/2)%18;
+ const x=12+step*4.4+(index%2?2:0);
+ const y=index%2?(79-step*3.6):(18+step*3.6);
+ const err=document.createElement('div');err.className='ending-error';
  err.style.setProperty('--x',x+'%');err.style.setProperty('--y',y+'%');err.style.zIndex=String(2+index);
  err.innerHTML='<div class="ending-error-bar"><span>SYSTEM FAILURE // 0'+(index+1)+'</span><span class="ending-error-x">×</span></div>'+
  '<div class="ending-error-content"><span class="ending-error-icon">×</span><div><div class="ending-error-code">ERROR CODE // E-'+String(401+index)+'</div><div class="ending-error-sub">CRITICAL PROCESS TERMINATED</div></div></div><div class="ending-error-ok">OK</div>';
  $('endingErrors').appendChild(err);endingErrorSound(index);
 }
 function clearAllGameStorage(){
- for(const store of [window.localStorage,window.sessionStorage]){
-  try{const targets=[];for(let i=0;i<store.length;i++){const key=store.key(i);if(key&&(key.startsWith('project_logic_')||key.startsWith('logic_tutorial_')))targets.push(key)}targets.forEach(key=>store.removeItem(key));}catch(e){}
+ for(const owner of [window,window.parent]){
+  for(const type of ['localStorage','sessionStorage']){
+   try{const store=owner[type],targets=[];
+    for(let i=0;i<store.length;i++){const key=store.key(i);if(key&&(key.startsWith('project_logic_')||key.startsWith('logic_tutorial_')))targets.push(key)}
+    targets.forEach(key=>store.removeItem(key));
+   }catch(e){}
+  }
  }
 }
 function returnToFreshTitle(){
@@ -890,10 +913,17 @@ async function startEndingSequence(){
  endingGlitch(true);playGlitchSound(.8,true);
  await endingWait(430);$('endingRoomImage').src='__ECHO_ERROR__';
  await endingWait(370);endGlitch();
- // 마지막 오류 창이 나타난 다음 지체하지 않고 SIGNAL LOST로 넘어갑니다.
- for(let i=0;i<14;i++){createEndingError(i);await endingWait(100)}
- const lost=$('endingSignal');lost.classList.add('visible');playCameraPowerOffSound();
- await endingWait(810);$('endingSignalText').classList.add('visible');
+ // 36개를 38ms 간격으로 빠르게 출력하고, 마지막 창 직후 진입 컷신과 같은 카메라 종료를 실행합니다.
+ for(let i=0;i<36;i++){
+  createEndingError(i);
+  if(i<35)await endingWait(38);
+ }
+ // 기존 Stage 02 진입 때와 동일한 효과음과 CRT 수축 애니메이션을 재사용합니다.
+ playCameraPowerOffSound();
+ screen.classList.add('powering-down');
+ await endingWait(800);
+ const lost=$('endingSignal');lost.classList.add('visible');
+ $('endingSignalText').classList.add('visible');
  await endingWait(1800);
  returnToFreshTitle();
 }
@@ -1070,7 +1100,7 @@ if(cinematicActive)preludeSay(0);
 
 // 스테이지 안내가 끝난 뒤에만 본편 ECHO 메시지를 시작합니다.
 document.addEventListener('keydown',e=>{
- if(cinematicActive||entering||finaleActive)return;const k=e.key.toLowerCase();
+ if(cinematicActive||entering||finaleActive||timedOut)return;const k=e.key.toLowerCase();
  if(['arrowup','arrowdown','arrowleft','arrowright',' ','e'].includes(k))e.preventDefault();
  if(k==='escape'){
   if(paused)togglePause(false);else if(objectDialogOpen())closeObjectDialog();else if(isPanelOpen())closePanels();return;
@@ -1087,7 +1117,7 @@ document.addEventListener('keydown',e=>{
  if(k==='e'){if(!e.repeat)interactNearest();return}
  keys.add(k)
 });document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
-function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!finaleActive&&!isPanelOpen()&&!objectDialogOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&!finaleActive&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0){togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();updateObjectHint();requestAnimationFrame(tick)}
+function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!finaleActive&&!isPanelOpen()&&!objectDialogOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&!finaleActive&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0&&!timedOut){timedOut=true;closePanels();$('objectOverlay').style.display='none';activeObject=null;$('pauseOverlay').classList.add('timeout-mode');togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();updateObjectHint();requestAnimationFrame(tick)}
 setInterval(save,1200);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});draw();save();requestAnimationFrame(tick);$('gameRoot').focus();
 })();</script><div class="data-saving-screen" id="dataSavingScreen"><div class="data-saving-label"><span class="data-saving-gear">⚙</span>DATA SAVING...</div></div></body></html>"""
 html = html.replace("__ECHO_NORMAL__", image(root / "assets/stage02/echo_control_normal.png"))
@@ -1113,5 +1143,6 @@ html = html.replace("__RESET_SAVE__", "true" if st.session_state.pop("stage02_re
 html = html.replace("</head>", '<style id="logic-v9-iframe-ui">\n/* This style lives INSIDE the components.html iframe, unlike v8\'s Streamlit-level CSS. */\n#helpOverlay,#inventoryOverlay{position:fixed!important;inset:0!important;z-index:4000!important;background:rgba(0,0,0,.70)!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}\n#helpOverlay .help-panel,#helpOverlay .utility-panel{box-sizing:border-box!important;width:min(760px,90vw)!important;max-width:90vw!important;max-height:90vh!important;overflow:hidden!important;padding:24px 32px!important}\n#helpOverlay .help-row{display:grid!important;grid-template-columns:32px 260px minmax(0,1fr)!important;grid-template-rows:auto!important;gap:2px 14px!important;align-items:center!important;padding:9px 0!important;min-width:0!important;border-bottom:1px solid #17495b!important}\n#helpOverlay .help-number{grid-column:1!important;grid-row:1!important;display:block!important;width:auto!important;min-width:0!important;height:auto!important;color:#61e8ff!important;border:0!important;background:none!important;box-shadow:none!important}\n#helpOverlay .help-key{grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;gap:12px!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;font-size:12px!important}\n#helpOverlay .help-key .control-label{position:static!important;display:inline!important;flex:0 0 128px!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;transform:none!important;clip-path:none!important;border:0!important;background:none!important;box-shadow:none!important;color:#63e8ff!important;font-size:12px!important}\n#helpOverlay .help-key .control-separator{position:static!important;display:inline!important;flex:0 0 auto!important;color:#637985!important}\n#helpOverlay .help-key .control-button{position:static!important;display:inline!important;flex:0 0 auto!important;min-width:0!important;width:auto!important;height:auto!important;padding:0!important;transform:none!important;clip-path:none!important;border:0!important;background:none!important;box-shadow:none!important;color:#f2fbff!important;font-size:12px!important;line-height:1.4!important}\n#helpOverlay .help-description{grid-column:3!important;grid-row:1!important;color:#8c9da7!important;font-size:11px!important;line-height:1.5!important;min-width:0!important}\n#helpOverlay .help-important{margin-top:14px!important;padding:12px 14px!important}\n#inventoryOverlay .inventory-panel,#inventoryOverlay .utility-panel{box-sizing:border-box!important;width:min(760px,90vw)!important;max-height:90vh!important;overflow:hidden!important;padding:24px!important}\n#inventoryOverlay .inventory-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;gap:8px!important;max-height:min(55vh,470px)!important;overflow:hidden!important}\n#inventoryOverlay .inventory-slot{position:relative!important;min-width:0!important;min-height:0!important;aspect-ratio:1.1!important;background:#01060b!important;border:1px solid #28546a!important}\n#inventoryOverlay .item-description{margin-top:12px!important;min-height:56px!important;padding:12px!important;border:1px solid #48dfff!important;color:#d9faff!important}\n#pauseOverlay,.pause-overlay{z-index:9000!important;background:rgba(0,0,0,.72)!important;backdrop-filter:blur(3px)!important}\n#pauseOverlay .pause-menu-panel,.pause-overlay .pause-menu-panel{box-shadow:0 0 0 1px #123c4d,0 0 22px #00cfff55,0 0 100px #00cfff20!important}\n#pauseToggle,.pause-toggle{z-index:9100!important}\n.item-acquired-notice.show{z-index:4500!important}\n.item-acquired-text{font-size:12px!important;line-height:1.6!important}\n.echo-next{color:#4b8da0!important;opacity:.85!important}\n#dataSavingScreen:not(.active){display:none!important}\n#floorLayer,#wallLayer{width:100%!important;height:100%!important;object-fit:fill!important}\n</style>' + "</head>", 1)
 html = html.replace('</head>', '<style id="logic-v11-gameplay">' + '\n/* v11: tutorial-matched entrance and slow low-contrast ECHO prompt */\n.stage-transition-card{\n  text-shadow:0 0 5px #fff,0 0 12px #00dfff!important;\n  animation:neonFaultOnce .85s steps(1,end) 1 both!important;\n}\n.stage-transition-stage,.stage-transition-room{animation:none!important}\n@keyframes neonFaultOnce{\n  0%,18%,22%,100%{opacity:1;filter:none}\n  19%,21%{opacity:.22;filter:brightness(.4)}\n}\n.echo-next,.echo-next.ready,.echo-next:not(.ready){\n color:#80bbc8!important;\n opacity:.65!important;\n animation:logicSlowBlink 3s ease-in-out infinite!important;\n}\n@keyframes logicSlowBlink{0%,100%{filter:opacity(.35)}50%{filter:opacity(.9)}}\n' + '</style></head>', 1)
 html = html.replace("</head>", '\n<style id="logic-v14-shared-prompt">\n/* Identical typography and ready state to the tutorial ECHO prompt. */\n.echo-bar {box-sizing:border-box!important;padding-bottom:29px!important;min-height:88px!important}\n.echo-bar #echoText {display:block!important;margin:0!important;padding:0 0 8px!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important}\n.echo-bar #echoNext.echo-next {\n position:absolute!important;right:14px!important;bottom:7px!important;\n font:9px/1.4 NeoDungGeunMo,monospace!important;letter-spacing:normal!important;\n pointer-events:none!important;color:#6c8791!important;opacity:1!important;\n animation:none!important;text-shadow:none!important;\n}\n.echo-bar #echoNext.echo-next.ready {color:#f5ffff!important;animation:tutorialEchoBlink .8s steps(2,end) infinite!important}\n@keyframes tutorialEchoBlink {50%{opacity:.35}}\n</style>\n' + "</head>", 1)
-html = html.replace('</head>', '<style id="logic-stage02-puzzle">' + '\n/* Stage 02 interactive objects: panels remain below the pause controls. */\n.object-hint{position:absolute;left:50%;bottom:17.5%;transform:translateX(-50%);z-index:35;\n padding:7px 12px;border:1px solid #45d8ed;background:#021019ed;color:#e5f9ff;\n font:11px NeoDungGeunMo,monospace;white-space:nowrap;pointer-events:none;text-align:center}\n.object-hint[hidden]{display:none!important}\n.object-overlay{position:fixed;inset:0;z-index:5500;align-items:center;justify-content:center;\n background:rgba(0,0,0,.7);padding:15px}\n.object-panel{width:min(750px,90vw);max-height:85vh;overflow-y:auto;background:linear-gradient(135deg,#030b12,#061722);\n border:1px solid #35dfff;box-shadow:0 0 0 1px #123c4d,0 0 24px #00cfff24;\n padding:24px 28px 20px;color:#daf4fa;font:13px/1.65 NeoDungGeunMo,monospace}\n.object-panel-header{display:flex;justify-content:space-between;gap:12px;align-items:center;\n border-bottom:1px solid #24687a;padding-bottom:12px;margin-bottom:16px}\n.object-panel-title{font-size:16px;color:#65e4ff}\n.object-close{background:transparent;border:0;color:#82a9b5;font:10px NeoDungGeunMo,monospace;cursor:pointer}\n.object-panel-body{font-size:13px}.object-panel-body h4{font-size:14px;color:#77e7f5;margin:6px 0 12px}\n.object-panel-body p{margin:8px 0 13px;line-height:1.75}\n.object-info-table{width:100%;border-collapse:collapse;margin:12px 0}\n.object-info-table th,.object-info-table td{padding:9px 11px;border:1px solid #28495c;text-align:left}\n.object-info-table th{color:#69dff3}.object-info-table .danger{color:#ff707b}.object-info-table .ok{color:#64e9bf}\n.object-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}\n.object-action,.object-slot{border:1px solid #4dcbe1;background:#041721;color:#dffaff;\n padding:11px 15px;cursor:pointer;font:12px NeoDungGeunMo,monospace;transition:background .12s}\n.object-action:hover,.object-slot:hover{background:#123747}.object-action:disabled,.object-slot:disabled{opacity:.4;cursor:default}\n.object-action.danger{border-color:#9f4b57;color:#ff939a}\n.object-feedback-note{font-size:11px;color:#a1c8d5;margin-top:10px}\n.object-panel-feedback{min-height:22px;border-top:1px solid #1d5366;margin-top:14px;padding-top:11px;\n font-size:11px;color:#a9e5f2;white-space:normal;word-break:keep-all}\n.object-panel-feedback.bad{color:#ff9198}.object-panel-feedback.good{color:#80efc3}\n.object-slot-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:13px 0}\n.object-slot{display:flex;flex-direction:column;gap:6px;align-items:center;min-height:68px;justify-content:center}\n.object-slot.selected{background:#146076;border-color:#a0efff;color:#fff}\n.object-sequence{padding:12px;background:#011019;border:1px solid #265469;color:#83e4f6;text-align:center;letter-spacing:2px}\n.object-warning{border-left:2px solid #d76b72;background:#211017;padding:11px;margin:12px 0;color:#ff9ba4}\n.object-status{color:#63e9f4;font-size:11px;letter-spacing:.6px}\n@media(max-width:600px){.object-panel{padding:18px 16px}.object-slot-grid{gap:5px}.object-slot{padding:8px 2px;font-size:10px}}\n\n#inventoryOverlay .puzzle-clue-icon{font-size:29px;color:#6be8f8}\n#inventoryOverlay .puzzle-clue-label{font-size:8px;color:#83d4e2;text-align:center;max-width:100%;overflow-wrap:anywhere}\n#inventoryOverlay .inventory-slot.filled{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}\n' + '</style></head>', 1)
+html = html.replace('</head>', '<style id="logic-timeout-actions">#pauseOverlay.timeout-mode .pause-row:first-child{display:none!important}</style></head>', 1)
+html = html.replace('</head>', '<style id="logic-stage02-puzzle">'  + '\n/* Stage 02 interactive objects: panels remain below the pause controls. */\n.object-hint{position:absolute;left:50%;bottom:17.5%;transform:translateX(-50%);z-index:35;\n padding:7px 12px;border:1px solid #45d8ed;background:#021019ed;color:#e5f9ff;\n font:11px NeoDungGeunMo,monospace;white-space:nowrap;pointer-events:none;text-align:center}\n.object-hint[hidden]{display:none!important}\n.object-overlay{position:fixed;inset:0;z-index:5500;align-items:center;justify-content:center;\n background:rgba(0,0,0,.7);padding:15px}\n.object-panel{width:min(750px,90vw);max-height:85vh;overflow-y:auto;background:linear-gradient(135deg,#030b12,#061722);\n border:1px solid #35dfff;box-shadow:0 0 0 1px #123c4d,0 0 24px #00cfff24;\n padding:24px 28px 20px;color:#daf4fa;font:13px/1.65 NeoDungGeunMo,monospace}\n.object-panel-header{display:flex;justify-content:space-between;gap:12px;align-items:center;\n border-bottom:1px solid #24687a;padding-bottom:12px;margin-bottom:16px}\n.object-panel-title{font-size:16px;color:#65e4ff}\n.object-close{background:transparent;border:0;color:#82a9b5;font:10px NeoDungGeunMo,monospace;cursor:pointer}\n.object-panel-body{font-size:13px}.object-panel-body h4{font-size:14px;color:#77e7f5;margin:6px 0 12px}\n.object-panel-body p{margin:8px 0 13px;line-height:1.75}\n.object-info-table{width:100%;border-collapse:collapse;margin:12px 0}\n.object-info-table th,.object-info-table td{padding:9px 11px;border:1px solid #28495c;text-align:left}\n.object-info-table th{color:#69dff3}.object-info-table .danger{color:#ff707b}.object-info-table .ok{color:#64e9bf}\n.object-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}\n.object-action,.object-slot{border:1px solid #4dcbe1;background:#041721;color:#dffaff;\n padding:11px 15px;cursor:pointer;font:12px NeoDungGeunMo,monospace;transition:background .12s}\n.object-action:hover,.object-slot:hover{background:#123747}.object-action:disabled,.object-slot:disabled{opacity:.4;cursor:default}\n.object-action.danger{border-color:#9f4b57;color:#ff939a}\n.object-feedback-note{font-size:11px;color:#a1c8d5;margin-top:10px}\n.object-panel-feedback{min-height:22px;border-top:1px solid #1d5366;margin-top:14px;padding-top:11px;\n font-size:11px;color:#a9e5f2;white-space:normal;word-break:keep-all}\n.object-panel-feedback.bad{color:#ff9198}.object-panel-feedback.good{color:#80efc3}\n.object-slot-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:13px 0}\n.object-slot{display:flex;flex-direction:column;gap:6px;align-items:center;min-height:68px;justify-content:center}\n.object-slot.selected{background:#146076;border-color:#a0efff;color:#fff}\n.object-sequence{padding:12px;background:#011019;border:1px solid #265469;color:#83e4f6;text-align:center;letter-spacing:2px}\n.object-warning{border-left:2px solid #d76b72;background:#211017;padding:11px;margin:12px 0;color:#ff9ba4}\n.object-status{color:#63e9f4;font-size:11px;letter-spacing:.6px}\n@media(max-width:600px){.object-panel{padding:18px 16px}.object-slot-grid{gap:5px}.object-slot{padding:8px 2px;font-size:10px}}\n\n#inventoryOverlay .puzzle-clue-icon{font-size:29px;color:#6be8f8}\n#inventoryOverlay .puzzle-clue-label{font-size:8px;color:#83d4e2;text-align:center;max-width:100%;overflow-wrap:anywhere}\n#inventoryOverlay .inventory-slot.filled{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}\n' + '</style></head>', 1)
 components.html(html, height=800, scrolling=False)
