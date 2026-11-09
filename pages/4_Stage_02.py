@@ -263,6 +263,57 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
  #inventoryOverlay .inventory-panel{width:94vw!important;padding:13px!important}
 }
 
+
+/* STAGE 02 // ECHO CONTROL-ROOM PRELUDE */
+#echoPrelude{
+ position:fixed;inset:0;z-index:1500000;background:#000;opacity:1;
+ display:flex;align-items:center;justify-content:center;padding:28px;
+ color:#e1f7ff;font-family:NeoDungGeunMo,monospace;overflow:hidden;
+}
+#echoPrelude[hidden]{display:none!important}
+#echoPrelude .prelude-panel{
+ position:relative;width:min(1000px,94vw);max-height:calc(100vh - 45px);
+ padding:12px 12px 0;background:#030b11;border:1px solid #4fd5eb;
+ box-shadow:0 0 0 1px #163b49;overflow:hidden;
+}
+#echoPrelude .prelude-image-wrap{
+ position:relative;width:100%;aspect-ratio:2/1;overflow:hidden;background:#02050a;
+ border:1px solid #234d5e;image-rendering:pixelated;
+}
+#echoPrelude .prelude-image{
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+ image-rendering:pixelated;filter:brightness(.82);
+}
+#echoPrelude .prelude-message-box{
+ position:relative;min-height:117px;padding:15px 17px 30px;
+ background:#02070c;color:#e2f5fa;font-size:13px;line-height:1.85;
+}
+#echoPrelude .prelude-system-label{font-size:11px;color:#66dcef;margin-bottom:9px}
+#echoPrelude .prelude-text{min-height:40px;max-width:92%;word-break:keep-all;overflow-wrap:break-word}
+#echoPrelude .prelude-next{
+ position:absolute;right:15px;bottom:9px;border:0;padding:0;background:transparent;
+ color:#8ba9b3;font:10px NeoDungGeunMo,monospace;letter-spacing:.6px;
+ cursor:pointer;animation:preludePulse 3s ease-in-out infinite;
+}
+#echoPrelude .prelude-next[disabled]{opacity:0;pointer-events:none}
+@keyframes preludePulse{0%,100%{opacity:.25}50%{opacity:.78}}
+#preludeGlitch{
+ position:fixed;inset:0;z-index:1500002;pointer-events:none;opacity:0;
+ background:repeating-linear-gradient(0deg,transparent 0 8px,#00eaff13 9px,#0009 11px,transparent 13px),
+ linear-gradient(90deg,#ea244319 0 12%,transparent 23% 68%,#00ecff22 90%);
+ mix-blend-mode:screen;
+}
+#preludeGlitch.active{opacity:1;animation:signalTear .12s steps(2,end) infinite}
+#preludeGlitch.major{animation:signalTear .07s steps(3,end) infinite;
+ background:repeating-linear-gradient(0deg,#030b15 0 5px,#ff315344 6px 7px,#00efff4b 8px 9px,transparent 10px 19px),
+ linear-gradient(100deg,transparent 0 20%,#ee335529 21% 28%,transparent 29% 68%,#00f4ff43 70% 76%,transparent 77%);
+}
+#echoPrelude.glitching .prelude-panel{animation:preludeJitter .11s steps(2,end) infinite}
+#echoPrelude.glitching.major .prelude-panel{animation:preludeJitter .065s steps(2,end) infinite}
+@keyframes signalTear{0%{transform:translateX(-12px) skewX(1.5deg);filter:hue-rotate(10deg)}33%{transform:translateX(11px) skewX(-2deg)}66%{transform:translateY(5px) translateX(-4px);filter:hue-rotate(-15deg)}100%{transform:translateX(4px)}}
+@keyframes preludeJitter{0%{transform:translateX(-3px)}50%{transform:translateX(4px)}100%{transform:translateY(2px)}}
+@media(max-height:650px){#echoPrelude .prelude-panel{width:min(780px,92vw)}#echoPrelude .prelude-message-box{min-height:92px;padding:8px 13px 23px;font-size:11px}#echoPrelude .prelude-system-label{margin-bottom:4px}}
+@media(prefers-reduced-motion:reduce){#preludeGlitch.active,#preludeGlitch.major,#echoPrelude.glitching .prelude-panel,#echoPrelude.glitching.major .prelude-panel{animation:none!important}#echoPrelude .prelude-next{animation:none}}
 </style></head><body><div class="game" id="gameRoot" tabindex="0"><div class="project-title">PROJECT : LOGIC</div><div class="stage-title">STAGE 02 // LOWER ENGINE</div><div class="stage01-timer" id="timer">10:00</div><button class="pause-toggle" id="pauseToggle" aria-label="Pause">Ⅱ</button><div class="game-area"><div class="room" id="room"><img class="layer" id="floorLayer" src="__FLOOR__"><div class="player" id="player"></div><img class="layer" id="wallLayer" src="__WALLS__"></div></div><div class="echo-bar"><div class="echo-head">ECHO // AI SYSTEM</div><div id="echoText"></div><div class="echo-next" id="echoNext">SPACE // SKIP / NEXT</div></div><div class="status">ECHO SYSTEM // ONLINE</div><div class="pause-overlay" id="pauseOverlay"><div class="pause-menu-panel"><div class="pause-actions"><div class="pause-row"><span class="pause-icon">Ⅱ</span><button class="pause-nav-link" id="resumeButton">RESUME</button></div><div class="pause-row"><span class="pause-icon">↻</span><button class="pause-nav-link" id="restartButton">RESTART</button></div><div class="pause-row"><span class="pause-icon">⌂</span><button class="pause-nav-link" id="titleButton">TITLE</button></div></div></div></div><div id="inventoryOverlay" class="overlay logic-utility-overlay" style="display:none"><div class="inventory-panel"><div class="inventory-header"><div class="inventory-title">INVENTORY</div><div class="inventory-close">I / ESC TO CLOSE</div></div><div id="inventoryGrid" class="inventory-grid"></div><div id="itemDescription" class="item-description"><strong>ITEM DESCRIPTION</strong>아이템을 선택하면 설명이 표시됩니다.</div></div></div>
 <div id="helpOverlay" class="overlay logic-utility-overlay" style="display:none">
 <div class="help-panel logic-help-panel">
@@ -276,12 +327,34 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 <div>시설 내부의 물체와 기록을 자세히 조사하세요.</div>
 <div>ECHO가 제공하는 모든 정보가 사실이라고 가정해서는 안 됩니다.</div>
 <div>서로 모순되는 단서가 발견될 수도 있습니다.</div>
-</div></div></div><div class="stage-transition" id="stageTransition"><div class="stage-transition-card"><div class="stage-transition-stage">STAGE 02</div><div class="stage-transition-room">:LOWER ENGINE</div></div></div><script>(()=>{
+</div></div></div><div id="echoPrelude" aria-label="ECHO 중앙 제어실 영상" role="dialog" aria-modal="true" tabindex="0">
+  <section class="prelude-panel">
+    <div class="prelude-image-wrap"><img id="preludeImage" class="prelude-image" src="__ECHO_NORMAL__" alt="ECHO 중앙 제어실 정상 화면"></div>
+    <div class="prelude-message-box">
+      <div class="prelude-system-label">ECHO // MAIN SYSTEM</div>
+      <div id="preludeText" class="prelude-text" aria-live="polite"></div>
+      <button id="preludeNext" class="prelude-next" type="button">SPACE // SKIP / NEXT</button>
+    </div>
+  </section>
+  <div id="preludeGlitch" aria-hidden="true"></div>
+</div><div class="stage-transition prelude-locked" id="stageTransition"><div class="stage-transition-card"><div class="stage-transition-stage">STAGE 02</div><div class="stage-transition-room">:LOWER ENGINE</div></div></div><script>(()=>{
 const $=id=>document.getElementById(id),player=$('player'),keys=new Set();
 const saveKey='project_logic_stage02_progress_v1',handoffKey='project_logic_stage02_handoff_v1';
 if(__RESET_SAVE__){try{localStorage.removeItem(saveKey);localStorage.removeItem(handoffKey)}catch(e){}}
 let saved=null,handoff=null;try{saved=JSON.parse(localStorage.getItem(saveKey)||'null');handoff=JSON.parse(localStorage.getItem(handoffKey)||'null')}catch(e){}
-let entering=true;const transition=$('stageTransition');setTimeout(()=>transition.classList.add('hide'),2700);setTimeout(()=>{transition.remove();entering=false;last=performance.now();$('gameRoot').focus()},3150);
+let entering=true;
+const transition=$('stageTransition');
+const prelude=$('echoPrelude');
+let cinematicActive=!saved;
+function beginStageTransition(){
+ transition.classList.remove('prelude-locked');
+ setTimeout(()=>transition.classList.add('hide'),2700);
+ setTimeout(()=>{
+   transition.remove();entering=false;last=performance.now();
+   echoSay(echoLines[echoIndex]);$('gameRoot').focus();save();
+ },3150);
+}
+if(!cinematicActive){prelude.hidden=true;beginStageTransition();}
 document.addEventListener('DOMContentLoaded',()=> $('dataSavingScreen')?.classList.remove('active'));
 let x=Number(saved?.x??50),y=Number(saved?.y??50),remaining=Number(saved?.remaining??handoff?.remaining??600),paused=false,last=performance.now();
 if(!Number.isFinite(remaining))remaining=600;remaining=Math.max(0,Math.min(600,remaining));
@@ -303,7 +376,7 @@ function valid(nx,ny){
  return true;
 }
 if(!valid(x,y)){x=50;y=50}
-function save(){try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,updatedAt:Date.now()}))}catch(e){}}
+function save(){if(cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,updatedAt:Date.now()}))}catch(e){}}
 function draw(){player.style.left=x+'%';player.style.top=y+'%';const s=Math.ceil(remaining);$('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function togglePause(force){paused=typeof force==='boolean'?force:!paused;$('pauseOverlay').style.display=paused?'flex':'none';$('pauseToggle').textContent=paused?'▶':'Ⅱ';$('pauseToggle').classList.toggle('paused',paused);keys.clear();last=performance.now();save()}
 $('pauseToggle').onclick=()=>togglePause();$('resumeButton').onclick=()=>togglePause(false);
@@ -314,11 +387,93 @@ for(let i=0;i<12;i++){const slot=document.createElement('div');slot.className='i
 const echoLines=['연결이 확인되었습니다. 저는 ECHO입니다. 이 시설에서의 첫 번째 절차를 안내하겠습니다.'];let echoIndex=0,typingTimer=null,typingDone=false,fullEcho='';
 function echoSay(message){clearTimeout(typingTimer);fullEcho=message;typingDone=false;$('echoNext').classList.remove('ready');const el=$('echoText');el.textContent='';let i=0;function next(){if(i>=message.length){typingDone=true;$('echoNext').classList.add('ready');return}el.textContent+=message[i++];typingTimer=setTimeout(next,26)}next()}
 function echoAdvance(){if(!typingDone){clearTimeout(typingTimer);$('echoText').textContent=fullEcho;typingDone=true;$('echoNext').classList.add('ready')}else if(echoIndex<echoLines.length-1){echoSay(echoLines[++echoIndex])}}
-echoSay(echoLines[echoIndex]);
-document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(isPanelOpen())closePanels();else if(paused)togglePause(false);return}if(k==='i'){togglePanel('inventoryOverlay');return}if(k==='h'){togglePanel('helpOverlay');return}if(k===' '){if(!paused&&!isPanelOpen())echoAdvance();return}keys.add(k)});document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
+// 정상적인 안내 → ECHO 영상 오류 → 오류 부정 → Stage 02 진입.
+const preludeLines=[
+ '중앙 제어실과의 영상 연결을 수립했습니다. 시설의 모든 감시 장치는 정상적으로 작동 중입니다.',
+ '확인된 운영 기록에는 이상 징후가 없습니다. 모든 정보는 검증된 자료이므로 안심하셔도 됩니다.',
+ '…일시적인 영상 간섭이 발생했습니다. 시스템 내부에는 아무런 이상이 없습니다.',
+ '오류 기록은 존재하지 않습니다. 안내 절차를 계속하겠습니다. 다음 구역으로 이동하십시오.'
+];
+let preludeIndex=0,preludeTyping=false,preludeBusy=false,preludeTypingTimeout=null;
+let glitchAudioCtx=null;
+function playGlitchSound(duration,strong=false){
+ try{
+  const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
+  glitchAudioCtx=glitchAudioCtx||new Audio();
+  glitchAudioCtx.resume();
+  const rate=glitchAudioCtx.sampleRate,frames=Math.ceil(rate*duration);
+  const buffer=glitchAudioCtx.createBuffer(1,frames,rate),data=buffer.getChannelData(0);
+  let held=0;const step=strong?37:59;
+  for(let n=0;n<frames;n++){
+   if(n%step===0)held=Math.random()*2-1;
+   const t=n/rate,attack=Math.min(1,t/.015),release=Math.min(1,(duration-t)/.07);
+   const gate=((Math.floor(t*(strong?37:24))%5)===0)?.22:1;
+   data[n]=held*attack*Math.max(0,release)*gate*(strong?.5:.33);
+  }
+  const src=glitchAudioCtx.createBufferSource(),filter=glitchAudioCtx.createBiquadFilter(),gain=glitchAudioCtx.createGain();
+  filter.type='bandpass';filter.frequency.value=strong?1850:1350;filter.Q.value=.6;
+  gain.gain.value=strong?.12:.10;
+  src.buffer=buffer;src.connect(filter).connect(gain).connect(glitchAudioCtx.destination);
+  src.start();src.stop(glitchAudioCtx.currentTime+duration);
+ }catch(e){/* 음향이 차단된 환경에서도 연출은 정상 진행 */}
+}
+function preludeSay(i){
+ clearTimeout(preludeTypingTimeout);preludeIndex=i;preludeTyping=true;
+ const text=preludeLines[i],target=$('preludeText');target.textContent='';
+ $('preludeNext').disabled=false;let pos=0;
+ function type(){
+  if(!cinematicActive||preludeBusy)return;
+  if(pos>=text.length){preludeTyping=false;return;}
+  target.textContent+=text[pos++];preludeTypingTimeout=setTimeout(type,24);
+ }
+ type();
+}
+function beginInterference(){
+ preludeBusy=true;clearTimeout(preludeTypingTimeout);$('preludeNext').disabled=true;
+ const glitch=$('preludeGlitch'),img=$('preludeImage');
+ prelude.classList.add('glitching');glitch.className='active';playGlitchSound(.5,false);
+ setTimeout(()=>{
+  glitch.className='';prelude.classList.remove('glitching');
+  img.src='__ECHO_ERROR__';img.alt='ECHO 중앙 제어실 오류 화면';
+  setTimeout(()=>{
+   prelude.classList.add('glitching','major');glitch.className='active major';playGlitchSound(1,true);
+   setTimeout(()=>{
+    img.src='__ECHO_NORMAL__';img.alt='ECHO 중앙 제어실 정상 화면';
+    glitch.className='';prelude.classList.remove('glitching','major');
+    preludeBusy=false;preludeSay(2);
+   },1000);
+  },500);
+ },500);
+}
+function preludeAdvance(){
+ if(!cinematicActive||preludeBusy)return;
+ if(preludeTyping){clearTimeout(preludeTypingTimeout);$('preludeText').textContent=preludeLines[preludeIndex];preludeTyping=false;return;}
+ if(preludeIndex===0){preludeSay(1);return;}
+ if(preludeIndex===1){beginInterference();return;}
+ if(preludeIndex===2){preludeSay(3);return;}
+ cinematicActive=false;prelude.hidden=true;
+ beginStageTransition();
+}
+$('preludeNext').addEventListener('click',preludeAdvance);
+document.addEventListener('keydown',e=>{
+ if(!cinematicActive)return;
+ if(e.key===' '||e.key==='Enter'){
+  e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)preludeAdvance();
+ }else{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape','h','H','i','I','w','a','s','d'].includes(e.key)){
+   e.preventDefault();e.stopImmediatePropagation();
+  }
+ }
+},true);
+if(cinematicActive)preludeSay(0);
+
+// 스테이지 안내가 끝난 뒤에만 본편 ECHO 메시지를 시작합니다.
+document.addEventListener('keydown',e=>{if(cinematicActive)return;const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(isPanelOpen())closePanels();else if(paused)togglePause(false);return}if(k==='i'){togglePanel('inventoryOverlay');return}if(k==='h'){togglePanel('helpOverlay');return}if(k===' '){if(!paused&&!isPanelOpen())echoAdvance();return}keys.add(k)});document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
 function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!isPanelOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0){togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();requestAnimationFrame(tick)}
 setInterval(save,1200);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});draw();save();requestAnimationFrame(tick);$('gameRoot').focus();
 })();</script><div class="data-saving-screen" id="dataSavingScreen"><div class="data-saving-label"><span class="data-saving-gear">⚙</span>DATA SAVING...</div></div></body></html>"""
+html = html.replace("__ECHO_NORMAL__", image(root / "assets/stage02/echo_control_normal.png"))
+html = html.replace("__ECHO_ERROR__", image(root / "assets/stage02/echo_control_error.png"))
 html = html.replace("__FLOOR__", image(root / "assets/stage02/floor.png"))
 html = html.replace("__WALLS__", image(root / "assets/stage02/walls.png"))
 html = html.replace("__FONT__", font)
