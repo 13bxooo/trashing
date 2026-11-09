@@ -312,6 +312,91 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 #echoPrelude.glitching.major .prelude-panel{animation:preludeJitter .065s steps(2,end) infinite}
 @keyframes signalTear{0%{transform:translateX(-12px) skewX(1.5deg);filter:hue-rotate(10deg)}33%{transform:translateX(11px) skewX(-2deg)}66%{transform:translateY(5px) translateX(-4px);filter:hue-rotate(-15deg)}100%{transform:translateX(4px)}}
 @keyframes preludeJitter{0%{transform:translateX(-3px)}50%{transform:translateX(4px)}100%{transform:translateY(2px)}}
+
+/* v13: separate full-screen signal tear, RGB ghosts, and pixel fault bars. */
+#echoPrelude .prelude-image-wrap{isolation:isolate}
+#echoPrelude .prelude-ghost{
+ opacity:0;pointer-events:none;z-index:3;mix-blend-mode:screen;
+}
+#echoPrelude.glitching .prelude-ghost-a{
+ opacity:.64;filter:brightness(1.45) sepia(1) saturate(6) hue-rotate(300deg);
+ animation:preludeGhostA .095s steps(2,end) infinite;
+}
+#echoPrelude.glitching .prelude-ghost-b{
+ opacity:.55;filter:brightness(1.35) sepia(1) saturate(7) hue-rotate(132deg);
+ animation:preludeGhostB .13s steps(3,end) infinite;
+}
+#echoPrelude.glitching.major .prelude-ghost{opacity:.85}
+@keyframes preludeGhostA{
+ 0%{clip-path:inset(4% 0 77% 0);transform:translateX(11px)}
+ 33%{clip-path:inset(37% 0 39% 0);transform:translateX(-14px)}
+ 66%{clip-path:inset(69% 0 8% 0);transform:translateX(18px)}
+ 100%{clip-path:inset(20% 0 57% 0);transform:translateX(-7px)}
+}
+@keyframes preludeGhostB{
+ 0%{clip-path:inset(72% 0 4% 0);transform:translateX(-13px)}
+ 31%{clip-path:inset(13% 0 68% 0);transform:translateX(15px)}
+ 67%{clip-path:inset(43% 0 32% 0);transform:translateX(-21px)}
+ 100%{clip-path:inset(7% 0 78% 0);transform:translateX(8px)}
+}
+#preludeGlitch{isolation:isolate}
+#preludeGlitch:before,#preludeGlitch:after{
+ content:"";position:absolute;inset:0;pointer-events:none;
+}
+#preludeGlitch:before{
+ background:repeating-linear-gradient(0deg,transparent 0 3px,#040809a6 4px 5px,transparent 6px 11px);
+ opacity:.8;animation:preludeScanDance .085s steps(3,end) infinite;
+}
+#preludeGlitch:after{
+ background:linear-gradient(90deg,transparent 0 33%,#f12b3b57 34% 35%,transparent 36% 61%,#14f5ff66 62% 63%,transparent 64%);
+ opacity:.75;animation:preludeChromatic .12s steps(2,end) infinite;
+ mix-blend-mode:screen;
+}
+#preludeGlitch .glitch-slice{
+ position:absolute;z-index:3;pointer-events:none;mix-blend-mode:screen;
+ box-shadow:0 1px 0 #0009,0 -1px 0 #d8ffff27;
+}
+#echoPrelude.glitching .prelude-text{animation:preludeTextFault .12s steps(2,end) infinite}
+@keyframes preludeTextFault{
+ 0%,100%{text-shadow:none;transform:none}
+ 40%{text-shadow:-3px 0 #00edff,3px 0 #fb3150;transform:translateX(2px)}
+ 70%{text-shadow:2px 0 #fb3150,-2px 0 #03f1fc;transform:translateX(-1px)}
+}
+@keyframes preludeScanDance{0%{transform:translateY(0)}40%{transform:translateY(17px)}75%{transform:translateY(-9px)}100%{transform:translateY(7px)}}
+@keyframes preludeChromatic{0%{transform:translateX(-18px)}50%{transform:translateX(25px)}100%{transform:translateX(-9px)}}
+/* Camera turns off: image collapses into a horizontal CRT line, then a dot. */
+#echoPrelude.powering-down .prelude-panel{
+ pointer-events:none;
+ transform-origin:50% 50%;
+ animation:cameraPowerCollapse .78s cubic-bezier(.6,0,.75,1) both!important;
+}
+#echoPrelude.powering-down #preludeGlitch{opacity:0!important;animation:none!important}
+#echoPrelude.powering-down:after{
+ content:"";pointer-events:none;position:absolute;z-index:1500005;top:50%;left:50%;
+ width:min(950px,92vw);height:3px;transform:translate(-50%,-50%) scaleX(0);
+ background:#d8ffff;box-shadow:0 0 7px #caffff,0 0 24px #00daff;
+ animation:cameraPowerLine .78s steps(12,end) forwards;
+}
+@keyframes cameraPowerCollapse{
+ 0%{opacity:1;filter:brightness(1);transform:scale(1,1)}
+ 13%{opacity:1;filter:brightness(1.9) contrast(1.4);transform:scale(1,.99)}
+ 34%{opacity:1;filter:grayscale(1) brightness(2.3);transform:scale(1.005,.86)}
+ 54%{opacity:1;filter:brightness(4);transform:scale(1.01,.018)}
+ 78%{opacity:1;filter:brightness(5);transform:scale(.6,.005)}
+ 100%{opacity:0;filter:brightness(0);transform:scale(0,.003)}
+}
+@keyframes cameraPowerLine{
+ 0%,46%{opacity:0;transform:translate(-50%,-50%) scaleX(0)}
+ 54%{opacity:1;transform:translate(-50%,-50%) scaleX(1)}
+ 77%{opacity:1;transform:translate(-50%,-50%) scaleX(.45)}
+ 95%{opacity:.7;transform:translate(-50%,-50%) scaleX(.006)}
+ 100%{opacity:0;transform:translate(-50%,-50%) scaleX(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ #echoPrelude.powering-down .prelude-panel{animation:none!important;opacity:0!important}
+ #echoPrelude.powering-down:after{animation:none!important;opacity:0!important}
+}
+
 @media(max-height:650px){#echoPrelude .prelude-panel{width:min(780px,92vw)}#echoPrelude .prelude-message-box{min-height:92px;padding:8px 13px 23px;font-size:11px}#echoPrelude .prelude-system-label{margin-bottom:4px}}
 @media(prefers-reduced-motion:reduce){#preludeGlitch.active,#preludeGlitch.major,#echoPrelude.glitching .prelude-panel,#echoPrelude.glitching.major .prelude-panel{animation:none!important}#echoPrelude .prelude-next{animation:none}}
 </style></head><body><div class="game" id="gameRoot" tabindex="0"><div class="project-title">PROJECT : LOGIC</div><div class="stage-title">STAGE 02 // LOWER ENGINE</div><div class="stage01-timer" id="timer">10:00</div><button class="pause-toggle" id="pauseToggle" aria-label="Pause">Ⅱ</button><div class="game-area"><div class="room" id="room"><img class="layer" id="floorLayer" src="__FLOOR__"><div class="player" id="player"></div><img class="layer" id="wallLayer" src="__WALLS__"></div></div><div class="echo-bar"><div class="echo-head">ECHO // AI SYSTEM</div><div id="echoText"></div><div class="echo-next" id="echoNext">SPACE // SKIP / NEXT</div></div><div class="status">ECHO SYSTEM // ONLINE</div><div class="pause-overlay" id="pauseOverlay"><div class="pause-menu-panel"><div class="pause-actions"><div class="pause-row"><span class="pause-icon">Ⅱ</span><button class="pause-nav-link" id="resumeButton">RESUME</button></div><div class="pause-row"><span class="pause-icon">↻</span><button class="pause-nav-link" id="restartButton">RESTART</button></div><div class="pause-row"><span class="pause-icon">⌂</span><button class="pause-nav-link" id="titleButton">TITLE</button></div></div></div></div><div id="inventoryOverlay" class="overlay logic-utility-overlay" style="display:none"><div class="inventory-panel"><div class="inventory-header"><div class="inventory-title">INVENTORY</div><div class="inventory-close">I / ESC TO CLOSE</div></div><div id="inventoryGrid" class="inventory-grid"></div><div id="itemDescription" class="item-description"><strong>ITEM DESCRIPTION</strong>아이템을 선택하면 설명이 표시됩니다.</div></div></div>
@@ -329,7 +414,7 @@ html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 <div>서로 모순되는 단서가 발견될 수도 있습니다.</div>
 </div></div></div><div id="echoPrelude" aria-label="ECHO 중앙 제어실 영상" role="dialog" aria-modal="true" tabindex="0">
   <section class="prelude-panel">
-    <div class="prelude-image-wrap"><img id="preludeImage" class="prelude-image" src="__ECHO_NORMAL__" alt="ECHO 중앙 제어실 정상 화면"></div>
+    <div class="prelude-image-wrap"><img id="preludeImage" class="prelude-image" src="__ECHO_NORMAL__" alt="ECHO 중앙 제어실 정상 화면"><img id="preludeGhostA" class="prelude-image prelude-ghost prelude-ghost-a" alt="" aria-hidden="true"><img id="preludeGhostB" class="prelude-image prelude-ghost prelude-ghost-b" alt="" aria-hidden="true"></div>
     <div class="prelude-message-box">
       <div class="prelude-system-label">ECHO // MAIN SYSTEM</div>
       <div id="preludeText" class="prelude-text" aria-live="polite"></div>
@@ -379,7 +464,7 @@ if(!valid(x,y)){x=50;y=50}
 function save(){if(cinematicActive||entering)return;try{localStorage.setItem(saveKey,JSON.stringify({stage:2,x,y,remaining,updatedAt:Date.now()}))}catch(e){}}
 function draw(){player.style.left=x+'%';player.style.top=y+'%';const s=Math.ceil(remaining);$('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function togglePause(force){paused=typeof force==='boolean'?force:!paused;$('pauseOverlay').style.display=paused?'flex':'none';$('pauseToggle').textContent=paused?'▶':'Ⅱ';$('pauseToggle').classList.toggle('paused',paused);keys.clear();last=performance.now();save()}
-$('pauseToggle').onclick=()=>togglePause();$('resumeButton').onclick=()=>togglePause(false);
+$('pauseToggle').onclick=()=>{if(entering||cinematicActive)return;togglePause();};$('resumeButton').onclick=()=>togglePause(false);
 function hostAction(action){if(action!=='restart')save();try{const selector=action==='title'?'[class*=st-key-stage02_title_nav] button':'[class*=st-key-stage02_restart_nav] button';const btn=window.parent.document.querySelector(selector);if(btn){btn.click();return}}catch(e){}window.parent.postMessage({type:'stage02_nav',target:action},'*')}
 $('titleButton').onclick=()=>{save();$('dataSavingScreen').classList.add('active');togglePause(true);setTimeout(()=>hostAction('title'),3000)};$('restartButton').onclick=()=>{try{localStorage.removeItem(saveKey);localStorage.removeItem(handoffKey);localStorage.removeItem('project_logic_stage01_progress_v6')}catch(e){}hostAction('restart')};
 const panels=['inventoryOverlay','helpOverlay'];function isPanelOpen(){return panels.some(id=>$(id).style.display==='flex')};function closePanels(){panels.forEach(id=>$(id).style.display='none');keys.clear()};function togglePanel(id){if(paused)return;const was=$(id).style.display==='flex';closePanels();if(!was)$(id).style.display='flex'}
@@ -394,7 +479,48 @@ const preludeLines=[
  '…일시적인 영상 간섭이 발생했습니다. 시스템 내부에는 아무런 이상이 없습니다.',
  '오류 기록은 존재하지 않습니다. 안내 절차를 계속하겠습니다. 다음 구역으로 이동하십시오.'
 ];
-let preludeIndex=0,preludeTyping=false,preludeBusy=false,preludeTypingTimeout=null;
+let preludeIndex=0,preludeTyping=false,preludeBusy=false,preludeTypingTimeout=null,preludeAutoCloseTimer=null;
+const glitchGhosts=[$('preludeGhostA'),$('preludeGhostB')];
+const preludeErrorPreload=new Image();preludeErrorPreload.src='__ECHO_ERROR__';
+function setPreludeVisual(error){
+ const main=$('preludeImage');
+ main.src=error?preludeErrorPreload.src:'__ECHO_NORMAL__';
+ main.alt=error?'ECHO 중앙 제어실 오류 화면':'ECHO 중앙 제어실 정상 화면';
+ glitchGhosts.forEach(ghost=>{ghost.src=main.src});
+}
+glitchGhosts.forEach(ghost=>{ghost.src=$('preludeImage').src});
+let glitchSliceTimer=null;
+function updateGlitchSlices(){
+ const overlay=$('preludeGlitch');
+ overlay.querySelectorAll('.glitch-slice').forEach(slice=>{
+  const thickness=1+Math.floor(Math.random()*19);
+  slice.style.top=(Math.random()*98)+'%';
+  slice.style.left=(Math.random()*24)+'%';
+  slice.style.width=(45+Math.random()*74)+'%';
+  slice.style.height=thickness+'px';
+  slice.style.opacity=String(.15+Math.random()*.8);
+  slice.style.background=['#20eaff','#d6feff','#fa3256','#06141d'][Math.floor(Math.random()*4)];
+  slice.style.transform='translateX('+(Math.random()*110-55)+'px)';
+ });
+}
+function startGlitch(strong){
+ const overlay=$('preludeGlitch');
+ prelude.classList.add('glitching');
+ prelude.classList.toggle('major',strong);
+ overlay.className=strong?'active major':'active';
+ if(!overlay.children.length){
+  for(let i=0;i<16;i++){
+   const bar=document.createElement('span');bar.className='glitch-slice';overlay.appendChild(bar);
+  }
+ }
+ updateGlitchSlices();clearInterval(glitchSliceTimer);
+ glitchSliceTimer=setInterval(updateGlitchSlices,strong?40:65);
+}
+function stopGlitch(){
+ clearInterval(glitchSliceTimer);glitchSliceTimer=null;
+ $('preludeGlitch').className='';
+ prelude.classList.remove('glitching','major');
+}
 let glitchAudioCtx=null;
 function playGlitchSound(duration,strong=false){
  try{
@@ -417,42 +543,91 @@ function playGlitchSound(duration,strong=false){
   src.start();src.stop(glitchAudioCtx.currentTime+duration);
  }catch(e){/* 음향이 차단된 환경에서도 연출은 정상 진행 */}
 }
+
+function playCameraPowerOffSound(){
+ try{
+  const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
+  glitchAudioCtx=glitchAudioCtx||new Audio();
+  glitchAudioCtx.resume();
+  const ctx=glitchAudioCtx,t=ctx.currentTime;
+  // Electrical camera switch click.
+  const rate=ctx.sampleRate,frames=Math.ceil(rate*.055);
+  const buffer=ctx.createBuffer(1,frames,rate),data=buffer.getChannelData(0);
+  for(let i=0;i<frames;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/frames,3);
+  const src=ctx.createBufferSource(),click=ctx.createBiquadFilter(),clickGain=ctx.createGain();
+  click.type='highpass';click.frequency.value=1600;
+  clickGain.gain.setValueAtTime(.18,t);
+  clickGain.gain.exponentialRampToValueAtTime(.001,t+.055);
+  src.buffer=buffer;src.connect(click).connect(clickGain).connect(ctx.destination);
+  src.start(t);src.stop(t+.055);
+  // Descending electrical hum, followed by a hard power cut.
+  const osc=ctx.createOscillator(),gain=ctx.createGain();
+  osc.type='triangle';osc.frequency.setValueAtTime(480,t+.04);
+  osc.frequency.exponentialRampToValueAtTime(67,t+.66);
+  gain.gain.setValueAtTime(.0001,t+.04);
+  gain.gain.exponentialRampToValueAtTime(.055,t+.075);
+  gain.gain.exponentialRampToValueAtTime(.0001,t+.68);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t+.04);osc.stop(t+.7);
+ }catch(e){/* Autoplay-blocked browsers may mute sound without blocking the scene. */}
+}
+function beginCameraShutdown(){
+ if(!cinematicActive||preludeBusy||preludeIndex!==preludeLines.length-1||preludeTyping)return;
+ preludeBusy=true;clearTimeout(preludeAutoCloseTimer);clearTimeout(preludeTypingTimeout);
+ $('preludeNext').disabled=true;
+ stopGlitch();playCameraPowerOffSound();
+ prelude.classList.add('powering-down');
+ setTimeout(()=>{
+  cinematicActive=false;
+  prelude.hidden=true;
+  beginStageTransition();
+ },800);
+}
+function onPreludeLineComplete(){
+ if(preludeIndex===preludeLines.length-1){
+  clearTimeout(preludeAutoCloseTimer);
+  // Leave the last line readable; SPACE can advance earlier.
+  preludeAutoCloseTimer=setTimeout(beginCameraShutdown,3200);
+ }
+}
 function preludeSay(i){
- clearTimeout(preludeTypingTimeout);preludeIndex=i;preludeTyping=true;
+ clearTimeout(preludeTypingTimeout);clearTimeout(preludeAutoCloseTimer);
+ preludeIndex=i;preludeTyping=true;
  const text=preludeLines[i],target=$('preludeText');target.textContent='';
  $('preludeNext').disabled=false;let pos=0;
  function type(){
   if(!cinematicActive||preludeBusy)return;
-  if(pos>=text.length){preludeTyping=false;return;}
+  if(pos>=text.length){preludeTyping=false;onPreludeLineComplete();return;}
   target.textContent+=text[pos++];preludeTypingTimeout=setTimeout(type,24);
  }
  type();
 }
 function beginInterference(){
  preludeBusy=true;clearTimeout(preludeTypingTimeout);$('preludeNext').disabled=true;
- const glitch=$('preludeGlitch'),img=$('preludeImage');
- prelude.classList.add('glitching');glitch.className='active';playGlitchSound(.5,false);
+ // 300 ms static → 300 ms error frame → 700 ms severe interruption.
+ startGlitch(false);playGlitchSound(.3,false);
  setTimeout(()=>{
-  glitch.className='';prelude.classList.remove('glitching');
-  img.src='__ECHO_ERROR__';img.alt='ECHO 중앙 제어실 오류 화면';
+  stopGlitch();setPreludeVisual(true);
   setTimeout(()=>{
-   prelude.classList.add('glitching','major');glitch.className='active major';playGlitchSound(1,true);
+   startGlitch(true);playGlitchSound(.7,true);
    setTimeout(()=>{
-    img.src='__ECHO_NORMAL__';img.alt='ECHO 중앙 제어실 정상 화면';
-    glitch.className='';prelude.classList.remove('glitching','major');
+    setPreludeVisual(false);stopGlitch();
     preludeBusy=false;preludeSay(2);
-   },1000);
-  },500);
- },500);
+   },700);
+  },300);
+ },300);
 }
 function preludeAdvance(){
  if(!cinematicActive||preludeBusy)return;
- if(preludeTyping){clearTimeout(preludeTypingTimeout);$('preludeText').textContent=preludeLines[preludeIndex];preludeTyping=false;return;}
+ if(preludeTyping){
+  clearTimeout(preludeTypingTimeout);
+  $('preludeText').textContent=preludeLines[preludeIndex];
+  preludeTyping=false;onPreludeLineComplete();return;
+ }
  if(preludeIndex===0){preludeSay(1);return;}
  if(preludeIndex===1){beginInterference();return;}
  if(preludeIndex===2){preludeSay(3);return;}
- cinematicActive=false;prelude.hidden=true;
- beginStageTransition();
+ beginCameraShutdown();
 }
 $('preludeNext').addEventListener('click',preludeAdvance);
 document.addEventListener('keydown',e=>{
@@ -468,7 +643,7 @@ document.addEventListener('keydown',e=>{
 if(cinematicActive)preludeSay(0);
 
 // 스테이지 안내가 끝난 뒤에만 본편 ECHO 메시지를 시작합니다.
-document.addEventListener('keydown',e=>{if(cinematicActive)return;const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(isPanelOpen())closePanels();else if(paused)togglePause(false);return}if(k==='i'){togglePanel('inventoryOverlay');return}if(k==='h'){togglePanel('helpOverlay');return}if(k===' '){if(!paused&&!isPanelOpen())echoAdvance();return}keys.add(k)});document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
+document.addEventListener('keydown',e=>{if(cinematicActive||entering)return;const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(isPanelOpen())closePanels();else if(paused)togglePause(false);return}if(k==='i'){togglePanel('inventoryOverlay');return}if(k==='h'){togglePanel('helpOverlay');return}if(k===' '){if(!paused&&!isPanelOpen())echoAdvance();return}keys.add(k)});document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
 function tick(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!entering&&!isPanelOpen()&&remaining>0){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx=dx/len*78*dt;dy=dy/len*78*dt;if(valid(x+dx,y))x+=dx;if(valid(x,y+dy))y+=dy}}if(!paused&&!entering&&remaining>0){remaining=Math.max(0,remaining-dt);if(remaining===0){togglePause(true);$('echoText').textContent='제한 시간이 종료되었습니다.'}}draw();requestAnimationFrame(tick)}
 setInterval(save,1200);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});draw();save();requestAnimationFrame(tick);$('gameRoot').focus();
 })();</script><div class="data-saving-screen" id="dataSavingScreen"><div class="data-saving-label"><span class="data-saving-gear">⚙</span>DATA SAVING...</div></div></body></html>"""
