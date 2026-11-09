@@ -203,7 +203,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02050a;col
 .prop{position:absolute;z-index:2;transform:translate(-50%,-50%);object-fit:contain;cursor:pointer;image-rendering:pixelated;filter:drop-shadow(2px 2px 0 #02090e) drop-shadow(-2px -2px 0 #a4d9e3)}
 /* 세 터미널의 정삼각형 배치 좌표. JS objects 좌표와 맞춰야 한다. */
 #terminalA{left:34%;top:44%;width:13%}#terminalB{left:66%;top:44%;width:13%}#terminalC{left:50%;top:71.7%;width:13%}
-#noteProp{left:calc(37% - 90px);top:calc(29% - 120px);width:3.5%;z-index:6}#keypadProp{left:calc(63% + 120px);top:calc(29% - 120px);width:3.5%;z-index:6}
+#noteProp{left:29.5%;top:15.667%;width:3.5%;z-index:6}#keypadProp{left:73%;top:15.667%;width:3.5%;z-index:6}
 /* 조사 단계에 따라 NOTE 또는 키패드에 적용되는 청록색 점멸 효과 */
 .glow{animation:cyanPulse 2.2s ease-in-out infinite;filter:drop-shadow(0 0 5px #20f4ed) drop-shadow(0 0 11px #17bfc8)}
 @keyframes cyanPulse{0%,100%{filter:drop-shadow(0 0 1px #1ec5cf)}50%{filter:drop-shadow(0 0 9px #54ffff) drop-shadow(0 0 15px #12b7bf)}}
@@ -450,7 +450,7 @@ function nextEcho(){
 }
 const recordImages={A:'__RECORDA__',B:'__RECORDB__',C:'__RECORDC__'};
 // CSS의 px 이동량을 상호작용 좌표에도 반영한다.
-const objects=[{id:'terminalA',x:34,y:44,k:'A'},{id:'terminalB',x:66,y:44,k:'B'},{id:'terminalC',x:50,y:71.7,k:'C'},{id:'noteProp',x:37,y:29,k:'NOTE'},{id:'keypadProp',x:63,y:29,k:'KEYPAD'},{id:'exitDoor',x:50,y:24,k:'EXIT'}];
+const objects=[{id:'terminalA',x:34,y:44,k:'A'},{id:'terminalB',x:66,y:44,k:'B'},{id:'terminalC',x:50,y:71.7,k:'C'},{id:'noteProp',x:29.5,y:15.667,k:'NOTE'},{id:'keypadProp',x:73,y:15.667,k:'KEYPAD'},{id:'exitDoor',x:50,y:24,k:'EXIT'}];
 
 // 저장된 Stage 01 진행 상태를 복원합니다.
 const SAVE_KEY='project_logic_stage01_progress_v6';
@@ -587,7 +587,7 @@ function objectDistance(o){
  return Math.hypot(dx*.843,dy*.619);
 }
 // NOTE와 키패드는 일반 터미널보다 멀리서 조사할 수 있습니다.
-function interactionRange(o){return o.k==='EXIT'?8:o.k==='NOTE'?7.5:o.k==='KEYPAD'?11:4.8}
+function interactionRange(o){return o.k==='EXIT'?8:o.k==='NOTE'?9:o.k==='KEYPAD'?12.5:4.8}
 function nearest(){
  let best=null,dist=Infinity;
  for(const o of objects){
